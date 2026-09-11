@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer base {
+  :root {
+    --background: 39 11% 73%;
+    --foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 39 11% 73%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 39 8% 88%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 239 71% 42%;
+    --accent-foreground: 0 0% 98%;
+    --paper: 39 11% 73%;
+    --paper-deep: 39 8% 68%;
+    --ink: 0 0% 9%;
+    --ink-soft: 0 0% 32%;
+    --ink-faint: 0 0% 51%;
+    --hairline: 0 0% 9% / 0.12;
+    --rise: 142 48% 30%;
+    --drop: 15 62% 34%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 9% / 0.12;
+    --input: 0 0% 9% / 0.12;
+    --ring: 239 71% 42%;
+    --radius: 0.25rem;
+  }
+}
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-[#c1c0b6] text-zinc-900 antialiased; }
+  .serif { font-family: var(--font-fraunces), ui-serif, Georgia, serif; }
+  .stats { font-family: var(--font-plex-mono), ui-monospace, monospace; }
+  .rule { border-color: hsl(var(--hairline)); }
+  ::selection { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+}

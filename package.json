@@ -1,0 +1,11 @@
+{
+  "name": "opentip",
+  "private": true,
+  "workspaces": ["frontend", "indexer"],
+  "scripts": {
+    "dev:frontend": "npm --workspace frontend run dev",
+    "build:frontend": "npm --workspace frontend run build",
+    "dev:indexer": "npm --workspace indexer run dev",
+    "test:contracts": "npm --workspace contracts run test"
+  }
+}

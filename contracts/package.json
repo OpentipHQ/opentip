@@ -1,0 +1,11 @@
+{
+  "name": "@opentip/contracts",
+  "private": true,
+  "scripts": {
+    "test": "forge test -vvv",
+    "build": "forge build",
+    "deploy:sepolia": "forge script script/Deploy.s.sol:Deploy --rpc-url $BASE_SEPOLIA_RPC --broadcast --verify",
+    "deploy:base": "forge script script/Deploy.s.sol:Deploy --rpc-url $BASE_RPC --broadcast --verify",
+    "slither": "slither . --filter-paths lib"
+  }
+}

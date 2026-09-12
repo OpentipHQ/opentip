@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
   const repoId = req.nextUrl.searchParams.get("repoId")?.toLowerCase() || null;

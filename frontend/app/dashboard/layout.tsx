@@ -80,8 +80,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  const login = (session?.user as any)?.login || session?.user?.name || session?.user?.email;
-
   return (
     <div className="flex min-h-[80vh] -mx-16 md:-mx-40">
       {/* Desktop sidebar */}
@@ -92,9 +90,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       >
         <div className={`flex items-center border-b rule ${collapsed ? "justify-center py-4" : "justify-between px-4 py-4"}`}>
           {!collapsed && (
-            <Link href={`/dev/${login}`} className="serif font-semibold text-sm truncate">
-              {login}
-            </Link>
+            <span className="serif font-semibold text-sm">Dashboard</span>
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -144,28 +140,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Mobile hamburger */}
-      <div className="md:hidden fixed top-5 left-4 z-30">
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="p-2 bg-[#c1c0b6] border rule rounded-sm"
-          aria-label="Toggle menu"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            {mobileOpen ? (
-              <>
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </>
-            ) : (
-              <>
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </>
-            )}
-          </svg>
-        </button>
-      </div>
+      {!mobileOpen && (
+        <div className="md:hidden fixed top-5 left-4 z-30">
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="p-2 bg-[#c1c0b6] border rule rounded-sm"
+            aria-label="Toggle menu"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+        </div>
+      )}
 
       {/* Mobile overlay */}
       {mobileOpen && (
@@ -173,9 +162,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="absolute inset-0 bg-black/20" onClick={() => setMobileOpen(false)} />
           <aside className="absolute left-0 top-0 bottom-0 w-[240px] bg-[#c1c0b6] border-r rule">
             <div className="flex items-center justify-between px-4 py-4 border-b rule">
-              <Link href={`/dev/${login}`} className="serif font-semibold text-sm" onClick={() => setMobileOpen(false)}>
-                {login}
-              </Link>
+              <span className="serif font-semibold text-sm">Dashboard</span>
               <button onClick={() => setMobileOpen(false)} className="p-1 hover:bg-zinc-900/5 rounded-sm">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18" />

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createPublicClient, http } from "viem";
 import { baseSepolia, base } from "viem/chains";
 import { opentipAbi, getContractAddress } from "@/lib/contract";
+import { prisma } from "@/lib/prisma";
 import ProfileClient from "./ProfileClient";
 
 const chain = process.env.NEXT_PUBLIC_CHAIN === "base" ? base : baseSepolia;
@@ -31,9 +32,6 @@ export default async function DevProfilePage({
   params: Promise<{ login: string }>;
 }) {
   const { login } = await params;
-
-  const { PrismaClient } = await import("@prisma/client");
-  const prisma = new PrismaClient();
 
   const user = await prisma.user.findUnique({
     where: { login },
@@ -93,19 +91,24 @@ export default async function DevProfilePage({
     : [];
 
   const tipMap = new Map(
-    tips.map((t) => [t.repo_id, { total: t._sum.usdc_amount?.toString() ?? "0", count: t._count }])
+    tips.map((t) => [t.repo_id, {
+      total: t._sum.usdc_amount?.toString() ?? "0",
+      count: t._count,
+    }])
   );
 
   const contractAddress = getContractAddress();
 
   let totalTippedOnChain = 0n;
   let totalPendingOnChain = 0n;
+  let feeBps = 500n;
 
   if (contractAddress && repos.length > 0) {
     const calls = repos.flatMap((r) => [
       { address: contractAddress, abi: opentipAbi, functionName: "getTotalTipped" as const, args: [r.repo_id] },
       { address: contractAddress, abi: opentipAbi, functionName: "getPendingBalance" as const, args: [r.repo_id] },
     ]);
+    calls.push({ address: contractAddress, abi: opentipAbi, functionName: "getFeeBps" as const, args: [] });
 
     const results = await client.multicall({ contracts: calls });
 
@@ -115,9 +118,13 @@ export default async function DevProfilePage({
       if (totalResult.status === "success") totalTippedOnChain += totalResult.result as bigint;
       if (pendingResult.status === "success") totalPendingOnChain += pendingResult.result as bigint;
     }
+    const feeResult = results[repos.length * 2];
+    if (feeResult.status === "success") feeBps = feeResult.result as bigint;
   }
 
-  const totalClaimed = totalTippedOnChain - totalPendingOnChain;
+  // Developer's share = 95% of totalTipped minus what's still pending
+  const developerShare = totalTippedOnChain * (10000n - feeBps) / 10000n;
+  const totalClaimed = developerShare > totalPendingOnChain ? developerShare - totalPendingOnChain : 0n;
 
   const enrichedRepos = repos.map((r) => ({
     repo_id: r.repo_id,

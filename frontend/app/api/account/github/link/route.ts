@@ -11,7 +11,7 @@ export async function POST() {
 
   const state = randomBytes(16).toString("hex");
   const clientId = process.env.GITHUB_ID;
-  const redirectUri = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/api/account/github/callback`;
+  const redirectUri = `${process.env.NEXTAUTH_URL || "https://opentip.tech"}/api/account/github/callback`;
 
   if (!clientId) {
     return NextResponse.json({ error: "GitHub OAuth not configured" }, { status: 500 });

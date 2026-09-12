@@ -1,5 +1,22 @@
 "use client";
 import Link from "next/link";
+import { useMemo } from "react";
+
+function renderBioWithLinks(bio: string) {
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[^\s]*)/g;
+  const parts = bio.split(urlRegex);
+  return parts.map((part, i) => {
+    if (part.match(urlRegex)) {
+      const href = part.startsWith("http") ? part : `https://${part}`;
+      return (
+        <a key={i} href={href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-accent break-all">
+          {part}
+        </a>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
 
 interface ContributionDay {
   date: string;
@@ -143,7 +160,7 @@ export default function ProfileClient({ data, contributions }: { data: ProfileDa
             <p className="text-sm text-zinc-600 mt-1">{data.name}</p>
           )}
           {data.bio && (
-            <p className="text-sm text-zinc-700 max-w-md leading-relaxed mt-3">{data.bio}</p>
+            <p className="text-sm text-zinc-700 max-w-md leading-relaxed mt-3">{renderBioWithLinks(data.bio)}</p>
           )}
           <div className="mt-3 flex justify-center md:justify-start">
             <SocialLinks social={data.social} />

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/motion/button";
 import { Loader } from "@/components/motion/loader";
 import { useAccount, useConnect, useSignMessage } from "wagmi";
+import { useAppKit } from "@reown/appkit/react";
 
 function truncate(addr: string) { return addr.slice(0, 6) + "..." + addr.slice(-4); }
 
@@ -11,6 +12,7 @@ export default function DashboardWallets() {
   const { data: session, status } = useSession();
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
+  const { open } = useAppKit();
   const { signMessageAsync } = useSignMessage();
   const [wallets, setWallets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +25,7 @@ export default function DashboardWallets() {
   }, [status]);
 
   async function linkWallet() {
-    if (!address) { connect({ connector: connectors[0] }); return; }
+    if (!address) { open(); return; }
     setLinking(true);
     setMessage("");
     try {
@@ -68,7 +70,7 @@ export default function DashboardWallets() {
         )}
 
         {!isConnected && (
-          <Button size="sm" variant="secondary" onClick={() => connect({ connector: connectors[0] })}>Connect wallet to link</Button>
+          <Button size="sm" variant="secondary" onClick={() => open()}>Connect wallet to link</Button>
         )}
 
         {message && <p className="text-xs text-zinc-600">{message}</p>}

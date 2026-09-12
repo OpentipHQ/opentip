@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { useAccount, useConnect, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSignMessage } from "wagmi";
+import { useAppKit } from "@reown/appkit/react";
 import { signIn, useSession } from "next-auth/react";
 import { parseUnits, formatUnits, parseEther } from "viem";
 import { opentipAbi, usdcAbi, getContractAddress, getUsdcAddress } from "@/lib/contract";
@@ -17,6 +18,7 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
   const repoIdLower = repoId.toLowerCase();
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
+  const { open } = useAppKit();
   const { data: session } = useSession();
   const { showToast, updateToast, dismissToast } = useToast();
   const { signMessageAsync } = useSignMessage();
@@ -130,7 +132,6 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
       try {
         const quote = await getRelayQuote({ chainId, amountWei: wei, recipient: address });
         updateToast(id, { status:"success", title:"Quote ready", description:"Confirm swap, then tip the USDC", duration: 4000 });
-        console.log(quote);
         setTipFlow("idle");
       } catch(e:any){ updateToast(id, { status:"error", title:"Relay quote failed", description: e.message?.slice(0,120) }); setTipFlow("error"); setTimeout(()=>setTipFlow("idle"),2000); }
       return;
@@ -192,7 +193,7 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
   };
 
   const copyLink = async () => {
-    const url = `https://opentip.xyz/${repoIdLower}`;
+    const url = `https://opentip.tech/${repoIdLower}`;
     await navigator.clipboard.writeText(url);
     showToast({ status:"success", title:"Copied", description: url });
   };
@@ -295,7 +296,7 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
             {isConnected ? (
               <span className="stats text-xs text-zinc-700 border rule rounded-sm px-2 py-1 h-9 flex items-center">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
             ) : (
-              <Button variant="secondary" onClick={() => connect({ connector: connectors[0] })} className="h-9">Connect wallet</Button>
+              <Button variant="secondary" onClick={() => open()} className="h-9">Connect wallet</Button>
             )}
           </div>
 

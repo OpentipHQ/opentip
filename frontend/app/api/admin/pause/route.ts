@@ -1,16 +1,7 @@
 import { NextRequest } from "next/server";
 import { handleAdminRequest, auditLog } from "@/lib/admin-api";
-import { createWalletClient, http } from "viem";
-import { baseSepolia, base } from "viem/chains";
+import { getOwnerWallet } from "@/lib/admin-wallet";
 import { opentipAbi, getContractAddress } from "@/lib/contract";
-
-const chain = process.env.NEXT_PUBLIC_CHAIN === "base" ? base : baseSepolia;
-
-function getOwnerWallet() {
-  const pk = process.env.PRIVATE_KEY;
-  if (!pk) throw new Error("PRIVATE_KEY not set");
-  return createWalletClient({ account: pk as `0x${string}`, chain, transport: http() });
-}
 
 export async function POST(req: NextRequest) {
   return handleAdminRequest(req, "critical", async (admin) => {

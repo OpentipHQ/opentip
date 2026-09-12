@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { verifyMessage } from "viem";
-
-const prisma = new PrismaClient();
 
 export async function POST(req: NextRequest) {
   const { address, displayName, signature } = await req.json();

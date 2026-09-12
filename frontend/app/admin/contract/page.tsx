@@ -12,10 +12,14 @@ export default function AdminContract() {
   const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
   const [currentFee, setCurrentFee] = useState<string | null>(null);
   const [currentTreasury, setCurrentTreasury] = useState<string | null>(null);
+  const [treasuryBalance, setTreasuryBalance] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/stats").then(r => r.json()).then(j => {
-      // Fee and treasury come from contract reads on the overview
+      if (j.treasuryBalance) {
+        const bal = Number(j.treasuryBalance) / 1e6;
+        setTreasuryBalance(bal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      }
     }).catch(() => {});
   }, []);
 
@@ -108,6 +112,9 @@ export default function AdminContract() {
       {/* Withdraw */}
       <section className="space-y-3">
         <h2 className="text-sm font-medium">Withdraw treasury</h2>
+        {treasuryBalance !== null && (
+          <p className="text-xs text-zinc-500">Available: <span className="stats text-zinc-900">{treasuryBalance} USDC</span></p>
+        )}
         <div className="flex gap-3 items-end">
           <div className="flex-1 max-w-[160px]">
             <label className="block text-xs text-zinc-500 mb-1">Amount (USDC)</label>

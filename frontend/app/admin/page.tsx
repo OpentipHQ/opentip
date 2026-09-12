@@ -5,6 +5,7 @@ import { Loader } from "@/components/motion/loader";
 interface Stats {
   totalTipsUsdc: string;
   totalFeesUsdc: string;
+  treasuryBalance: string;
   totalTipCount: number;
   totalRepos: number;
   totalUsers: number;
@@ -43,6 +44,7 @@ export default function AdminOverview() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Total tips" value={formatUsdc(stats.totalTipsUsdc)} sub="USDC" />
         <StatCard label="Platform fees" value={formatUsdc(stats.totalFeesUsdc)} sub="USDC" />
+        <StatCard label="Treasury balance" value={formatUsdc(stats.treasuryBalance || "0")} sub="USDC" />
         <StatCard label="Registered repos" value={String(stats.totalRepos)} />
         <StatCard label="Users" value={String(stats.totalUsers)} />
       </div>

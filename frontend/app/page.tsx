@@ -32,7 +32,7 @@ export default function Home() {
               Support the humans<br />behind the <span className="underline decoration-accent decoration-2 underline-offset-4">code.</span>
             </h1>
             <p className="text-zinc-700 max-w-lg text-lg leading-relaxed">
-              Behind every repo you <code className="font-mono text-sm">npm install</code> without thinking twice, there&apos;s someone who wrote it, fixed it, and kept it running — usually for free. Opentip makes it a five-second thing to change that. Paste a GitHub link, send a tip, done.
+              Behind every repo you <code className="font-mono text-sm bg-accent/10 text-accent px-1.5 py-0.5 rounded-sm">git clone</code> without thinking twice, there&apos;s someone who wrote it, fixed it, and kept it running — usually for free. Opentip makes it a five-second thing to change that. Paste a GitHub link, send a tip, done.
             </p>
             <div className="flex gap-3">
               <Link href="/repos"><Button size="lg" className="px-8">Find a repo</Button></Link>
@@ -83,12 +83,12 @@ export default function Home() {
               <div className="stats text-2xl font-bold">01</div>
               <h3 className="font-semibold text-sm">Change one word in a URL.</h3>
               <p className="text-sm text-zinc-600 leading-relaxed">
-                Take any GitHub repo link. Swap <code className="font-mono text-xs">github.com</code> for <code className="font-mono text-xs">opentip.dev</code>. That&apos;s the whole trick.
+                Take any GitHub repo link. Swap <code className="font-mono text-xs">github.com</code> for <code className="font-mono text-xs">opentip.tech</code>. That&apos;s the whole trick.
               </p>
               <div className="flex items-center gap-3 text-sm font-mono text-zinc-500 overflow-x-auto">
                 <a href="https://github.com/optimusexe/Opentip" target="_blank" rel="noopener noreferrer" className="whitespace-nowrap underline underline-offset-4 hover:text-accent transition-colors">github.com/optimusexe/Opentip</a>
                 <span className="text-zinc-400 flex-shrink-0">&rarr;</span>
-                <a href="/optimusexe/Opentip" className="whitespace-nowrap underline underline-offset-4 hover:text-accent transition-colors">opentip.dev/optimusexe/Opentip</a>
+                <a href="/optimusexe/Opentip" className="whitespace-nowrap underline underline-offset-4 hover:text-accent transition-colors">opentip.tech/optimusexe/Opentip</a>
               </div>
             </div>
             <div className="space-y-4 border-t rule pt-6">
@@ -153,7 +153,7 @@ export default function Home() {
           <div className="md:col-span-8 space-y-6">
             <h3 className="serif text-2xl md:text-3xl font-semibold tracking-tight">Claim your repo. Takes about a minute.</h3>
             <p className="text-zinc-700 text-lg leading-relaxed max-w-2xl">
-              Sign in with GitHub, we confirm you actually own (or maintain) the repo, then you link a wallet. That&apos;s the entire setup. From then on, anyone in the world can send you a tip at <code className="font-mono text-sm">opentip.dev/you/your-repo</code>, and it&apos;s waiting for you to claim whenever you want.
+              Sign in with GitHub, we confirm you actually own (or maintain) the repo, then you link a wallet. That&apos;s the entire setup. From then on, anyone in the world can send you a tip at <code className="font-mono text-sm">opentip.tech/you/your-repo</code>, and it&apos;s waiting for you to claim whenever you want.
             </p>
             <div className="pt-2">
               <Link href="/onboarding"><Button size="lg" className="px-8">Claim your repo</Button></Link>

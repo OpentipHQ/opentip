@@ -1,10 +1,25 @@
+import { prisma } from "@/lib/prisma";
+
 async function getLeaderboard() {
-  const base = process.env.NEXTAUTH_URL || "";
   try {
-    const res = await fetch(`${base}/api/leaderboard`, { cache: "no-store" });
-    if (!res.ok) return [];
-    return res.json();
-  } catch { return []; }
+    const rows: any[] = await prisma.$queryRaw`
+      SELECT tipper_address, SUM(usdc_amount)::text as total
+      FROM "Tip"
+      GROUP BY tipper_address ORDER BY SUM(usdc_amount) DESC LIMIT 20
+    `;
+    const addrs = rows.map((r: any) => r.tipper_address);
+    const names = addrs.length
+      ? await prisma.displayName.findMany({ where: { tipper_address: { in: addrs } } })
+      : [];
+    const nameMap = new Map(names.map((n) => [n.tipper_address.toLowerCase(), n.display_name]));
+    return rows.map((r: any) => ({
+      tipper_address: r.tipper_address,
+      total: r.total,
+      display_name: nameMap.get(r.tipper_address.toLowerCase()) || null,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export default async function LeaderboardPage() {

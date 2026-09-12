@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useAccount, useConnect, useSignMessage } from "wagmi";
+import { useAppKit } from "@reown/appkit/react";
 import { useToast } from "@/app/providers";
 import { Button, StatefulButton } from "@/components/motion/button";
 import { Loader } from "@/components/motion/loader";
@@ -11,6 +12,7 @@ export default function OnboardingPage() {
   const { data: session, status } = useSession();
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
+  const { open } = useAppKit();
   const { signMessageAsync } = useSignMessage();
   const router = useRouter();
   const { showToast } = useToast();
@@ -90,7 +92,7 @@ export default function OnboardingPage() {
               <span className="stats text-xs text-zinc-700 border rule rounded-sm px-2 py-1">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
             </div>
           ) : (
-            <Button onClick={() => connect({ connector: connectors[0] })}>Connect wallet</Button>
+            <Button onClick={() => open()}>Connect wallet</Button>
           )}
           <div>
             <StatefulButton state={linkState === "loading" ? "loading" : linkState === "success" ? "success" : linkState === "error" ? "error" : "idle"} onClick={linkWallet} disabled={!isConnected}>

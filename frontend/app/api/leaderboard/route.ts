@@ -4,7 +4,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest) {
-  const repoId = req.nextUrl.searchParams.get("repoId");
+  const repoId = req.nextUrl.searchParams.get("repoId")?.toLowerCase() || null;
   const filter = repoId ? `WHERE repo_id = '${repoId.replace(/'/g,"''")}'` : "";
   // Prisma raw query for aggregation
   const rows: any[] = await prisma.$queryRawUnsafe(`

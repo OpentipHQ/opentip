@@ -86,9 +86,9 @@ export default function Home() {
                 Take any GitHub repo link. Swap <code className="font-mono text-xs">github.com</code> for <code className="font-mono text-xs">opentip.dev</code>. That&apos;s the whole trick.
               </p>
               <div className="flex items-center gap-3 text-sm font-mono text-zinc-500 overflow-x-auto">
-                <span className="whitespace-nowrap">github.com/vercel/next.js</span>
+                <a href="https://github.com/optimusexe/Opentip" target="_blank" rel="noopener noreferrer" className="whitespace-nowrap underline underline-offset-4 hover:text-accent transition-colors">github.com/optimusexe/Opentip</a>
                 <span className="text-zinc-400 flex-shrink-0">&rarr;</span>
-                <span className="whitespace-nowrap">opentip.dev/vercel/next.js</span>
+                <a href="/optimusexe/Opentip" className="whitespace-nowrap underline underline-offset-4 hover:text-accent transition-colors">opentip.dev/optimusexe/Opentip</a>
               </div>
             </div>
             <div className="space-y-4 border-t rule pt-6">
@@ -202,6 +202,7 @@ export default function Home() {
               { q: "Can anyone claim any repo's tips?", a: "No. Only whoever verifies ownership through GitHub can register a repo and set the wallet that claims its funds." },
               { q: "Has the contract been audited?", a: "Not yet — this is early. The code is open and verified on Basescan, so you don't have to take our word for it, but we're not going to pretend a formal audit has happened when it hasn't." },
               { q: "What happens if a repo gets a new owner?", a: "Whoever's currently verified as the developer can update the payout wallet anytime. Ownership on Opentip follows ownership on GitHub." },
+              { q: "Isn't the contract centralized?", a: "Partially. The contract owner can pause tips in emergencies and reassign payouts if a wallet is lost. The goal is to make this the least interesting power in the system — it only works as a recovery mechanism. The owner can't steal tips or change fee percentages unilaterally. Think of it as the dead-man's switch you hope never to use." },
             ].map(({ q, a }, i) => {
               const open = openFaqs.has(i);
               return (
@@ -224,16 +225,50 @@ export default function Home() {
       </section>
 
       {/* Closing */}
-      <section className="py-16 md:py-24">
-        <div className="max-w-2xl space-y-6">
-          <h2 className="serif text-4xl md:text-5xl font-semibold tracking-tight leading-[0.95]">
-            Someone maintained the thing you&apos;re about to use for free. Say thanks in a way that actually means something.
-          </h2>
-          <div className="pt-2">
-            <Link href="/repos"><Button size="lg" className="px-8">Find a repo to support</Button></Link>
-          </div>
+      <section className="py-16 md:py-24 text-center space-y-6">
+        <h2 className="serif text-4xl md:text-5xl font-semibold tracking-tight leading-[0.95]">
+          Say thanks in a way that counts.
+        </h2>
+        <div>
+          <Link href="/repos"><Button size="lg" className="px-8">Find a repo to support</Button></Link>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="bg-accent text-accent-foreground -mx-16 md:-mx-40 w-[calc(100%+8rem)] md:w-[calc(100%+20rem)]">
+        <div className="px-16 md:px-40 pt-10 md:pt-14 pb-6 md:pb-8 space-y-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/Opentip.png" alt="" className="w-7 h-7" />
+                <h3 className="serif text-2xl font-semibold tracking-tight">Opentip</h3>
+              </div>
+              <p className="text-sm opacity-70 max-w-xs">Open-source tip jar on Base. Send crypto to the developers who built the tools you use every day.</p>
+            </div>
+            <div className="flex gap-8 text-sm opacity-80">
+              <div className="space-y-3">
+                <div className="text-[0.65rem] uppercase tracking-[0.2em] opacity-60">Product</div>
+                <div className="space-y-2">
+                  <Link href="/repos" className="block hover:opacity-100 transition-opacity">Repos</Link>
+                  <Link href="/activity" className="block hover:opacity-100 transition-opacity">Activity</Link>
+                  <Link href="/leaderboard" className="block hover:opacity-100 transition-opacity">Leaderboard</Link>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="text-[0.65rem] uppercase tracking-[0.2em] opacity-60">Resources</div>
+                <div className="space-y-2">
+                  <a href="https://github.com/optimusexe/Opentip" target="_blank" rel="noopener noreferrer" className="block hover:opacity-100 transition-opacity">GitHub</a>
+                  <a href="https://basescan.org" target="_blank" rel="noopener noreferrer" className="block hover:opacity-100 transition-opacity">Basescan</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="text-center pb-4">
+          <div className="serif text-[6rem] md:text-[9rem] font-bold tracking-tight opacity-90 leading-none">opentip.</div>
+        </div>
+      </footer>
 
     </div>
   );

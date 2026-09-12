@@ -18,7 +18,7 @@ function GithubIcon({ className }: { className?: string }) {
 export default function SignInPage() {
   const router = useRouter();
   const params = useSearchParams();
-  const callbackUrl = params.get("callbackUrl") || "/onboarding";
+  const callbackUrl = params.get("callbackUrl") || "/dashboard";
   const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,7 +27,7 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string|undefined>(undefined);
 
-  const onGithub = () => signIn("github", { callbackUrl: "/onboarding" });
+  const onGithub = () => signIn("github", { callbackUrl: "/dashboard" });
   const onEmail = async () => {
     setError(undefined);
     if (mode==="signup" && password.length < 8) { setError("Password must be at least 8 characters"); return; }
@@ -37,11 +37,16 @@ export default function SignInPage() {
       const j = await res.json();
       if (!res.ok) { setError(j.error); setLoading(false); showToast({ status:"error", title: j.error }); return; }
       showToast({ status:"success", title:"Account created, signing in..." });
+      const r = await signIn("credentials", { email, password, redirect: false, callbackUrl: "/onboarding" });
+      setLoading(false);
+      if (r?.error) { setError("Invalid email or password"); showToast({ status:"error", title: "Login failed" }); }
+      else if (r?.ok) router.push("/onboarding");
+      return;
     }
     setLoading(true);
     const r = await signIn("credentials", { email, password, redirect: false, callbackUrl });
     setLoading(false);
-    if (r?.error) { setError("Invalid email or password"); showToast({ status:"error", title:"Login failed" }); }
+    if (r?.error) { setError("Invalid email or password"); showToast({ status:"error", title: "Login failed" }); }
     else if (r?.ok) router.push(callbackUrl);
   };
 
@@ -64,6 +69,12 @@ export default function SignInPage() {
             <Input label="Email" value={email} onChange={setEmail} placeholder="ada@example.com" type="email" />
             <Input label="Password" value={password} onChange={setPassword} placeholder="••••••••" type="password" error={error} reserveErrorLine />
           </div>
+
+          {mode === "login" && (
+            <Link href="/forgot-password" className="text-xs text-zinc-500 underline underline-offset-4 hover:text-zinc-700">
+              Forgot your password?
+            </Link>
+          )}
 
           <StatefulButton state={loading ? "loading" : "idle"} onClick={onEmail} className="px-6">
             {mode === "signup" ? "Create account" : "Sign in"}

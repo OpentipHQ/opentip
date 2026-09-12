@@ -1,182 +1,262 @@
 "use client";
 import { useSession } from "next-auth/react";
-import { useEffect, useState, useMemo } from "react";
-import Link from "next/link";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/motion/button";
-import { Input } from "@/components/motion/input";
 import { Loader } from "@/components/motion/loader";
-import { useAccount, useReadContracts } from "wagmi";
-import { getContractAddress, opentipAbi } from "@/lib/contract";
-import { Search } from "lucide-react";
+import { useToast } from "@/app/providers";
 
-function truncate(addr: string) { return addr.slice(0, 6) + "..." + addr.slice(-4); }
-
-const PAGE_SIZE = 20;
-
-export default function Dashboard() {
+export default function DashboardProfile() {
   const { data: session, status } = useSession();
-  const { address } = useAccount();
-  const contract = getContractAddress();
-  const [repos, setRepos] = useState<any[]>([]);
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [wallets, setWallets] = useState<any[]>([]);
-  const [registeredRepos, setRegisteredRepos] = useState<any[]>([]);
-  const [loadingRegistered, setLoadingRegistered] = useState(true);
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
 
-  const onChainContracts = contract && registeredRepos.length > 0 ? registeredRepos.flatMap((r: any) => [
-    { address: contract, abi: opentipAbi, functionName: "getPendingBalance" as const, args: [r.repo_id] },
-    { address: contract, abi: opentipAbi, functionName: "getTotalTipped" as const, args: [r.repo_id] },
-  ]) : [];
+  const [pfp, setPfp] = useState<string | null>(null);
+  const [header, setHeader] = useState<string | null>(null);
+  const [uploadingPfp, setUploadingPfp] = useState(false);
+  const [uploadingHeader, setUploadingHeader] = useState(false);
 
-  const { data: onChainData } = useReadContracts({ contracts: onChainContracts });
+  const [bio, setBio] = useState("");
+  const [website, setWebsite] = useState("");
+  const [twitter, setTwitter] = useState("");
+  const [discord, setDiscord] = useState("");
+  const [telegram, setTelegram] = useState("");
+  const [farcaster, setFarcaster] = useState("");
+  const [github, setGithub] = useState("");
 
-  const onChainMap = useMemo(() => {
-    const map: Record<string, { pending: string; total: string }> = {};
-    for (let i = 0; i < registeredRepos.length; i++) {
-      const pendingResult = onChainData?.[i * 2];
-      const totalResult = onChainData?.[i * 2 + 1];
-      if (pendingResult?.status === "success" && totalResult?.status === "success") {
-        map[registeredRepos[i].repo_id] = {
-          pending: (pendingResult.result as bigint).toString(),
-          total: (totalResult.result as bigint).toString(),
-        };
-      }
-    }
-    return map;
-  }, [onChainData, registeredRepos]);
+  const pfpInput = useRef<HTMLInputElement>(null);
+  const headerInput = useRef<HTMLInputElement>(null);
+
+  const login = (session?.user as any)?.login as string | undefined;
 
   useEffect(() => {
     if (status !== "authenticated") return;
-    fetch("/api/github/repos?per_page=100").then(r => r.json()).then(j => Array.isArray(j) ? setRepos(j) : setRepos([])).finally(() => setLoading(false));
-    fetch("/api/wallet/link").then(r => r.json()).then(j => Array.isArray(j) ? setWallets(j) : setWallets([])).catch(() => {});
-    fetch("/api/registered-repos").then(r => r.json()).then(j => Array.isArray(j) ? setRegisteredRepos(j) : setRegisteredRepos([])).finally(() => setLoadingRegistered(false));
+    fetch(`/api/account/status`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.pfp) setPfp(data.pfp);
+        if (data.header) setHeader(data.header);
+      })
+      .catch(() => {});
   }, [status]);
 
-  const filtered = useMemo(() => {
-    if (!search) return repos;
-    const q = search.toLowerCase();
-    return repos.filter(r => r.full_name.toLowerCase().includes(q) || (r.description || "").toLowerCase().includes(q));
-  }, [repos, search]);
+  useEffect(() => {
+    if (status !== "authenticated" || !login) { setLoading(false); return; }
+    fetch(`/api/dev/${login}`)
+      .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
+      .then((data) => {
+        if (data.pfp) setPfp(data.pfp);
+        if (data.header) setHeader(data.header);
+        if (data.bio) setBio(data.bio);
+        if (data.social?.website) setWebsite(data.social.website);
+        if (data.social?.twitter) setTwitter(data.social.twitter);
+        if (data.social?.discord) setDiscord(data.social.discord);
+        if (data.social?.telegram) setTelegram(data.social.telegram);
+        if (data.social?.farcaster) setFarcaster(data.social.farcaster);
+        if (data.social?.github) setGithub(data.social.github);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [status, login]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages);
-  const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  async function uploadFile(file: File, type: "pfp" | "header") {
+    const setter = type === "pfp" ? setUploadingPfp : setUploadingHeader;
+    setter(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`/api/upload/${type}`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok) {
+        if (type === "pfp") setPfp(data.url);
+        else setHeader(data.url);
+        showToast({ status: "success", title: type === "pfp" ? "Profile picture updated" : "Header updated" });
+      } else {
+        showToast({ status: "error", title: data.error || "Upload failed" });
+      }
+    } catch {
+      showToast({ status: "error", title: "Upload failed" });
+    }
+    setter(false);
+  }
 
-  useEffect(() => { setPage(1); }, [search]);
+  function handlePfpChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) uploadFile(file, "pfp");
+  }
 
-  if (status === "loading") return <div className="py-20 flex justify-center"><Loader variant="spinner" size={24} /></div>;
+  function handleHeaderChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) uploadFile(file, "header");
+  }
 
-  if (status === "unauthenticated") return (
-    <div className="min-h-[60vh] flex flex-col justify-center">
-      <div className="max-w-sm w-full mx-auto space-y-6">
-        <h1 className="serif text-4xl md:text-5xl font-semibold tracking-tight leading-[0.9]">Dashboard</h1>
-        <p className="text-sm text-zinc-600">Sign in to manage your repos and claim tips.</p>
-        <Link href="/signin"><Button size="lg" className="px-8">Sign in</Button></Link>
+  async function handleSave() {
+    setSaving(true);
+    setMessage("");
+    try {
+      const res = await fetch("/api/dev/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bio, website, twitter, discord, telegram, farcaster, github }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setMessage("Profile saved.");
+      } else {
+        setMessage(data.error || "Failed to save.");
+      }
+    } catch (e: any) {
+      setMessage(e.message || "Failed to save.");
+    }
+    setSaving(false);
+  }
+
+  if (status === "loading" || loading) {
+    return <div className="py-20 flex justify-center"><Loader variant="spinner" size={24} /></div>;
+  }
+
+  if (status === "unauthenticated") return null;
+
+  const fallbackName = session?.user?.name || session?.user?.email || "U";
+
+  return (
+    <div className="max-w-lg space-y-8">
+      <div>
+        <h1 className="serif text-2xl font-semibold">Profile</h1>
+        <p className="text-sm text-zinc-600">
+          {login
+            ? <>Your public profile at <span className="stats text-xs">/dev/{login}</span></>
+            : "Link GitHub to get a public profile at /dev/{username}"}
+        </p>
+      </div>
+
+      <input ref={pfpInput} type="file" accept="image/*" className="hidden" onChange={handlePfpChange} />
+      <input ref={headerInput} type="file" accept="image/*" className="hidden" onChange={handleHeaderChange} />
+
+      {/* Header */}
+      <section className="space-y-2">
+        <div className="border-t rule" />
+        <h2 className="text-xs font-medium text-zinc-700">Header</h2>
+        <div
+          className="relative w-full h-32 rounded-sm overflow-hidden border rule cursor-pointer group"
+          onClick={() => headerInput.current?.click()}
+        >
+          {header ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={header} alt="Header" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-zinc-200/50 flex items-center justify-center text-zinc-400 text-xs">
+              {uploadingHeader ? "Uploading..." : "Click to upload header image"}
+            </div>
+          )}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+            {uploadingHeader ? (
+              <Loader variant="spinner" size={20} />
+            ) : (
+              <span className="text-xs text-white bg-black/40 px-2 py-1 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                {header ? "Change header" : "Upload header"}
+              </span>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Profile picture */}
+      <section className="space-y-2">
+        <div className="border-t rule" />
+        <h2 className="text-xs font-medium text-zinc-700">Profile picture</h2>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => pfpInput.current?.click()}
+            className="relative w-20 h-20 rounded-sm overflow-hidden border rule shrink-0 group"
+          >
+            {pfp ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={pfp} alt="PFP" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-zinc-200/50 flex items-center justify-center text-zinc-400 text-lg font-semibold">
+                {fallbackName.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+              {uploadingPfp ? (
+                <Loader variant="spinner" size={16} />
+              ) : (
+                <span className="text-xs text-white bg-black/40 px-2 py-1 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                  Change
+                </span>
+              )}
+            </div>
+          </button>
+          <div className="text-xs text-zinc-500">
+            <p>Click to upload a new profile picture.</p>
+            <p>JPG, PNG, WebP, or GIF. Max 2MB.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Bio */}
+      <section className="space-y-2">
+        <div className="border-t rule" />
+        <h2 className="text-xs font-medium text-zinc-700">Bio</h2>
+        <textarea
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
+          rows={3}
+          placeholder="Tell people about yourself..."
+          className="w-full bg-transparent border rule rounded-sm px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:border-accent resize-none"
+        />
+      </section>
+
+      {/* Social links */}
+      <section className="space-y-3">
+        <div className="border-t rule" />
+        <h2 className="text-xs font-medium text-zinc-700">Social links</h2>
+        <SocialField label="Website" value={website} onChange={setWebsite} placeholder="https://yoursite.com" />
+        <SocialField label="GitHub" value={github} onChange={setGithub} placeholder={login || "username"} />
+        <SocialField label="Twitter" value={twitter} onChange={setTwitter} placeholder="username" />
+        <SocialField label="Discord" value={discord} onChange={setDiscord} placeholder="username" />
+        <SocialField label="Telegram" value={telegram} onChange={setTelegram} placeholder="username" />
+        <SocialField label="Farcaster" value={farcaster} onChange={setFarcaster} placeholder="username" />
+      </section>
+
+      <div className="border-t rule" />
+
+      <div className="flex items-center gap-3">
+        <Button onClick={handleSave} disabled={saving}>
+          {saving ? "Saving..." : "Save profile"}
+        </Button>
+        {message && <span className="text-xs text-zinc-600">{message}</span>}
       </div>
     </div>
   );
+}
 
-  const login = (session?.user as any)?.login || session?.user?.name || session?.user?.email;
-
+function SocialField({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}) {
   return (
-    <div className="space-y-0">
-      <section className="py-12 md:py-16 border-b rule space-y-4">
-        <h1 className="serif text-4xl md:text-5xl font-semibold tracking-tight">{login}</h1>
-        {wallets.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-1">
-            {wallets.map((w: any) => (
-              <span key={w.address} className="stats text-xs text-zinc-600 border rule rounded-sm px-2 py-1">{truncate(w.address)}</span>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {registeredRepos.length > 0 && (
-        <section className="py-10 border-b rule">
-          <h2 className="serif text-lg font-semibold mb-4">Registered repos</h2>
-          <ul className="divide-y rule">
-            {registeredRepos.map((r: any) => {
-              const onChain = onChainMap[r.repo_id];
-              const pending = onChain ? (Number(onChain.pending) / 1e6).toFixed(2) : "—";
-              const total = onChain ? (Number(onChain.total) / 1e6).toFixed(2) : "—";
-              const isClaimant = address && contract && r.payout_address.toLowerCase() === address.toLowerCase();
-              return (
-                <li key={r.repo_id} className="py-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Link href={`/${r.repo_id}`} className="font-mono text-sm underline underline-offset-4 hover:text-accent">{r.repo_id}</Link>
-                      <div className="flex gap-4 mt-1">
-                        <span className="stats text-xs text-zinc-500">pending: ${pending}</span>
-                        <span className="stats text-xs text-zinc-500">total: ${total}</span>
-                        <span className="stats text-xs text-zinc-500">{r.tip_count} tips</span>
-                      </div>
-                    </div>
-                    {isClaimant && (
-                      <Link href={`/${r.repo_id}`}><Button size="sm" variant="secondary">Claim</Button></Link>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
-
-      <section className="py-10">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="serif text-lg font-semibold">GitHub repos</h2>
-          {!loading && repos.length > 0 && (
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search repos..." className="h-9 w-full bg-transparent border rule rounded-sm pl-9 pr-3 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:border-accent" />
-            </div>
-          )}
-        </div>
-
-        {loading ? (
-          <div className="py-12 flex justify-center"><Loader variant="dots" size={20} /></div>
-        ) : repos.length === 0 ? (
-          <p className="text-sm text-zinc-500 mt-3">No repos found.</p>
-        ) : filtered.length === 0 ? (
-          <p className="text-sm text-zinc-500 mt-3">No repos match &ldquo;{search}&rdquo;</p>
-        ) : (
-          <>
-            <ul className="mt-4 divide-y rule">
-              {paged.map((r: any) => (
-                <li key={r.full_name} className="flex items-center justify-between py-4">
-                  <div className="flex items-center gap-4">
-                    <img src={r.avatar_url} alt={r.owner} width={32} height={32} className="rounded-sm" />
-                    <div>
-                      <div className="font-mono text-sm">{r.full_name}</div>
-                      {r.description && <div className="text-xs text-zinc-500 truncate max-w-[40ch]">{r.description}</div>}
-                    </div>
-                  </div>
-                  <Link href={`/${r.full_name}`} className="text-sm underline underline-offset-4 text-zinc-700">View</Link>
-                </li>
-              ))}
-            </ul>
-
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6 pt-4 border-t rule">
-                <span className="text-xs text-zinc-500">{filtered.length} repos · page {currentPage} of {totalPages}</span>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" disabled={currentPage <= 1} onClick={() => setPage(p => p - 1)}>← Prev</Button>
-                  <Button variant="ghost" size="sm" disabled={currentPage >= totalPages} onClick={() => setPage(p => p + 1)}>Next →</Button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </section>
-
-      {address && contract && (
-        <section className="py-8 border-t rule">
-          <span className="stats text-xs text-zinc-500 border rule rounded-sm px-2 py-1">{truncate(address)}</span>
-          <span className="text-xs text-zinc-500 ml-3">check repo pages for pending and Claim.</span>
-        </section>
-      )}
+    <div className="flex items-center gap-3">
+      <label className="text-xs text-zinc-500 w-20 shrink-0">{label}</label>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="flex-1 bg-transparent border rule rounded-sm px-3 py-1.5 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:border-accent"
+      />
     </div>
   );
 }

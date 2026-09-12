@@ -40,4 +40,6 @@
   .stats { font-family: var(--font-plex-mono), ui-monospace, monospace; }
   .rule { border-color: hsl(var(--hairline)); }
   ::selection { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 }

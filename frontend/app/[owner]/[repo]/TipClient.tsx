@@ -14,6 +14,7 @@ import { Coins, Wallet, Copy } from "lucide-react";
 function truncate(addr: string){ return addr.slice(0,6)+"..."+addr.slice(-4); }
 
 export default function TipClient({ repoId, owner, repo }: { repoId: string; owner:string; repo:string }) {
+  const repoIdLower = repoId.toLowerCase();
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
   const { data: session } = useSession();
@@ -22,10 +23,10 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
   const contract = getContractAddress();
   const usdc = getUsdcAddress();
 
-  const { data: isRegistered, isPending: isRegPending } = useReadContract({ address: contract, abi: opentipAbi, functionName: "isRegistered", args: [repoId], query: { enabled: !!contract } });
-  const { data: pending } = useReadContract({ address: contract, abi: opentipAbi, functionName: "getPendingBalance", args: [repoId], query: { enabled: !!contract && !!isRegistered } });
-  const { data: totalTipped, isPending: isTotalPending } = useReadContract({ address: contract, abi: opentipAbi, functionName: "getTotalTipped", args: [repoId], query: { enabled: !!contract } });
-  const { data: payout } = useReadContract({ address: contract, abi: opentipAbi, functionName: "getPayoutAddress", args: [repoId], query: { enabled: !!contract && !!isRegistered } });
+  const { data: isRegistered, isPending: isRegPending } = useReadContract({ address: contract, abi: opentipAbi, functionName: "isRegistered", args: [repoIdLower], query: { enabled: !!contract } });
+  const { data: pending } = useReadContract({ address: contract, abi: opentipAbi, functionName: "getPendingBalance", args: [repoIdLower], query: { enabled: !!contract && !!isRegistered } });
+  const { data: totalTipped, isPending: isTotalPending } = useReadContract({ address: contract, abi: opentipAbi, functionName: "getTotalTipped", args: [repoIdLower], query: { enabled: !!contract } });
+  const { data: payout } = useReadContract({ address: contract, abi: opentipAbi, functionName: "getPayoutAddress", args: [repoIdLower], query: { enabled: !!contract && !!isRegistered } });
   const { data: allowance } = useReadContract({ address: usdc, abi: usdcAbi, functionName: "allowance", args: address && contract ? [address, contract] : undefined, query: { enabled: !!address && !!usdc && !!contract && !!isRegistered } as any });
 
   const [amount, setAmount] = useState("5");
@@ -38,7 +39,7 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
   const [tipFlow, setTipFlow] = useState<"idle"|"approving"|"sending"|"success"|"error">("idle");
   const [claimState, setClaimState] = useState<"idle"|"loading"|"success"|"error">("idle");
   const [registerState, setRegisterState] = useState<"idle"|"loading"|"success"|"error">("idle");
-  const [ownership, setOwnership] = useState<{ owns?: boolean; via?: string; loading?: boolean }>({});
+  const [ownership, setOwnership] = useState<{ owns?: boolean; via?: string; loading?: boolean; signature?: string; expiry?: string; nonce?: string }>({});
   const [wallets, setWallets] = useState<any[]>([]);
   const loadingToastRef = useRef<string | null>(null);
 
@@ -56,9 +57,9 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
   }, [session]);
 
   useEffect(()=>{ setTipsLoading(true); Promise.all([
-    fetch(`/api/tips?repoId=${encodeURIComponent(repoId)}`).then(r=>r.json()).then(setTips).catch(()=>{}),
-    fetch(`/api/leaderboard?repoId=${encodeURIComponent(repoId)}`).then(r=>r.json()).then(setLeaderboard).catch(()=>{})
-  ]).finally(()=>setTipsLoading(false)); }, [repoId]);
+    fetch(`/api/tips?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setTips).catch(()=>{}),
+    fetch(`/api/leaderboard?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setLeaderboard).catch(()=>{})
+  ]).finally(()=>setTipsLoading(false)); }, [repoIdLower]);
 
   const approveW = useWriteContract();
   const tipW = useWriteContract();
@@ -81,8 +82,8 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
     if (tipFlow==="approving" && approveReceipt.isSuccess && approveW.data) {
       const baseUnits = parseUnits(amount, 6);
       setTipFlow("sending");
-      showLoading("Sending tip...", `${amount} USDC → ${repoId}`);
-      tipW.writeContract({ address: contract!, abi: opentipAbi, functionName: "receiveTip", args: [repoId, baseUnits] });
+      showLoading("Sending tip...", `${amount} USDC → ${repoIdLower}`);
+      tipW.writeContract({ address: contract!, abi: opentipAbi, functionName: "receiveTip", args: [repoIdLower, baseUnits] });
     }
     if (tipFlow==="approving" && approveReceipt.isError) {
       if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
@@ -94,10 +95,10 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
   useEffect(()=>{
     if (tipFlow==="sending" && tipReceipt.isSuccess) {
       if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
-      showToast({ status:"success", title:"Tip sent", description:`${amount} ${currency} → ${repoId}` });
+      showToast({ status:"success", title:"Tip sent", description:`${amount} ${currency} → ${repoIdLower}` });
       setTipFlow("success"); setTimeout(()=>setTipFlow("idle"), 1600);
-      fetch(`/api/tips?repoId=${encodeURIComponent(repoId)}`).then(r=>r.json()).then(setTips).catch(()=>{});
-      fetch(`/api/leaderboard?repoId=${encodeURIComponent(repoId)}`).then(r=>r.json()).then(setLeaderboard).catch(()=>{});
+      fetch(`/api/tips?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setTips).catch(()=>{});
+      fetch(`/api/leaderboard?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setLeaderboard).catch(()=>{});
     }
     if (tipFlow==="sending" && tipReceipt.isError) {
       if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
@@ -112,7 +113,7 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
   }, [claimReceipt.isSuccess, claimReceipt.isError]);
 
   useEffect(()=>{
-    if (registerState==="loading" && registerReceipt.isSuccess) { setRegisterState("success"); showToast({ status:"success", title:"Registered", description: repoId }); setTimeout(()=>setRegisterState("idle"),1600); }
+    if (registerState==="loading" && registerReceipt.isSuccess) { setRegisterState("success"); showToast({ status:"success", title:"Registered", description: repoIdLower }); setTimeout(()=>setRegisterState("idle"),1600); }
     if (registerState==="loading" && registerReceipt.isError) { setRegisterState("error"); showToast({ status:"error", title:"Register failed" }); setTimeout(()=>setRegisterState("idle"),2000); }
   }, [registerReceipt.isSuccess, registerReceipt.isError]);
 
@@ -142,32 +143,56 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
       approveW.writeContract({ address: usdc!, abi: usdcAbi, functionName: "approve", args: [contract!, baseUnits] });
     } else {
       setTipFlow("sending");
-      showLoading("Sending tip...", `${amount} USDC → ${repoId}`);
-      tipW.writeContract({ address: contract!, abi: opentipAbi, functionName: "receiveTip", args: [repoId, baseUnits] });
+      showLoading("Sending tip...", `${amount} USDC → ${repoIdLower}`);
+      tipW.writeContract({ address: contract!, abi: opentipAbi, functionName: "receiveTip", args: [repoIdLower, baseUnits] });
     }
   };
 
   const onClaim = () => {
     if (!contract) return;
     setClaimState("loading");
-    claimW.writeContract({ address: contract, abi: opentipAbi, functionName: "claim", args: [repoId] });
+    claimW.writeContract({ address: contract, abi: opentipAbi, functionName: "claim", args: [repoIdLower] });
   };
 
-  const onRegister = () => {
+  const onRegister = async () => {
     if (!contract || !address) return;
-    setRegisterState("loading");
-    registerW.writeContract({ address: contract, abi: opentipAbi, functionName: "registerRepo", args: [repoId, address] });
+    // If we already have a signature, use it directly
+    if (ownership.signature && ownership.expiry && ownership.nonce) {
+      setRegisterState("loading");
+      registerW.writeContract({
+        address: contract,
+        abi: opentipAbi,
+        functionName: "registerRepo",
+        args: [repoIdLower, address as `0x${string}`, BigInt(ownership.expiry), BigInt(ownership.nonce), ownership.signature as `0x${string}`],
+      });
+      return;
+    }
+    // Otherwise, get signature from backend first
+    await checkOwnershipAndSign();
   };
 
-  const checkOwnership = async () => {
+  const checkOwnershipAndSign = async () => {
+    if (!address) { showToast({ status: "error", title: "Connect wallet first" }); return; }
     setOwnership({ loading: true });
-    const res = await fetch(`/api/verify-ownership?repoId=${encodeURIComponent(repoId)}`);
-    const j = await res.json();
-    setOwnership({ owns: j.owns, via: j.via, loading: false });
+    try {
+      const res = await fetch("/api/verify-ownership", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ repoId: repoIdLower, payoutAddress: address }),
+      });
+      const j = await res.json();
+      if (j.ok) {
+        setOwnership({ owns: true, via: "github", loading: false, signature: j.signature, expiry: j.expiry, nonce: j.nonce });
+      } else {
+        setOwnership({ owns: false, loading: false });
+      }
+    } catch {
+      setOwnership({ owns: false, loading: false });
+    }
   };
 
   const copyLink = async () => {
-    const url = `https://opentip.xyz/${repoId}`;
+    const url = `https://opentip.xyz/${repoIdLower}`;
     await navigator.clipboard.writeText(url);
     showToast({ status:"success", title:"Copied", description: url });
   };
@@ -233,7 +258,7 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-zinc-600 max-w-lg">Verify you own <code className="font-mono text-sm">{repoId}</code>, then register to start receiving tips.</p>
+              <p className="text-zinc-600 max-w-lg">Verify you own <code className="font-mono text-sm">{repoIdLower}</code>, then register to start receiving tips.</p>
               {ownership.loading ? (
                 <Loader variant="dots" />
               ) : ownership.owns ? (
@@ -246,10 +271,10 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
               ) : ownership.owns === false ? (
                 <div className="space-y-3">
                   <p className="text-sm text-red-600">Not owner. Ensure you have admin/write on GitHub.</p>
-                  <Button variant="secondary" onClick={checkOwnership}>Re-check</Button>
+                  <Button variant="secondary" onClick={checkOwnershipAndSign}>Re-check</Button>
                 </div>
               ) : (
-                <Button onClick={checkOwnership}>Verify ownership</Button>
+                <Button onClick={checkOwnershipAndSign}>Verify ownership</Button>
               )}
             </div>
           )}
@@ -257,7 +282,7 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
       ) : (
         /* Registered — tip form */
         <section className="py-10 border-b rule space-y-6">
-          <h2 className="serif text-2xl font-semibold">Tip {repoId}</h2>
+          <h2 className="serif text-2xl font-semibold">Tip {repoIdLower}</h2>
 
           <div className="flex gap-3 items-end">
             <div className="flex-1 max-w-[200px]">
@@ -309,7 +334,7 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
               {leaderboard.map((r:any)=>(
                 <li key={r.tipper_address} className="flex justify-between py-3">
                   <span className="text-sm text-zinc-700">{r.display_name || truncate(r.tipper_address)}</span>
-                  <span className="stats text-sm text-zinc-900">{(Number(r.total)/1e6).toFixed(2)}</span>
+                  <span className="stats text-sm text-zinc-900">${(Number(r.total)/1e6).toFixed(2)}</span>
                 </li>
               ))}
             </ul>
@@ -326,7 +351,7 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
               {tips.slice(0,10).map((t:any)=>(
                 <li key={t.id} className="flex justify-between py-3">
                   <span className="text-xs text-zinc-600">{truncate(t.tipper_address)}</span>
-                  <span className="stats text-sm text-zinc-900">{(Number(t.usdc_amount)/1e6).toFixed(2)}</span>
+                  <span className="stats text-sm text-zinc-900">${(Number(t.usdc_amount)/1e6).toFixed(2)}</span>
                 </li>
               ))}
             </ul>

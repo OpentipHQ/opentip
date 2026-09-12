@@ -4,7 +4,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest) {
-  const repoId = req.nextUrl.searchParams.get("repoId");
+  const repoId = req.nextUrl.searchParams.get("repoId")?.toLowerCase() || null;
   const limit = Math.min(100, Math.max(1, parseInt(req.nextUrl.searchParams.get("limit") || "50", 10)));
   const page = Math.max(1, parseInt(req.nextUrl.searchParams.get("page") || "1", 10));
   const offset = (page - 1) * limit;

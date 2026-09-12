@@ -46,15 +46,35 @@ model User {
   name          String?
   email         String?   @unique
   emailVerified DateTime?
-  passwordHash  String?
-  image         String?
-  githubId      String?   @unique
-  login         String?   @unique
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  passwordHash    String?
+  resetToken      String?
+  resetTokenExpiry DateTime?
+  pfp             String?  @db.Text
+  header          String?  @db.Text
+  image           String?
+  githubId        String?   @unique
+  login           String?   @unique
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
   accounts      Account[]
   sessions      Session[]
   wallets       UserWallet[]
+  profile       DeveloperProfile?
+}
+
+model DeveloperProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  bio          String?  @db.Text
+  website      String?  @db.VarChar(255)
+  twitter      String?  @db.VarChar(255)
+  discord      String?  @db.VarChar(255)
+  telegram     String?  @db.VarChar(255)
+  farcaster    String?  @db.VarChar(255)
+  github       String?  @db.VarChar(255)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Account {
@@ -97,4 +117,25 @@ model UserWallet {
   linkedAt  DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@index([userId])
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  address   String   @unique @db.VarChar(42)
+  role      String   @default("admin")
+  addedBy   String?  @db.VarChar(42)
+  createdAt DateTime @default(now())
+}
+
+model AdminAuditLog {
+  id        String   @id @default(cuid())
+  adminAddr String   @db.VarChar(42)
+  action    String
+  params    Json
+  txHash    String?
+  timestamp DateTime @default(now())
+
+  @@index([adminAddr])
+  @@index([action])
+  @@index([timestamp])
 }

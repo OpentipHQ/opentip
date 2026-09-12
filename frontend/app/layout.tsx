@@ -9,7 +9,11 @@ const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", dis
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const plexMono = IBM_Plex_Mono({ weight: ["400","500"], subsets: ["latin"], variable: "--font-plex-mono", display: "swap" });
 
-export const metadata = { title: "Opentip — tip any GitHub repo in crypto", description: "Open-source tip jar on Base. ETH/USDC → USDC pull payments." };
+export const metadata = {
+  title: "Opentip — tip any GitHub repo in crypto",
+  description: "Open-source tip jar on Base. ETH/USDC → USDC pull payments.",
+  icons: { icon: "/Opentip.png" },
+};
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const headersObj = await headers();
@@ -20,7 +24,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Providers cookies={cookies}>
           <header className="border-b rule sticky top-0 bg-[#c1c0b6]/80 backdrop-blur z-10">
             <nav className="w-full px-6 md:px-10 py-5 flex items-center justify-between relative">
-              <Link href="/" className="serif font-semibold text-2xl tracking-tight">Opentip</Link>
+              <Link href="/" className="flex items-center gap-2.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/Opentip.png" alt="" className="w-7 h-7" />
+                <span className="serif font-semibold text-2xl tracking-tight">Opentip</span>
+              </Link>
               <div className="hidden md:flex gap-x-8 text-sm items-center text-zinc-700 absolute left-1/2 -translate-x-1/2">
                 {[
                   { href: "/repos", label: "Repos" },

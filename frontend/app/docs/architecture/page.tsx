@@ -212,49 +212,6 @@ Both flows:
       </section>
 
       <section className="border-t rule pt-10 space-y-6">
-        <h2 className="serif text-2xl font-semibold">Security headers</h2>
-        <p className="text-sm text-zinc-700 leading-relaxed">
-          All routes receive security headers via <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">proxy.ts</code>:
-        </p>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b rule">
-                <th className="text-left py-3 pr-4 font-medium">Header</th>
-                <th className="text-left py-3 font-medium">Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b rule">
-                <td className="py-3 pr-4 font-mono text-xs">X-Frame-Options</td>
-                <td className="py-3">DENY</td>
-              </tr>
-              <tr className="border-b rule">
-                <td className="py-3 pr-4 font-mono text-xs">X-Content-Type-Options</td>
-                <td className="py-3">nosniff</td>
-              </tr>
-              <tr className="border-b rule">
-                <td className="py-3 pr-4 font-mono text-xs">Referrer-Policy</td>
-                <td className="py-3">strict-origin-when-cross-origin</td>
-              </tr>
-              <tr className="border-b rule">
-                <td className="py-3 pr-4 font-mono text-xs">HSTS</td>
-                <td className="py-3">max-age=63072000; includeSubDomains; preload</td>
-              </tr>
-              <tr className="border-b rule">
-                <td className="py-3 pr-4 font-mono text-xs">CSP</td>
-                <td className="py-3">Restricts scripts, styles, images, connections to known origins</td>
-              </tr>
-              <tr className="border-b rule">
-                <td className="py-3 pr-4 font-mono text-xs">Permissions-Policy</td>
-                <td className="py-3">camera=(), microphone=(), geolocation=()</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="border-t rule pt-10 space-y-6">
         <h2 className="serif text-2xl font-semibold">Environment variables</h2>
         <p className="text-sm text-zinc-700 leading-relaxed">
           The frontend requires 19 environment variables to run (including <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">GROQ_API_KEY</code> for AI summaries). The indexer requires 6.

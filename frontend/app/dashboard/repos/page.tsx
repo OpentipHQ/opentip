@@ -5,7 +5,8 @@ import Link from "next/link";
 import { Button } from "@/components/motion/button";
 import { Loader } from "@/components/motion/loader";
 import { useAccount, useReadContracts } from "wagmi";
-import { getContractAddress, opentipAbi } from "@/lib/contract";
+import { opentipAbi } from "@/lib/contract";
+import { CONTRACT_ADDRESS, CHAIN_ID } from "@/lib/chain";
 
 type LinkItem = { title: string; url: string };
 
@@ -133,14 +134,14 @@ function LinksEditor({ repoId, onClose }: { repoId: string; onClose: () => void 
 export default function DashboardRepos() {
   const { status } = useSession();
   const { address } = useAccount();
-  const contract = getContractAddress();
+  const contract = CONTRACT_ADDRESS;
   const [registeredRepos, setRegisteredRepos] = useState<any[]>([]);
   const [loadingRegistered, setLoadingRegistered] = useState(true);
   const [expandedRepo, setExpandedRepo] = useState<string | null>(null);
 
   const onChainContracts = contract && registeredRepos.length > 0 ? registeredRepos.flatMap((r: any) => [
-    { address: contract, abi: opentipAbi, functionName: "getPendingBalance" as const, args: [r.repo_id] },
-    { address: contract, abi: opentipAbi, functionName: "getTotalTipped" as const, args: [r.repo_id] },
+    { address: contract, abi: opentipAbi, functionName: "getPendingBalance" as const, args: [r.repo_id], chainId: CHAIN_ID },
+    { address: contract, abi: opentipAbi, functionName: "getTotalTipped" as const, args: [r.repo_id], chainId: CHAIN_ID },
   ]) : [];
 
   const { data: onChainData } = useReadContracts({ contracts: onChainContracts });
@@ -185,7 +186,7 @@ export default function DashboardRepos() {
             const isExpanded = expandedRepo === r.repo_id;
             return (
               <li key={r.repo_id} className="py-4">
-                <div className="flex items-center justify-between">
+<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
                   <div>
                     <Link href={`/${r.repo_id}`} className="font-mono text-sm underline underline-offset-4 hover:text-accent">{r.repo_id}</Link>
                     <div className="flex gap-4 mt-1">

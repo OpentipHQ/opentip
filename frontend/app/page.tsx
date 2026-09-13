@@ -29,13 +29,13 @@ export default function Home() {
       <section className="py-32 md:py-52 border-b rule">
         <div className="grid md:grid-cols-12 gap-12 md:gap-8">
           <div className="md:col-span-8 space-y-8">
-            <h1 className="serif text-6xl md:text-8xl lg:text-[7rem] xl:text-[8rem] font-semibold leading-[0.85] tracking-tight">
+            <h1 className="serif fluid-hero font-semibold leading-[1.0] tracking-tight">
               Support the humans<br />behind the <span className="underline decoration-accent decoration-2 underline-offset-4">code</span>
             </h1>
             <p className="text-zinc-700 max-w-lg text-lg leading-relaxed">
               Every repo you <code className="font-mono text-sm bg-accent/10 text-accent px-1.5 py-0.5 rounded-sm">git clone</code> was built by someone who probably wasn&apos;t paid for it. Opentip makes it easy to change that &mdash; send a tip in ETH or USDC, straight to their wallet.
             </p>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <Link href="/repos"><Button size="lg" className="px-8">Find a repo</Button></Link>
               <Link href="/activity"><Button variant="ghost" size="lg">See who&apos;s been tipped</Button></Link>
             </div>
@@ -62,7 +62,7 @@ export default function Home() {
       <section className="py-16 md:py-24 border-b rule">
         <div className="grid md:grid-cols-12 gap-12">
           <div className="md:col-span-4">
-            <h2 className="serif text-3xl md:text-4xl font-semibold tracking-tight">Open source runs on gratitude. Gratitude doesn&apos;t pay rent</h2>
+            <h2 className="serif fluid-heading font-semibold tracking-tight">Open source runs on gratitude. Gratitude doesn&apos;t pay rent</h2>
           </div>
           <div className="md:col-span-8">
             <p className="text-zinc-700 text-lg leading-relaxed max-w-2xl">
@@ -76,7 +76,7 @@ export default function Home() {
       <section className="py-16 md:py-24 border-b rule">
         <div className="grid md:grid-cols-12 gap-12">
           <div className="md:col-span-4">
-            <h2 className="serif text-3xl md:text-4xl font-semibold tracking-tight">How it works</h2>
+            <h2 className="serif fluid-heading font-semibold tracking-tight">How it works</h2>
           </div>
           <div className="md:col-span-8 space-y-10">
             <div className="space-y-4 border-t rule pt-6">
@@ -113,7 +113,7 @@ export default function Home() {
       <section className="py-16 md:py-24 border-b rule">
         <div className="grid md:grid-cols-12 gap-12">
           <div className="md:col-span-4">
-            <h2 className="serif text-3xl md:text-4xl font-semibold tracking-tight">Why it&apos;s built this way</h2>
+            <h2 className="serif fluid-heading font-semibold tracking-tight">Why it&apos;s built this way</h2>
           </div>
           <div className="md:col-span-8 grid sm:grid-cols-2 gap-x-8 gap-y-6">
             <div className="space-y-2 border-t rule pt-4">
@@ -148,10 +148,10 @@ export default function Home() {
       <section className="py-16 md:py-24 border-b rule">
         <div className="grid md:grid-cols-12 gap-12">
           <div className="md:col-span-4">
-            <h2 className="serif text-3xl md:text-4xl font-semibold tracking-tight">For developers</h2>
+            <h2 className="serif fluid-heading font-semibold tracking-tight">For developers</h2>
           </div>
           <div className="md:col-span-8 space-y-6">
-            <h3 className="serif text-2xl md:text-3xl font-semibold tracking-tight">Claim your repo. Takes about a minute.</h3>
+            <h3 className="serif fluid-subheading font-semibold tracking-tight">Claim your repo. Takes about a minute.</h3>
             <p className="text-zinc-700 text-lg leading-relaxed max-w-2xl">
               Sign in with GitHub, we confirm you actually own (or maintain) the repo, then you link a wallet. That&apos;s the entire setup. From then on, anyone in the world can send you a tip at <code className="font-mono text-sm">opentip.tech/you/your-repo</code>, and it&apos;s waiting for you to claim whenever you want.
             </p>
@@ -166,11 +166,11 @@ export default function Home() {
       <section className="py-16 md:py-24 border-b rule">
         <div className="grid md:grid-cols-12 gap-12">
           <div className="md:col-span-4">
-            <h2 className="serif text-3xl md:text-4xl font-semibold tracking-tight">Fee breakdown</h2>
+            <h2 className="serif fluid-heading font-semibold tracking-tight">Fee breakdown</h2>
             <p className="text-zinc-600 text-sm mt-3 max-w-xs">No fine print. This is the whole thing.</p>
           </div>
           <div className="md:col-span-8">
-            <div className="grid grid-cols-3 gap-4 border-t rule pt-6">
+            <div className="fluid-grid-3 gap-4 border-t rule pt-6">
               <div>
                 <div className="stats text-4xl font-bold tracking-tight">95%</div>
                 <div className="text-xs text-zinc-600 mt-1">Goes to developer</div>
@@ -192,7 +192,7 @@ export default function Home() {
       <section className="py-16 md:py-24 border-b rule">
         <div className="grid md:grid-cols-12 gap-12">
           <div className="md:col-span-4">
-            <h2 className="serif text-3xl md:text-4xl font-semibold tracking-tight">FAQ</h2>
+            <h2 className="serif fluid-heading font-semibold tracking-tight">FAQ</h2>
           </div>
           <div className="md:col-span-8">
             {[
@@ -226,7 +226,7 @@ export default function Home() {
 
       {/* Closing */}
       <section className="py-16 md:py-24 text-center space-y-6">
-        <h2 className="serif text-4xl md:text-5xl font-semibold tracking-tight leading-[0.95]">
+        <h2 className="serif fluid-page-title font-semibold tracking-tight leading-[0.95]">
           Say thanks in a way that counts
         </h2>
         <div>

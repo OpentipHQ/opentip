@@ -51,7 +51,7 @@ export default function HeaderAuth() {
               {login?.charAt(0)?.toUpperCase()}
             </div>
           )}
-          <span className="text-sm text-zinc-700 hover:text-zinc-900">{login}</span>
+          <span className="text-sm text-zinc-700 hover:text-zinc-900 hidden sm:inline">{login}</span>
         </button>
 
         {open && (

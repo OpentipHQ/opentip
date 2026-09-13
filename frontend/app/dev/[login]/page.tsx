@@ -1,16 +1,15 @@
 import { notFound } from "next/navigation";
 import { createPublicClient, http } from "viem";
-import { baseSepolia, base } from "viem/chains";
-import { opentipAbi, getContractAddress } from "@/lib/contract";
+import { opentipAbi } from "@/lib/contract";
+import { VIEM_CHAIN, CONTRACT_ADDRESS } from "@/lib/chain";
 import { prisma } from "@/lib/prisma";
 import ProfileClient from "./ProfileClient";
 
-const chain = process.env.NEXT_PUBLIC_CHAIN === "base" ? base : baseSepolia;
 const rpcUrl = process.env.NEXT_PUBLIC_CHAIN === "base"
   ? "https://mainnet.base.org"
   : "https://sepolia.base.org";
 
-const client = createPublicClient({ chain, transport: http(rpcUrl) });
+const client = createPublicClient({ chain: VIEM_CHAIN, transport: http(rpcUrl) });
 
 async function fetchContributions(login: string) {
   try {
@@ -97,7 +96,7 @@ export default async function DevProfilePage({
     }])
   );
 
-  const contractAddress = getContractAddress();
+  const contractAddress = CONTRACT_ADDRESS;
 
   let totalTippedOnChain = BigInt(0);
   let totalPendingOnChain = BigInt(0);

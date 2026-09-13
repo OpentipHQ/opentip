@@ -2,10 +2,8 @@ import { NextRequest } from "next/server";
 import { handleAdminRequest } from "@/lib/admin-api";
 import { prisma } from "@/lib/prisma";
 import { createPublicClient, http } from "viem";
-import { baseSepolia, base } from "viem/chains";
-import { opentipAbi, getContractAddress } from "@/lib/contract";
-
-const chain = process.env.NEXT_PUBLIC_CHAIN === "base" ? base : baseSepolia;
+import { opentipAbi } from "@/lib/contract";
+import { VIEM_CHAIN, CONTRACT_ADDRESS } from "@/lib/chain";
 
 export async function GET(req: NextRequest) {
   return handleAdminRequest(req, "read", async () => {
@@ -29,11 +27,10 @@ export async function GET(req: NextRequest) {
 
     let treasuryBalance = "0";
     try {
-      const client = createPublicClient({ chain, transport: http() });
-      const contract = getContractAddress();
-      if (contract) {
+      const client = createPublicClient({ chain: VIEM_CHAIN, transport: http() });
+      if (CONTRACT_ADDRESS) {
         const bal = await client.readContract({
-          address: contract,
+          address: CONTRACT_ADDRESS,
           abi: opentipAbi,
           functionName: "getTreasuryBalance",
         });

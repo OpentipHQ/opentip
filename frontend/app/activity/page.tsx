@@ -42,7 +42,7 @@ export default function ActivityFeed() {
   return (
     <div className="space-y-0">
       <section className="py-12 md:py-16 border-b rule space-y-4">
-        <h1 className="serif text-4xl md:text-5xl font-semibold tracking-tight">Activity</h1>
+        <h1 className="serif fluid-page-title font-semibold tracking-tight">Activity</h1>
         <p className="text-zinc-600 text-sm max-w-xs">Every tip, as it happens.</p>
       </section>
 
@@ -59,7 +59,7 @@ export default function ActivityFeed() {
             <ul className="divide-y rule">
               {tips.map((t: any) => (
                 <li key={t.id} className="py-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <Link href={`/${t.repo_id}`} className="font-mono text-sm underline underline-offset-4 hover:text-accent">{t.repo_id}</Link>

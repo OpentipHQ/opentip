@@ -5,7 +5,8 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { useAppKit } from "@reown/appkit/react";
 import { signIn, useSession } from "next-auth/react";
 import { parseUnits, formatUnits, parseEther } from "viem";
-import { opentipAbi, usdcAbi, getContractAddress, getUsdcAddress } from "@/lib/contract";
+import { opentipAbi, usdcAbi } from "@/lib/contract";
+import { CONTRACT_ADDRESS, USDC_ADDRESS, CHAIN_ID } from "@/lib/chain";
 import { getRelayQuote } from "@/lib/relay";
 import { useToast } from "@/app/providers";
 import { Input } from "@/components/motion/input";
@@ -18,20 +19,19 @@ function truncate(addr: string){ return addr.slice(0,6)+"..."+addr.slice(-4); }
 export default function TipClient({ repoId }: { repoId: string }) {
   const router = useRouter();
   const repoIdLower = repoId.toLowerCase();
-  const { address, isConnected, chain } = useAccount();
-  const isTestnet = chain?.id === 84532;
+  const { address, isConnected } = useAccount();
   const { open } = useAppKit();
   const { data: session } = useSession();
   const { showToast, updateToast, dismissToast } = useToast();
   const { signMessageAsync } = useSignMessage();
-  const contract = getContractAddress();
-  const usdc = getUsdcAddress();
+  const contract = CONTRACT_ADDRESS;
+  const usdc = USDC_ADDRESS;
 
-  const { data: isRegistered, isPending: isRegPending } = useReadContract({ address: contract, abi: opentipAbi, functionName: "isRegistered", args: [repoIdLower], query: { enabled: !!contract } });
-  const { data: pending } = useReadContract({ address: contract, abi: opentipAbi, functionName: "getPendingBalance", args: [repoIdLower], query: { enabled: !!contract && !!isRegistered } });
-  const { data: totalTipped, isPending: isTotalPending } = useReadContract({ address: contract, abi: opentipAbi, functionName: "getTotalTipped", args: [repoIdLower], query: { enabled: !!contract } });
-  const { data: payout } = useReadContract({ address: contract, abi: opentipAbi, functionName: "getPayoutAddress", args: [repoIdLower], query: { enabled: !!contract && !!isRegistered } });
-  const { data: allowance } = useReadContract({ address: usdc, abi: usdcAbi, functionName: "allowance", args: address && contract ? [address, contract] : undefined, query: { enabled: !!address && !!usdc && !!contract && !!isRegistered } as any });
+  const { data: isRegistered, isPending: isRegPending } = useReadContract({ address: contract, abi: opentipAbi, functionName: "isRegistered", args: [repoIdLower], chainId: CHAIN_ID, query: { enabled: !!contract } });
+  const { data: pending } = useReadContract({ address: contract, abi: opentipAbi, functionName: "getPendingBalance", args: [repoIdLower], chainId: CHAIN_ID, query: { enabled: !!contract && !!isRegistered } });
+  const { data: totalTipped, isPending: isTotalPending } = useReadContract({ address: contract, abi: opentipAbi, functionName: "getTotalTipped", args: [repoIdLower], chainId: CHAIN_ID, query: { enabled: !!contract } });
+  const { data: payout } = useReadContract({ address: contract, abi: opentipAbi, functionName: "getPayoutAddress", args: [repoIdLower], chainId: CHAIN_ID, query: { enabled: !!contract && !!isRegistered } });
+  const { data: allowance } = useReadContract({ address: usdc, abi: usdcAbi, functionName: "allowance", args: address && contract ? [address, contract] : undefined, chainId: CHAIN_ID, query: { enabled: !!address && !!usdc && !!contract && !!isRegistered } as any });
 
   const [amount, setAmount] = useState("5");
   const [currency, setCurrency] = useState<"USDC"|"ETH">("USDC");
@@ -166,13 +166,11 @@ export default function TipClient({ repoId }: { repoId: string }) {
     if (err) { showToast({ status:"error", title: err }); return; }
     if (!isConnected || !address || !contract) { showToast({ status:"error", title:"Connect wallet" }); return; }
     if (currency==="ETH") {
-      if (isTestnet) { showToast({ status:"error", title:"ETH tips not available on testnet", description:"Tip in USDC directly" }); return; }
       setTipFlow("sending");
-      const chainId = 8453;
       const wei = parseEther(amount).toString();
       const id = showLoading("Fetching Relay quote...", `${amount} ETH → USDC`);
       try {
-        const quote = await getRelayQuote({ chainId, amountWei: wei, recipient: address });
+        const quote = await getRelayQuote({ amountWei: wei, recipient: address });
         updateToast(id, { status:"loading", title:"Confirm in wallet", description:`${amount} ETH → USDC`, duration: 0 });
         const tx = quote.steps[0].items[0].data;
         relaySend.sendTransaction({
@@ -258,13 +256,13 @@ export default function TipClient({ repoId }: { repoId: string }) {
 
   const tipButtonText = tipFlow==="approving" ? "Approving spend..." : tipFlow==="sending" ? "Sending..." : tipFlow==="success" ? "Tip sent" : tipFlow==="error" ? "Try again" : `Tip ${amount} ${currency}`;
 
-  if (contract === undefined) return <div className="py-12 text-sm text-zinc-600">Set NEXT_PUBLIC_BASE_CONTRACT in .env</div>;
+  if (contract === undefined) return <div className="py-12 text-sm text-zinc-600">Contract address not configured. Set NEXT_PUBLIC_BASE_CONTRACT or NEXT_PUBLIC_BASE_SEPOLIA_CONTRACT in .env</div>;
 
   return (
     <div className="space-y-0">
 
       {/* Stats strip */}
-      <section className="py-8 border-b rule grid grid-cols-3 gap-4">
+      <section className="py-8 border-b rule fluid-grid-3 gap-4">
         <div>
           <div className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">Pending</div>
           <div className="stats mt-2 text-2xl flex items-baseline gap-2 text-zinc-900">
@@ -272,14 +270,14 @@ export default function TipClient({ repoId }: { repoId: string }) {
             <span className="text-xs text-zinc-500 font-sans">USDC</span>
           </div>
         </div>
-        <div className="border-l rule pl-4">
+        <div className="border-b sm:border-b-0 sm:border-l rule pl-4">
           <div className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">Total tipped</div>
           <div className="stats mt-2 text-2xl flex items-baseline gap-2 text-zinc-900">
             {isTotalPending ? <Loader size={16} variant="dots" /> : totalTipped!==undefined ? formatUnits(totalTipped as bigint,6) : "—"}
             <span className="text-xs text-zinc-500 font-sans">USDC</span>
           </div>
         </div>
-        <div className="border-l rule pl-4">
+        <div className="border-b sm:border-b-0 sm:border-l rule pl-4">
           <div className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">Payout</div>
           <div className="stats mt-2 text-sm text-zinc-700">{payout ? truncate(payout as string) : "—"}</div>
         </div>
@@ -332,13 +330,13 @@ export default function TipClient({ repoId }: { repoId: string }) {
         <section className="py-10 border-b rule space-y-6">
           <h2 className="serif text-2xl font-semibold">Tip {repoIdLower}</h2>
 
-          <div className="flex gap-3 items-end">
-            <div className="flex-1 max-w-[200px]">
+          <div className="flex flex-wrap gap-3 items-end">
+            <div className="flex-1 min-w-0 max-w-[200px]">
               <Input label="Amount" value={amount} onChange={(v)=>{ setAmount(v); setAmountError(validateAmount(v)); }} error={amountError} reserveErrorLine leftIcon={currency==="USDC" ? <Coins /> : <Wallet />} placeholder="5.00" />
             </div>
             <select value={currency} onChange={e=>setCurrency(e.target.value as any)} className="h-9 bg-transparent border rule rounded-sm px-3 text-sm text-zinc-900">
               <option>USDC</option>
-              {!isTestnet && <option>ETH</option>}
+              <option>ETH</option>
             </select>
             {isConnected ? (
               <span className="stats text-xs text-zinc-700 border rule rounded-sm px-2 py-1 h-9 flex items-center">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
@@ -347,8 +345,8 @@ export default function TipClient({ repoId }: { repoId: string }) {
             )}
           </div>
 
-          <div className="flex gap-3 items-end">
-            <div className="flex-1 max-w-xs">
+          <div className="flex flex-wrap gap-3 items-end">
+            <div className="flex-1 min-w-0">
               <Input value={displayName} onChange={setDisplayName} placeholder="Display name (optional)" />
             </div>
             <Button variant="ghost" size="sm" onClick={saveDisplayName}>Save</Button>

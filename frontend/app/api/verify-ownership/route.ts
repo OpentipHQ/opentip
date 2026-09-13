@@ -2,13 +2,10 @@ import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { signTypedData } from "viem/accounts";
-import { baseSepolia, base } from "viem/chains";
 import { randomBytes } from "crypto";
-import { getContractAddress } from "@/lib/contract";
+import { CONTRACT_ADDRESS, CHAIN_ID } from "@/lib/chain";
 import { prisma } from "@/lib/prisma";
 import { generateRepoSummary } from "@/lib/ai";
-
-const chain = process.env.NEXT_PUBLIC_CHAIN === "base" ? base : baseSepolia;
 
 export async function POST(req: NextRequest) {
   try {
@@ -68,16 +65,15 @@ export async function POST(req: NextRequest) {
     const pk = process.env.REGISTRAR_PRIVATE_KEY;
     if (!pk) throw new Error("REGISTRAR_PRIVATE_KEY env var not set");
 
-    const contract = getContractAddress();
-    if (!contract) throw new Error("Contract address not configured");
+    if (!CONTRACT_ADDRESS) throw new Error("Contract address not configured");
 
     const signature = await signTypedData({
       privateKey: pk as `0x${string}`,
       domain: {
         name: "Opentip",
         version: "1",
-        chainId: BigInt(chain.id),
-        verifyingContract: contract,
+        chainId: BigInt(CHAIN_ID),
+        verifyingContract: CONTRACT_ADDRESS!,
       },
       types: {
         Register: [

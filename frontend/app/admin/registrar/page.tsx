@@ -3,12 +3,11 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/motion/button";
 import { Loader } from "@/components/motion/loader";
 import { useToast } from "@/app/providers";
-import { getContractAddress, opentipAbi } from "@/lib/contract";
+import { opentipAbi } from "@/lib/contract";
+import { VIEM_CHAIN, CONTRACT_ADDRESS } from "@/lib/chain";
 import { createPublicClient, http } from "viem";
-import { baseSepolia, base } from "viem/chains";
 
-const chain = process.env.NEXT_PUBLIC_CHAIN === "base" ? base : baseSepolia;
-const client = createPublicClient({ chain, transport: http() });
+const client = createPublicClient({ chain: VIEM_CHAIN, transport: http() });
 
 export default function AdminRegistrar() {
   const { showToast, dismissToast } = useToast();
@@ -18,9 +17,8 @@ export default function AdminRegistrar() {
   const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
-    const contract = getContractAddress();
-    if (!contract) { setFetching(false); return; }
-    client.readContract({ address: contract, abi: opentipAbi, functionName: "registrarSigner" })
+    if (!CONTRACT_ADDRESS) { setFetching(false); return; }
+    client.readContract({ address: CONTRACT_ADDRESS, abi: opentipAbi, functionName: "registrarSigner" })
       .then((addr) => setCurrentSigner(addr as string))
       .catch(() => {})
       .finally(() => setFetching(false));

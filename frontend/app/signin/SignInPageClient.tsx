@@ -53,7 +53,7 @@ export default function SignInPageClient() {
   return (
     <div className="min-h-[80vh] flex flex-col justify-center">
       <div className="max-w-sm w-full mx-auto space-y-10">
-        <h1 className="serif text-5xl md:text-6xl font-semibold tracking-tight leading-[0.9]">Sign in</h1>
+        <h1 className="serif fluid-display font-semibold tracking-tight leading-[0.9]">Sign in</h1>
 
         <div className="space-y-3">
           <Button onClick={onGithub} size="lg" className="w-full px-6">

@@ -89,12 +89,12 @@ export default async function RepoPage({ params }: { params: Promise<{ owner: st
   return (
     <div className="space-y-0">
       <section className="py-12 md:py-16 border-b rule">
-        <div className="flex gap-5 items-start">
+        <div className="flex flex-wrap gap-5 items-start">
           {meta ? (
             <>
               <Image src={meta.owner.avatar_url} alt={owner} width={56} height={56} className="rounded-sm" />
               <div className="space-y-1">
-                <h1 className="serif text-3xl md:text-4xl font-semibold tracking-tight flex flex-wrap items-center gap-x-3 gap-y-1">
+                <h1 className="serif fluid-heading font-semibold tracking-tight flex flex-wrap items-center gap-x-3 gap-y-1">
                   <span>{meta.full_name}</span>
                   {developer && (
                     <a href={`/dev/${developer.login}`} className="inline-flex items-center gap-1.5 group">
@@ -117,7 +117,7 @@ export default async function RepoPage({ params }: { params: Promise<{ owner: st
             </>
           ) : (
             <div className="space-y-1">
-              <h1 className="serif text-3xl md:text-4xl font-semibold tracking-tight">{repoId}</h1>
+              <h1 className="serif fluid-heading font-semibold tracking-tight">{repoId}</h1>
               <p className="text-zinc-500 text-sm">Could not fetch GitHub metadata.</p>
             </div>
           )}

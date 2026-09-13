@@ -125,7 +125,7 @@ export default function ProfileClient({ data, contributions }: { data: ProfileDa
   return (
     <div className="max-w-2xl mx-auto py-12 md:py-20 space-y-10">
       {/* Header + PFP overlay */}
-      <section className="-mx-6 md:-mx-10 -mt-12 md:-mt-20">
+      <section className="-mx-0 sm:-mx-6 md:-mx-10 -mt-12 md:-mt-20">
         {/* Header banner */}
         {data.header ? (
           <Image src={data.header} alt="Header" width={800} height={192} className="w-full h-32 md:h-48 object-cover" />
@@ -152,7 +152,7 @@ export default function ProfileClient({ data, contributions }: { data: ProfileDa
 
         {/* Name + bio below header */}
         <div className="px-6 md:px-10 pt-3 text-center md:text-left">
-          <h1 className="serif text-3xl md:text-4xl font-semibold tracking-tight">{data.login}</h1>
+          <h1 className="serif fluid-heading font-semibold tracking-tight">{data.login}</h1>
           {data.name && data.name !== data.login && (
             <p className="text-sm text-zinc-600 mt-1">{data.name}</p>
           )}
@@ -167,7 +167,7 @@ export default function ProfileClient({ data, contributions }: { data: ProfileDa
 
       {/* Stats */}
       <section className="border-t border-b rule py-6">
-        <div className="flex justify-center gap-12">
+        <div className="flex justify-center fluid-gap">
           <div className="text-center">
             <div className="stats text-2xl font-medium">${data.stats.total_tipped}</div>
             <div className="text-xs text-zinc-500 mt-1">total tipped</div>

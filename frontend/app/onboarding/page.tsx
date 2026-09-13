@@ -60,7 +60,7 @@ export default function OnboardingPage() {
   return (
     <div className="max-w-sm mx-auto space-y-0">
       <section className="py-16 md:py-24 border-b rule space-y-6">
-        <h1 className="serif text-4xl md:text-5xl font-semibold tracking-tight leading-[0.9]">Set up Opentip</h1>
+        <h1 className="serif fluid-page-title font-semibold tracking-tight leading-[0.9]">Set up Opentip</h1>
         <div className="flex gap-1.5">
           {[1, 2].map(n => (
             <div key={n} className="flex-1 flex flex-col gap-2">

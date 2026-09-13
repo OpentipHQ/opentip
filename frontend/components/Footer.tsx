@@ -27,7 +27,7 @@ export default function Footer() {
 
   return (
     <footer className="w-full bg-accent text-white">
-      <div className="px-16 md:px-40 pt-12 pb-6">
+      <div className="fluid-page pt-12 pb-6">
         <div className="flex flex-col md:flex-row items-start justify-between gap-10">
           <div className="space-y-4">
             <div className="flex items-center gap-2.5">

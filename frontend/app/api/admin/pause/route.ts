@@ -1,16 +1,16 @@
 import { NextRequest } from "next/server";
 import { handleAdminRequest, auditLog } from "@/lib/admin-api";
 import { getOwnerWallet } from "@/lib/admin-wallet";
-import { opentipAbi, getContractAddress } from "@/lib/contract";
+import { opentipAbi } from "@/lib/contract";
+import { CONTRACT_ADDRESS } from "@/lib/chain";
 
 export async function POST(req: NextRequest) {
   return handleAdminRequest(req, "critical", async (admin) => {
-    const contract = getContractAddress();
-    if (!contract) throw new Error("contract not configured");
+    if (!CONTRACT_ADDRESS) throw new Error("contract not configured");
 
     const wallet = getOwnerWallet();
     const hash = await wallet.writeContract({
-      address: contract,
+      address: CONTRACT_ADDRESS!,
       abi: opentipAbi,
       functionName: "pause",
     });

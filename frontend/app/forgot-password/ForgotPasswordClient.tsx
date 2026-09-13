@@ -36,7 +36,7 @@ export default function ForgotPasswordClient() {
     return (
       <div className="min-h-[80vh] flex flex-col justify-center">
         <div className="max-w-sm w-full mx-auto space-y-10">
-          <h1 className="serif text-5xl md:text-6xl font-semibold tracking-tight leading-[0.9]">Check your email</h1>
+          <h1 className="serif fluid-display font-semibold tracking-tight leading-[0.9]">Check your email</h1>
           <p className="text-sm text-zinc-600">
             If an account exists for <span className="font-medium">{email}</span>, we&apos;ve sent a password reset link.
           </p>
@@ -51,7 +51,7 @@ export default function ForgotPasswordClient() {
   return (
     <div className="min-h-[80vh] flex flex-col justify-center">
       <div className="max-w-sm w-full mx-auto space-y-10">
-        <h1 className="serif text-5xl md:text-6xl font-semibold tracking-tight leading-[0.9]">Reset password</h1>
+        <h1 className="serif fluid-display font-semibold tracking-tight leading-[0.9]">Reset password</h1>
         <p className="text-sm text-zinc-600">
           Enter your email and we&apos;ll send you a link to reset your password.
         </p>

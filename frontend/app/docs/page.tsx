@@ -9,7 +9,7 @@ export default function DocsPage() {
   return (
     <div className="space-y-16">
       <section className="space-y-6">
-        <h1 className="serif text-4xl md:text-5xl font-semibold tracking-tight leading-[0.9]">Documentation</h1>
+        <h1 className="serif fluid-page-title font-semibold tracking-tight leading-[0.9]">Documentation</h1>
         <p className="text-lg text-zinc-600 max-w-xl">
           Opentip is an open-source tip jar on Base. Send crypto to the developers who build the tools you use.
         </p>

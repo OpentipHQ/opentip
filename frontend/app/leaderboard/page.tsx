@@ -27,14 +27,15 @@ export default async function LeaderboardPage() {
   return (
     <div className="space-y-0">
       <section className="py-12 md:py-16 border-b rule">
-        <h1 className="serif text-4xl md:text-5xl font-semibold tracking-tight">Top supporters</h1>
+        <h1 className="serif fluid-page-title font-semibold tracking-tight">Top supporters</h1>
       </section>
 
       <section className="py-6">
         {rows.length === 0 ? (
           <p className="text-sm text-zinc-500 py-12 text-center">No tips yet.</p>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
             <thead>
               <tr className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500 text-left border-b rule">
                 <th className="pb-3 font-medium">Supporter</th>
@@ -50,6 +51,7 @@ export default async function LeaderboardPage() {
               ))}
             </tbody>
           </table>
+            </div>
         )}
       </section>
     </div>

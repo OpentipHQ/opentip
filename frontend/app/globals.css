@@ -3,6 +3,18 @@
 @tailwind utilities;
 @layer base {
   :root {
+    /* Fluid spacing tokens */
+    --space-page: clamp(1rem, 4vw, 10rem);
+    --space-section: clamp(3rem, 6vw, 6rem);
+    --space-gap: clamp(1.5rem, 3vw, 3rem);
+
+    /* Fluid typography tokens */
+    --text-display: clamp(2.5rem, 1.25rem + 5vw, 6rem);
+    --text-hero: clamp(2.5rem, 1.25rem + 5vw, 10rem);
+    --text-page: clamp(1.5rem, 0.75rem + 2.5vw, 3.5rem);
+    --text-heading: clamp(1.25rem, 0.5rem + 2vw, 2.5rem);
+    --text-subheading: clamp(1rem, 0.4rem + 1.5vw, 1.75rem);
+
     --background: 39 11% 73%;
     --foreground: 0 0% 9%;
     --card: 0 0% 100%;
@@ -42,4 +54,15 @@
   ::selection { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+}
+@layer utilities {
+  .fluid-page { padding-inline: var(--space-page); }
+  .fluid-page-neg { margin-inline: calc(var(--space-page) * -1); }
+  .fluid-display { font-size: var(--text-display); }
+  .fluid-hero { font-size: var(--text-hero); }
+  .fluid-page-title { font-size: var(--text-page); }
+  .fluid-heading { font-size: var(--text-heading); }
+  .fluid-subheading { font-size: var(--text-subheading); }
+  .fluid-gap { gap: var(--space-gap); }
+  .fluid-grid-3 { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
 }

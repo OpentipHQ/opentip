@@ -43,7 +43,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               Skip to content
             </a>
             <HeaderShell />
-            <main id="main-content" className="w-full px-16 md:px-40 flex-1">{children}</main>
+            <main id="main-content" className="w-full fluid-page flex-1">{children}</main>
             <Footer />
           </div>
         </Providers>

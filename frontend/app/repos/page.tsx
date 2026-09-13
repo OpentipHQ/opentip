@@ -71,13 +71,13 @@ export default function ReposDirectory() {
   return (
     <div className="space-y-0">
       <section className="py-12 md:py-16 border-b rule space-y-4">
-        <h1 className="serif text-4xl md:text-5xl font-semibold tracking-tight">Repos</h1>
+        <h1 className="serif fluid-page-title font-semibold tracking-tight">Repos</h1>
         <p className="text-zinc-600 text-sm max-w-xs">Repos registered to receive tips. {total > 0 ? `${total} and counting.` : ""}</p>
       </section>
 
       <section className="py-10">
-        <div className="flex items-center justify-between gap-4 mb-6">
-          <div className="relative w-64">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
             <input
               value={search}

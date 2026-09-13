@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/motion/button";
 import { Loader } from "@/components/motion/loader";
 import { Search } from "lucide-react";
@@ -71,7 +72,7 @@ export default function ReposDirectory() {
     <div className="space-y-0">
       <section className="py-12 md:py-16 border-b rule space-y-4">
         <h1 className="serif text-4xl md:text-5xl font-semibold tracking-tight">Repos</h1>
-        <p className="text-zinc-600 text-sm max-w-xs">All repos registered to receive tips. {total > 0 ? `${total} and counting.` : ""}</p>
+        <p className="text-zinc-600 text-sm max-w-xs">Repos registered to receive tips. {total > 0 ? `${total} and counting.` : ""}</p>
       </section>
 
       <section className="py-10">
@@ -119,8 +120,7 @@ export default function ReposDirectory() {
                   >
                     <div className="flex items-start gap-4">
                       {meta ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img src={meta.owner.avatar_url} alt={owner} width={40} height={40} className="rounded-sm flex-shrink-0" />
+                        <Image src={meta.owner.avatar_url} alt={owner} width={40} height={40} className="rounded-sm flex-shrink-0" />
                       ) : (
                         <div className="w-10 h-10 rounded-sm bg-zinc-200 flex-shrink-0" />
                       )}

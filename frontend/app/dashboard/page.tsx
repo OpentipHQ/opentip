@@ -1,5 +1,6 @@
 "use client";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/motion/button";
 import { Loader } from "@/components/motion/loader";
@@ -146,8 +147,7 @@ export default function DashboardProfile() {
           onClick={() => headerInput.current?.click()}
         >
           {header ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={header} alt="Header" className="w-full h-full object-cover" />
+            <Image src={header} alt="Header" width={800} height={192} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full bg-zinc-200/50 flex items-center justify-center text-zinc-400 text-xs">
               {uploadingHeader ? "Uploading..." : "Click to upload header image"}
@@ -175,8 +175,7 @@ export default function DashboardProfile() {
             className="relative w-20 h-20 rounded-sm overflow-hidden border rule shrink-0 group"
           >
             {pfp ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={pfp} alt="PFP" className="w-full h-full object-cover" />
+              <Image src={pfp} alt="Profile" width={96} height={96} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-zinc-200/50 flex items-center justify-center text-zinc-400 text-lg font-semibold">
                 {fallbackName.charAt(0).toUpperCase()}

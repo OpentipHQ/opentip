@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useMemo } from "react";
+import Image from "next/image";
 
 function renderBioWithLinks(bio: string) {
   const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[^\s]*)/g;
@@ -25,7 +25,7 @@ interface ContributionDay {
 }
 
 interface ProfileData {
-  login: string;
+  login: string | null;
   name: string | null;
   image: string | null;
   pfp: string | null;
@@ -128,8 +128,7 @@ export default function ProfileClient({ data, contributions }: { data: ProfileDa
       <section className="-mx-6 md:-mx-10 -mt-12 md:-mt-20">
         {/* Header banner */}
         {data.header ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={data.header} alt="Header" className="w-full h-32 md:h-48 object-cover" />
+          <Image src={data.header} alt="Header" width={800} height={192} className="w-full h-32 md:h-48 object-cover" />
         ) : (
           <div className="w-full h-32 md:h-48 bg-zinc-200/50" />
         )}
@@ -139,11 +138,9 @@ export default function ProfileClient({ data, contributions }: { data: ProfileDa
           <div className="-mt-10 md:-mt-12 inline-block">
             <div className="w-20 h-20 md:w-24 md:h-24 rounded-sm border-4 border-[#c1c0b6] bg-[#c1c0b6] overflow-hidden">
               {data.pfp ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={data.pfp} alt={data.login} className="w-full h-full object-cover" />
+                <Image src={data.pfp} alt={data.login || "Profile"} width={96} height={96} className="w-full h-full object-cover" />
               ) : data.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={data.image} alt={data.login} className="w-full h-full object-cover" />
+                <Image src={data.image} alt={data.login || "Profile"} width={96} height={96} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full bg-zinc-200 flex items-center justify-center text-zinc-400 text-2xl font-semibold">
                   {data.login?.charAt(0)?.toUpperCase()}

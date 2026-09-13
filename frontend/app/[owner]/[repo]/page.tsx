@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { fetchRepoMeta } from "@/lib/github";
 import { prisma } from "@/lib/prisma";
 import TipClient from "./TipClient";
@@ -35,7 +36,7 @@ export default async function RepoPage({ params }: { params: Promise<{ owner: st
           {meta ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={meta.owner.avatar_url} alt={owner} width={56} height={56} className="rounded-sm" />
+              <Image src={meta.owner.avatar_url} alt={owner} width={56} height={56} className="rounded-sm" />
               <div className="space-y-1">
                 <h1 className="serif text-3xl md:text-4xl font-semibold tracking-tight flex flex-wrap items-center gap-x-3 gap-y-1">
                   <span>{meta.full_name}</span>
@@ -68,7 +69,7 @@ export default async function RepoPage({ params }: { params: Promise<{ owner: st
         </div>
       </section>
 
-      <TipClient repoId={repoId} owner={owner} repo={repo} />
+      <TipClient repoId={repoId} />
     </div>
   );
 }

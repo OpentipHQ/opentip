@@ -3,7 +3,7 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/motion/button";
 import { Loader } from "@/components/motion/loader";
-import { useAccount, useConnect, useSignMessage } from "wagmi";
+import { useAccount, useSignMessage } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 
 function truncate(addr: string) { return addr.slice(0, 6) + "..." + addr.slice(-4); }
@@ -11,7 +11,6 @@ function truncate(addr: string) { return addr.slice(0, 6) + "..." + addr.slice(-
 export default function DashboardWallets() {
   const { data: session, status } = useSession();
   const { address, isConnected } = useAccount();
-  const { connect, connectors } = useConnect();
   const { open } = useAppKit();
   const { signMessageAsync } = useSignMessage();
   const [wallets, setWallets] = useState<any[]>([]);

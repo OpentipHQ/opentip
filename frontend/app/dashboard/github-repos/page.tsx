@@ -1,5 +1,6 @@
 "use client";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { Button } from "@/components/motion/button";
@@ -9,7 +10,7 @@ import { Search } from "lucide-react";
 const PAGE_SIZE = 20;
 
 export default function DashboardGithubRepos() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [repos, setRepos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -58,7 +59,7 @@ export default function DashboardGithubRepos() {
             {paged.map((r: any) => (
               <li key={r.full_name} className="flex items-center justify-between py-4">
                 <div className="flex items-center gap-4">
-                  <img src={r.avatar_url} alt={r.owner} width={32} height={32} className="rounded-sm" />
+                  <Image src={r.avatar_url} alt={r.owner} width={32} height={32} className="rounded-sm" />
                   <div>
                     <div className="font-mono text-sm">{r.full_name}</div>
                     {r.description && <div className="text-xs text-zinc-500 truncate max-w-[40ch]">{r.description}</div>}

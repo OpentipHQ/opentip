@@ -34,7 +34,7 @@ export default function AdminOverview() {
   }, []);
 
   if (loading) return <div className="py-20 flex justify-center"><Loader variant="spinner" size={24} /></div>;
-  if (!stats || stats.error || !Array.isArray(stats.recentTips)) return <div className="py-20 text-sm text-zinc-600">Failed to load stats</div>;
+  if (!stats || (stats as any).error || !Array.isArray(stats.recentTips)) return <div className="py-20 text-sm text-zinc-600">Failed to load stats</div>;
 
   return (
     <div className="space-y-8">

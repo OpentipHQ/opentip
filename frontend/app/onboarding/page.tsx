@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useAccount, useConnect, useSignMessage } from "wagmi";
+import { useAccount, useSignMessage } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import { useToast } from "@/app/providers";
 import { Button, StatefulButton } from "@/components/motion/button";
@@ -11,14 +11,13 @@ import { Loader } from "@/components/motion/loader";
 export default function OnboardingPage() {
   const { data: session, status } = useSession();
   const { address, isConnected } = useAccount();
-  const { connect, connectors } = useConnect();
   const { open } = useAppKit();
   const { signMessageAsync } = useSignMessage();
   const router = useRouter();
   const { showToast } = useToast();
   const [step, setStep] = useState(1);
   const [linkState, setLinkState] = useState<"idle"|"loading"|"success"|"error">("idle");
-  const [linkedWallets, setLinkedWallets] = useState<string[]>([]);
+  const [_linkedWallets, setLinkedWallets] = useState<string[]>([]);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
@@ -78,7 +77,7 @@ export default function OnboardingPage() {
           <p className="text-sm text-zinc-600">Sign in with GitHub or email. Tippers don&apos;t need an account — just connect a wallet on any tip page.</p>
           <div className="flex gap-3">
             <Button onClick={() => signIn("github", { callbackUrl: "/onboarding" })}>Sign in with GitHub</Button>
-            <Button variant="ghost" onClick={() => window.location.href = "/signin"}>Use email</Button>
+            <Button variant="ghost" onClick={() => router.push("/signin")}>Use email</Button>
           </div>
         </section>
       )}

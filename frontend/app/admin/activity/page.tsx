@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Loader } from "@/components/motion/loader";
+import { getBasescanTxUrl } from "@/lib/basescan";
 
 function formatUsdc(raw: number | string): string {
   const num = typeof raw === "string" ? Number(raw) / 1e6 : raw / 1e6;
@@ -56,7 +57,7 @@ export default function AdminActivity() {
                 <td className="px-4 py-2 text-right stats text-xs text-zinc-500">{formatUsdc(tip.fee_amount)}</td>
                 <td className="px-4 py-2 text-right">
                   <a
-                    href={`https://sepolia.basescan.org/tx/${tip.tx_hash}`}
+                    href={getBasescanTxUrl(tip.tx_hash)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs text-accent hover:underline font-mono"

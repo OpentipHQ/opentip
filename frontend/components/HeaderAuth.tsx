@@ -1,5 +1,6 @@
 "use client";
 import { useSession, signOut } from "next-auth/react";
+import Image from "next/image";
 import { Button } from "@/components/motion/button";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
@@ -44,8 +45,7 @@ export default function HeaderAuth() {
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
           {image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={image} alt={login} className="w-8 h-8 rounded-sm object-cover" />
+            <Image src={image} alt={login || "Profile"} width={32} height={32} className="w-8 h-8 rounded-sm object-cover" />
           ) : (
             <div className="w-8 h-8 rounded-sm bg-zinc-300 flex items-center justify-center text-xs font-medium text-zinc-700">
               {login?.charAt(0)?.toUpperCase()}

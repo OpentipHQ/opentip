@@ -42,7 +42,7 @@ export default async function LeaderboardPage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((r: any, i: number) => (
+              {rows.map((r: any) => (
                 <tr key={r.tipper_address} className="border-b rule last:border-0">
                   <td className="py-4 font-mono text-zinc-700">{r.display_name || `${r.tipper_address.slice(0,6)}...${r.tipper_address.slice(-4)}`}</td>
                   <td className="py-4 text-right stats font-medium">{(Number(r.total)/1e6).toFixed(2)}</td>

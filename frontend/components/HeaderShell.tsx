@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import HeaderAuth from "@/components/HeaderAuth";
@@ -9,6 +10,7 @@ const NAV_LINKS = [
   { href: "/activity", label: "Activity" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/docs", label: "Docs" },
 ];
 
 export default function HeaderShell() {
@@ -26,8 +28,7 @@ export default function HeaderShell() {
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
             <Link href="/" className="flex items-center gap-2.5">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/Opentip.png" alt="" className="w-7 h-7" />
+              <Image src="/Opentip.png" alt="Opentip" width={28} height={28} />
               <span className="serif font-semibold text-2xl tracking-tight">Opentip</span>
             </Link>
           </div>

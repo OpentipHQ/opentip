@@ -99,16 +99,16 @@ export default async function DevProfilePage({
 
   const contractAddress = getContractAddress();
 
-  let totalTippedOnChain = 0n;
-  let totalPendingOnChain = 0n;
-  let feeBps = 500n;
+  let totalTippedOnChain = BigInt(0);
+  let totalPendingOnChain = BigInt(0);
+  let feeBps = BigInt(500);
 
   if (contractAddress && repos.length > 0) {
     const calls = repos.flatMap((r) => [
       { address: contractAddress, abi: opentipAbi, functionName: "getTotalTipped" as const, args: [r.repo_id] },
       { address: contractAddress, abi: opentipAbi, functionName: "getPendingBalance" as const, args: [r.repo_id] },
     ]);
-    calls.push({ address: contractAddress, abi: opentipAbi, functionName: "getFeeBps" as const, args: [] });
+    calls.push({ address: contractAddress, abi: opentipAbi, functionName: "getFeeBps" as any, args: [] });
 
     const results = await client.multicall({ contracts: calls });
 
@@ -123,8 +123,8 @@ export default async function DevProfilePage({
   }
 
   // Developer's share = 95% of totalTipped minus what's still pending
-  const developerShare = totalTippedOnChain * (10000n - feeBps) / 10000n;
-  const totalClaimed = developerShare > totalPendingOnChain ? developerShare - totalPendingOnChain : 0n;
+  const developerShare = totalTippedOnChain * (BigInt(10000) - feeBps) / BigInt(10000);
+  const totalClaimed = developerShare > totalPendingOnChain ? developerShare - totalPendingOnChain : BigInt(0);
 
   const enrichedRepos = repos.map((r) => ({
     repo_id: r.repo_id,

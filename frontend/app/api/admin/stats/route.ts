@@ -3,7 +3,7 @@ import { handleAdminRequest } from "@/lib/admin-api";
 import { prisma } from "@/lib/prisma";
 import { createPublicClient, http } from "viem";
 import { baseSepolia, base } from "viem/chains";
-import { opentipAbi, getContractAddress, getUsdcAddress, usdcAbi } from "@/lib/contract";
+import { opentipAbi, getContractAddress } from "@/lib/contract";
 
 const chain = process.env.NEXT_PUBLIC_CHAIN === "base" ? base : baseSepolia;
 

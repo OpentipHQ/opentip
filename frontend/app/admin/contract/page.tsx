@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/motion/button";
-import { Loader } from "@/components/motion/loader";
 import { useToast } from "@/app/providers";
 
 export default function AdminContract() {
@@ -10,8 +9,6 @@ export default function AdminContract() {
   const [treasury, setTreasury] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
-  const [currentFee, setCurrentFee] = useState<string | null>(null);
-  const [currentTreasury, setCurrentTreasury] = useState<string | null>(null);
   const [treasuryBalance, setTreasuryBalance] = useState<string | null>(null);
 
   useEffect(() => {

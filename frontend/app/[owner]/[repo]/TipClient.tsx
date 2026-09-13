@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
-import { useAccount, useConnect, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSignMessage } from "wagmi";
+import { useRouter } from "next/navigation";
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSignMessage, useSendTransaction } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import { signIn, useSession } from "next-auth/react";
 import { parseUnits, formatUnits, parseEther } from "viem";
@@ -14,10 +15,10 @@ import { Coins, Wallet, Copy } from "lucide-react";
 
 function truncate(addr: string){ return addr.slice(0,6)+"..."+addr.slice(-4); }
 
-export default function TipClient({ repoId, owner, repo }: { repoId: string; owner:string; repo:string }) {
+export default function TipClient({ repoId }: { repoId: string }) {
+  const router = useRouter();
   const repoIdLower = repoId.toLowerCase();
   const { address, isConnected } = useAccount();
-  const { connect, connectors } = useConnect();
   const { open } = useAppKit();
   const { data: session } = useSession();
   const { showToast, updateToast, dismissToast } = useToast();
@@ -45,6 +46,13 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
   const [wallets, setWallets] = useState<any[]>([]);
   const loadingToastRef = useRef<string | null>(null);
 
+  useEffect(() => {
+    if (!isConnected && tipFlow !== "idle") {
+      setTipFlow("idle");
+      if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
+    }
+  }, [isConnected]);
+
   const showLoading = (title: string, desc?: string) => {
     if (loadingToastRef.current) dismissToast(loadingToastRef.current);
     const id = showToast({ status: "loading", title, description: desc, duration: 0 });
@@ -63,10 +71,14 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
     fetch(`/api/leaderboard?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setLeaderboard).catch(()=>{})
   ]).finally(()=>setTipsLoading(false)); }, [repoIdLower]);
 
+  const [relayTxHash, setRelayTxHash] = useState<`0x${string}` | undefined>(undefined);
+  const relayReceipt = useWaitForTransactionReceipt({ hash: relayTxHash });
+
   const approveW = useWriteContract();
   const tipW = useWriteContract();
   const claimW = useWriteContract();
   const registerW = useWriteContract();
+  const relaySend = useSendTransaction();
 
   const approveReceipt = useWaitForTransactionReceipt({ hash: approveW.data });
   const tipReceipt = useWaitForTransactionReceipt({ hash: tipW.data });
@@ -76,7 +88,7 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
   const validateAmount = (v: string) => {
     const n = Number(v);
     if (!v || isNaN(n) || n <=0) return "Enter an amount";
-    if (currency==="USDC" && parseUnits(v||"0",6) < 1_000_000n) return "Minimum $1";
+    if (currency==="USDC" && parseUnits(v||"0",6) < BigInt(1_000_000)) return "Minimum $1";
     return undefined;
   };
 
@@ -110,7 +122,7 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
   }, [tipReceipt.isSuccess, tipReceipt.isError]);
 
   useEffect(()=>{
-    if (claimState==="loading" && claimReceipt.isSuccess) { setClaimState("success"); showToast({ status:"success", title:"Claimed", description: formatUnits((pending as bigint)||0n,6)+" USDC" }); setTimeout(()=>setClaimState("idle"),1600); }
+    if (claimState==="loading" && claimReceipt.isSuccess) { setClaimState("success"); showToast({ status:"success", title:"Claimed", description: formatUnits((pending as bigint)||BigInt(0),6)+" USDC" }); setTimeout(()=>setClaimState("idle"),1600); }
     if (claimState==="loading" && claimReceipt.isError) { setClaimState("error"); showToast({ status:"error", title:"Claim failed" }); setTimeout(()=>setClaimState("idle"),2000); }
   }, [claimReceipt.isSuccess, claimReceipt.isError]);
 
@@ -118,6 +130,34 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
     if (registerState==="loading" && registerReceipt.isSuccess) { setRegisterState("success"); showToast({ status:"success", title:"Registered", description: repoIdLower }); setTimeout(()=>setRegisterState("idle"),1600); }
     if (registerState==="loading" && registerReceipt.isError) { setRegisterState("error"); showToast({ status:"error", title:"Register failed" }); setTimeout(()=>setRegisterState("idle"),2000); }
   }, [registerReceipt.isSuccess, registerReceipt.isError]);
+
+  useEffect(()=>{
+    if (relayTxHash && relayReceipt.isSuccess) {
+      if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
+      showToast({ status:"success", title:"ETH tip sent", description:`${amount} ETH → USDC` });
+      setTipFlow("success"); setTimeout(()=>setTipFlow("idle"),1600);
+      setRelayTxHash(undefined);
+      fetch(`/api/tips?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setTips).catch(()=>{});
+      fetch(`/api/leaderboard?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setLeaderboard).catch(()=>{});
+    }
+    if (relayTxHash && relayReceipt.isError) {
+      if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
+      showToast({ status:"error", title:"ETH tip failed" });
+      setTipFlow("error"); setTimeout(()=>setTipFlow("idle"),2000);
+      setRelayTxHash(undefined);
+    }
+  }, [relayReceipt.isSuccess, relayReceipt.isError, relayTxHash]);
+
+  useEffect(()=>{
+    if (relaySend.data) {
+      setRelayTxHash(relaySend.data);
+    }
+    if (relaySend.error) {
+      if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
+      showToast({ status:"error", title:"Transaction rejected", description: relaySend.error.message?.slice(0,100) });
+      setTipFlow("error"); setTimeout(()=>setTipFlow("idle"),2000);
+    }
+  }, [relaySend.data, relaySend.error]);
 
   const onTipClick = async () => {
     const err = validateAmount(amount);
@@ -131,13 +171,18 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
       const id = showLoading("Fetching Relay quote...", `${amount} ETH → USDC`);
       try {
         const quote = await getRelayQuote({ chainId, amountWei: wei, recipient: address });
-        updateToast(id, { status:"success", title:"Quote ready", description:"Confirm swap, then tip the USDC", duration: 4000 });
-        setTipFlow("idle");
+        updateToast(id, { status:"loading", title:"Confirm in wallet", description:`${amount} ETH → USDC`, duration: 0 });
+        const tx = quote.tx;
+        relaySend.sendTransaction({
+          to: tx.to as `0x${string}`,
+          data: tx.data as `0x${string}`,
+          value: BigInt(tx.value),
+        });
       } catch(e:any){ updateToast(id, { status:"error", title:"Relay quote failed", description: e.message?.slice(0,120) }); setTipFlow("error"); setTimeout(()=>setTipFlow("idle"),2000); }
       return;
     }
     const baseUnits = parseUnits(amount, 6);
-    const currentAllowance = (allowance as bigint) || 0n;
+    const currentAllowance = (allowance as bigint) || BigInt(0);
     if (currentAllowance < baseUnits) {
       setTipFlow("approving");
       showLoading("Approving spend...", `${amount} USDC`);
@@ -248,14 +293,14 @@ export default function TipClient({ repoId, owner, repo }: { repoId: string; own
             <div className="space-y-4">
               <p className="text-zinc-600 max-w-lg">Not claimed yet. Sign in to verify ownership and register this repo.</p>
               <div className="flex gap-3">
-                <Button onClick={() => window.location.href = "/onboarding"}>Get started</Button>
+                <Button onClick={() => router.push("/onboarding")}>Get started</Button>
                 <Button variant="ghost" onClick={() => signIn("github")}>Sign in with GitHub</Button>
               </div>
             </div>
           ) : wallets.length === 0 ? (
             <div className="space-y-4">
               <p className="text-zinc-600 max-w-lg">You need to link a wallet first. This wallet receives USDC tips.</p>
-              <Button onClick={() => window.location.href = "/onboarding"}>Link wallet →</Button>
+              <Button onClick={() => router.push("/onboarding")}>Link wallet →</Button>
             </div>
           ) : (
             <div className="space-y-4">

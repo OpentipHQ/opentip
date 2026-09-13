@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/motion/button";
 import { useEffect, useState } from "react";
@@ -29,10 +30,10 @@ export default function Home() {
         <div className="grid md:grid-cols-12 gap-12 md:gap-8">
           <div className="md:col-span-8 space-y-8">
             <h1 className="serif text-6xl md:text-8xl lg:text-[7rem] xl:text-[8rem] font-semibold leading-[0.85] tracking-tight">
-              Support the humans<br />behind the <span className="underline decoration-accent decoration-2 underline-offset-4">code.</span>
+              Support the humans<br />behind the <span className="underline decoration-accent decoration-2 underline-offset-4">code</span>
             </h1>
             <p className="text-zinc-700 max-w-lg text-lg leading-relaxed">
-              Behind every repo you <code className="font-mono text-sm bg-accent/10 text-accent px-1.5 py-0.5 rounded-sm">git clone</code> without thinking twice, there&apos;s someone who wrote it, fixed it, and kept it running — usually for free. Opentip makes it a five-second thing to change that. Paste a GitHub link, send a tip, done.
+              Every repo you <code className="font-mono text-sm bg-accent/10 text-accent px-1.5 py-0.5 rounded-sm">git clone</code> was built by someone who probably wasn&apos;t paid for it. Opentip makes it easy to change that &mdash; send a tip in ETH or USDC, straight to their wallet.
             </p>
             <div className="flex gap-3">
               <Link href="/repos"><Button size="lg" className="px-8">Find a repo</Button></Link>
@@ -40,8 +41,7 @@ export default function Home() {
             </div>
           </div>
           <div className="md:col-span-4 flex flex-col justify-end space-y-8">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/opentip-hero-mockup-nobg.png" alt="" className="w-full max-w-[380px] mx-auto mix-blend-multiply" />
+            <Image src="/opentip-hero-mockup-nobg.png" alt="Opentip interface mockup" width={380} height={300} className="w-full max-w-[380px] mx-auto mix-blend-multiply" />
             <div className="border-t rule pt-8">
               <div className="grid grid-cols-2 divide-x rule">
                 <div className="px-3">
@@ -62,7 +62,7 @@ export default function Home() {
       <section className="py-16 md:py-24 border-b rule">
         <div className="grid md:grid-cols-12 gap-12">
           <div className="md:col-span-4">
-            <h2 className="serif text-3xl md:text-4xl font-semibold tracking-tight">Open source runs on gratitude. Gratitude doesn&apos;t pay rent.</h2>
+            <h2 className="serif text-3xl md:text-4xl font-semibold tracking-tight">Open source runs on gratitude. Gratitude doesn&apos;t pay rent</h2>
           </div>
           <div className="md:col-span-8">
             <p className="text-zinc-700 text-lg leading-relaxed max-w-2xl">
@@ -227,48 +227,12 @@ export default function Home() {
       {/* Closing */}
       <section className="py-16 md:py-24 text-center space-y-6">
         <h2 className="serif text-4xl md:text-5xl font-semibold tracking-tight leading-[0.95]">
-          Say thanks in a way that counts.
+          Say thanks in a way that counts
         </h2>
         <div>
           <Link href="/repos"><Button size="lg" className="px-8">Find a repo to support</Button></Link>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-accent text-accent-foreground -mx-16 md:-mx-40 w-[calc(100%+8rem)] md:w-[calc(100%+20rem)]">
-        <div className="px-16 md:px-40 pt-10 md:pt-14 pb-6 md:pb-8 space-y-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2.5">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/Opentip.png" alt="" className="w-7 h-7" />
-                <h3 className="serif text-2xl font-semibold tracking-tight">Opentip</h3>
-              </div>
-              <p className="text-sm opacity-70 max-w-xs">Open-source tip jar on Base. Send crypto to the developers who built the tools you use every day.</p>
-            </div>
-            <div className="flex gap-8 text-sm opacity-80">
-              <div className="space-y-3">
-                <div className="text-[0.65rem] uppercase tracking-[0.2em] opacity-60">Product</div>
-                <div className="space-y-2">
-                  <Link href="/repos" className="block hover:opacity-100 transition-opacity">Repos</Link>
-                  <Link href="/activity" className="block hover:opacity-100 transition-opacity">Activity</Link>
-                  <Link href="/leaderboard" className="block hover:opacity-100 transition-opacity">Leaderboard</Link>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <div className="text-[0.65rem] uppercase tracking-[0.2em] opacity-60">Resources</div>
-                <div className="space-y-2">
-                  <a href="https://github.com/optimusexe/Opentip" target="_blank" rel="noopener noreferrer" className="block hover:opacity-100 transition-opacity">GitHub</a>
-                  <a href="https://basescan.org" target="_blank" rel="noopener noreferrer" className="block hover:opacity-100 transition-opacity">Basescan</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="text-center pb-4">
-          <div className="serif text-[6rem] md:text-[9rem] font-bold tracking-tight opacity-90 leading-none">opentip.</div>
-        </div>
-      </footer>
 
     </div>
   );

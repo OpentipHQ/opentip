@@ -7,10 +7,8 @@ import { Loader } from "@/components/motion/loader";
 import { useAccount, useReadContracts } from "wagmi";
 import { getContractAddress, opentipAbi } from "@/lib/contract";
 
-function truncate(addr: string) { return addr.slice(0, 6) + "..." + addr.slice(-4); }
-
 export default function DashboardRepos() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const { address } = useAccount();
   const contract = getContractAddress();
   const [registeredRepos, setRegisteredRepos] = useState<any[]>([]);

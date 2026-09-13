@@ -4,9 +4,9 @@ import Link from "next/link";
 import { Button } from "@/components/motion/button";
 import { Loader } from "@/components/motion/loader";
 import { ExternalLink } from "lucide-react";
+import { getBasescanTxUrl } from "@/lib/basescan";
 
 const PAGE_SIZE = 20;
-const BASESCAN = "https://sepolia.basescan.org/tx/";
 
 function timeAgo(dateStr: string): string {
   const now = Date.now();
@@ -43,7 +43,7 @@ export default function ActivityFeed() {
     <div className="space-y-0">
       <section className="py-12 md:py-16 border-b rule space-y-4">
         <h1 className="serif text-4xl md:text-5xl font-semibold tracking-tight">Activity</h1>
-        <p className="text-zinc-600 text-sm max-w-xs">Every tip sent on Opentip, as it happens.</p>
+        <p className="text-zinc-600 text-sm max-w-xs">Every tip, as it happens.</p>
       </section>
 
       <section className="py-10">
@@ -69,7 +69,7 @@ export default function ActivityFeed() {
                       <div className="flex items-center gap-3 text-xs text-zinc-500">
                         <span>by {t.display_name || truncate(t.tipper_address)}</span>
                         <span>{timeAgo(t.timestamp)}</span>
-                        <a href={`${BASESCAN}${t.tx_hash}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-accent transition-colors">
+                        <a href={getBasescanTxUrl(t.tx_hash)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-accent transition-colors">
                           tx <ExternalLink className="h-3 w-3" />
                         </a>
                       </div>

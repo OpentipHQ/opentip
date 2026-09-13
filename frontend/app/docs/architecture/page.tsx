@@ -1,0 +1,278 @@
+export const metadata = {
+  title: "Architecture",
+  description: "System design, indexer, authentication flow, and infrastructure behind Opentip.",
+};
+
+function Diagram({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="bg-zinc-900 text-zinc-100 p-6 rounded-sm font-mono text-sm overflow-x-auto">
+      <pre className="whitespace-pre">{children}</pre>
+    </div>
+  );
+}
+
+export default function ArchitecturePage() {
+  return (
+    <div className="space-y-16">
+      <section className="space-y-4">
+        <h1 className="serif text-4xl font-semibold tracking-tight">Architecture</h1>
+        <p className="text-lg text-zinc-600">
+          How Opentip is built — from the smart contract to the frontend.
+        </p>
+      </section>
+
+      <section className="border-t rule pt-10 space-y-6">
+        <h2 className="serif text-2xl font-semibold">System overview</h2>
+        <Diagram>
+{`┌─────────────────────────────────────────────────────────┐
+│                      Frontend                          │
+│              Next.js 16 · Vercel                        │
+│                                                         │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐             │
+│  │  Pages   │  │  API     │  │  Auth    │             │
+│  │  (SSR)   │  │  Routes  │  │NextAuth  │             │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘             │
+│       │              │              │                   │
+│  ┌────┴──────────────┴──────────────┴─────┐            │
+│  │           Prisma Client                │            │
+│  └────────────────┬───────────────────────┘            │
+└───────────────────┼────────────────────────────────────┘
+                    │
+    ┌───────────────┼───────────────┐
+    │               │               │
+┌───┴───┐    ┌──────┴──────┐   ┌───┴────────┐
+│  DB   │    │  Contract   │   │  External  │
+│Postgres│    │  (Base)     │   │  Services  │
+└───────┘    └─────────────┘   └────────────┘
+
+┌─────────────────────────────────────────────────────────┐
+│                     Indexer                             │
+│           Node.js · Azure Container Apps                │
+│                                                         │
+│  Polls contract events → writes to PostgreSQL           │
+│  Events: TipReceived, RepoRegistered, PayoutUpdated    │
+└─────────────────────────────────────────────────────────┘`}
+        </Diagram>
+      </section>
+
+      <section className="border-t rule pt-10 space-y-6">
+        <h2 className="serif text-2xl font-semibold">Tech stack</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="p-3 border rule rounded-sm">
+            <p className="font-medium text-sm">Next.js 16</p>
+            <p className="text-xs text-zinc-600 mt-1">React framework with Turbopack, SSR, App Router</p>
+          </div>
+          <div className="p-3 border rule rounded-sm">
+            <p className="font-medium text-sm">Prisma</p>
+            <p className="text-xs text-zinc-600 mt-1">Type-safe ORM for PostgreSQL</p>
+          </div>
+          <div className="p-3 border rule rounded-sm">
+            <p className="font-medium text-sm">PostgreSQL</p>
+            <p className="text-xs text-zinc-600 mt-1">Azure Database for PostgreSQL Flexible Server</p>
+          </div>
+          <div className="p-3 border rule rounded-sm">
+            <p className="font-medium text-sm">viem</p>
+            <p className="text-xs text-zinc-600 mt-1">TypeScript Ethereum library for contract interaction</p>
+          </div>
+          <div className="p-3 border rule rounded-sm">
+            <p className="font-medium text-sm">Reown AppKit</p>
+            <p className="text-xs text-zinc-600 mt-1">Wallet connection modal (WalletConnect, injected)</p>
+          </div>
+          <div className="p-3 border rule rounded-sm">
+            <p className="font-medium text-sm">NextAuth.js</p>
+            <p className="text-xs text-zinc-600 mt-1">Authentication (GitHub OAuth + email/password)</p>
+          </div>
+          <div className="p-3 border rule rounded-sm">
+            <p className="font-medium text-sm">Azure Blob Storage</p>
+            <p className="text-xs text-zinc-600 mt-1">Profile picture and header image uploads</p>
+          </div>
+          <div className="p-3 border rule rounded-sm">
+            <p className="font-medium text-sm">Resend</p>
+            <p className="text-xs text-zinc-600 mt-1">Transactional email (password reset)</p>
+          </div>
+          <div className="p-3 border rule rounded-sm">
+            <p className="font-medium text-sm">Relay</p>
+            <p className="text-xs text-zinc-600 mt-1">Same-chain ETH→USDC swap for ETH tips</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t rule pt-10 space-y-6">
+        <h2 className="serif text-2xl font-semibold">Monorepo structure</h2>
+        <Diagram>
+{`opentip/
+├── frontend/          Next.js app (Vercel)
+│   ├── app/           Pages, API routes, layouts
+│   ├── components/    UI components (motion-enhanced)
+│   ├── lib/           Utilities, auth, contract ABI
+│   ├── prisma/        Schema + migrations
+│   └── config/        Reown AppKit + wagmi setup
+│
+├── indexer/           Event indexer (Azure Container Apps)
+│   ├── src/index.ts   Polling loop + event processing
+│   └── prisma/        Shared schema with frontend
+│
+├── contracts/         Solidity smart contracts (Foundry)
+│   ├── src/Opentip.sol
+│   ├── script/Deploy.s.sol
+│   └── test/          36 tests
+│
+└── package.json       npm workspaces`}
+        </Diagram>
+      </section>
+
+      <section className="border-t rule pt-10 space-y-6">
+        <h2 className="serif text-2xl font-semibold">Authentication flow</h2>
+        <Diagram>
+{`GitHub OAuth:                     Email/Password:
+                                  
+User clicks "GitHub"              User enters email + password
+  → signIn("github")                → POST /api/auth/signup
+  → GitHub OAuth popup                → bcrypt hash, store user
+  → Callback with code              → signIn("credentials")
+  → NextAuth creates session         → bcrypt compare
+  → JWT stored in cookie             → JWT stored in cookie
+                                  
+Both flows:                       
+  → JWT callback enriches token     
+    with login, githubId, accessToken
+  → Session callback exposes       
+    user.login, user.id, etc.`}
+        </Diagram>
+        <p className="text-sm text-zinc-700 leading-relaxed">
+          Sessions use JWT strategy (not database sessions). The JWT is stored in an HTTP-only cookie (<code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">next-auth.session-token</code>). The custom Prisma adapter handles user creation, account linking, and githubId deduplication.
+        </p>
+      </section>
+
+      <section className="border-t rule pt-10 space-y-6">
+        <h2 className="serif text-2xl font-semibold">Indexer</h2>
+        <p className="text-sm text-zinc-700 leading-relaxed">
+          A standalone Node.js process that polls the Base blockchain for smart contract events and writes them to PostgreSQL.
+        </p>
+        <div className="space-y-3">
+          <div className="p-4 border rule rounded-sm">
+            <h3 className="font-medium text-sm">How it works</h3>
+            <ol className="text-sm text-zinc-600 mt-2 space-y-1 list-decimal pl-5">
+              <li>Reads the last processed block from <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">IndexerState</code> table</li>
+              <li>Fetches new events via <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">eth_getLogs</code> in batches of 10,000 blocks</li>
+              <li>Processes each event and writes to the database</li>
+              <li>Saves the new checkpoint</li>
+              <li>Repeats every 12 seconds</li>
+            </ol>
+          </div>
+          <div className="p-4 border rule rounded-sm">
+            <h3 className="font-medium text-sm">Events indexed</h3>
+            <div className="mt-2 space-y-1">
+              <div className="flex items-center gap-2 text-sm">
+                <code className="font-mono text-xs text-accent">TipReceived</code>
+                <span className="text-zinc-600">→ Creates/updates Tip record</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <code className="font-mono text-xs text-accent">RepoRegistered</code>
+                <span className="text-zinc-600">→ Upserts Repo record</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <code className="font-mono text-xs text-accent">PayoutAddressUpdated</code>
+                <span className="text-zinc-600">→ Updates Repo.payoutAddress</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <code className="font-mono text-xs text-accent">Claimed</code>
+                <span className="text-zinc-600">→ Advances checkpoint only</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <code className="font-mono text-xs text-accent">TreasuryWithdrawn</code>
+                <span className="text-zinc-600">→ Advances checkpoint only</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t rule pt-10 space-y-6">
+        <h2 className="serif text-2xl font-semibold">Wallet connection</h2>
+        <p className="text-sm text-zinc-700 leading-relaxed">
+          Opentip uses Reown AppKit (formerly WalletConnect Web3Modal) for wallet connection. This provides a unified modal that supports:
+        </p>
+        <ul className="text-sm text-zinc-700 space-y-2 list-disc pl-5">
+          <li>Injected wallets (MetaMask, Rabby, Coinbase Wallet, etc.)</li>
+          <li>WalletConnect protocol (mobile wallets)</li>
+          <li>Coinbase Smart Wallet</li>
+        </ul>
+        <p className="text-sm text-zinc-700 leading-relaxed">
+          The wagmi library handles all EVM interactions — reading contract state, sending transactions, and signing messages. The config uses cookie-based storage for SSR support.
+        </p>
+      </section>
+
+      <section className="border-t rule pt-10 space-y-6">
+        <h2 className="serif text-2xl font-semibold">Security headers</h2>
+        <p className="text-sm text-zinc-700 leading-relaxed">
+          All routes receive security headers via <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">proxy.ts</code>:
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b rule">
+                <th className="text-left py-3 pr-4 font-medium">Header</th>
+                <th className="text-left py-3 font-medium">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b rule">
+                <td className="py-3 pr-4 font-mono text-xs">X-Frame-Options</td>
+                <td className="py-3">DENY</td>
+              </tr>
+              <tr className="border-b rule">
+                <td className="py-3 pr-4 font-mono text-xs">X-Content-Type-Options</td>
+                <td className="py-3">nosniff</td>
+              </tr>
+              <tr className="border-b rule">
+                <td className="py-3 pr-4 font-mono text-xs">Referrer-Policy</td>
+                <td className="py-3">strict-origin-when-cross-origin</td>
+              </tr>
+              <tr className="border-b rule">
+                <td className="py-3 pr-4 font-mono text-xs">HSTS</td>
+                <td className="py-3">max-age=63072000; includeSubDomains; preload</td>
+              </tr>
+              <tr className="border-b rule">
+                <td className="py-3 pr-4 font-mono text-xs">CSP</td>
+                <td className="py-3">Restricts scripts, styles, images, connections to known origins</td>
+              </tr>
+              <tr className="border-b rule">
+                <td className="py-3 pr-4 font-mono text-xs">Permissions-Policy</td>
+                <td className="py-3">camera=(), microphone=(), geolocation=()</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="border-t rule pt-10 space-y-6">
+        <h2 className="serif text-2xl font-semibold">Environment variables</h2>
+        <p className="text-sm text-zinc-700 leading-relaxed">
+          The frontend requires 18 environment variables to run. The indexer requires 6.
+        </p>
+        <a href="/docs/contributing" className="inline-block text-sm text-accent underline underline-offset-4">
+          See the full list in Contributing →
+        </a>
+      </section>
+
+      <section className="border-t rule pt-10 space-y-6">
+        <h2 className="serif text-2xl font-semibold">Deployment</h2>
+        <div className="space-y-3">
+          <div className="p-4 border rule rounded-sm">
+            <h3 className="font-medium text-sm">Frontend → Vercel</h3>
+            <p className="text-sm text-zinc-600 mt-1">Auto-deployed from the main branch. Environment variables set in the Vercel dashboard. Uses Node 20+.</p>
+          </div>
+          <div className="p-4 border rule rounded-sm">
+            <h3 className="font-medium text-sm">Indexer → Azure Container Apps</h3>
+            <p className="text-sm text-zinc-600 mt-1">Docker image built from the indexer directory. Runs in a consumption plan on Azure. Polls every 12 seconds.</p>
+          </div>
+          <div className="p-4 border rule rounded-sm">
+            <h3 className="font-medium text-sm">Contract → Base (Foundry)</h3>
+            <p className="text-sm text-zinc-600 mt-1">Deployed via Foundry scripts. Verified on Basescan. Currently on Base Sepolia (testnet).</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}

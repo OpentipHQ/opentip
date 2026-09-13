@@ -64,6 +64,52 @@ export default function ForDevelopersPage() {
       </section>
 
       <section className="border-t rule pt-10 space-y-6">
+        <h2 className="serif text-2xl font-semibold">AI-generated summary</h2>
+        <p className="text-sm text-zinc-700 leading-relaxed">
+          Upon registration, Opentip automatically generates an AI summary of your repository using Groq. The summary is created by analyzing your README, configuration files, and source code. It includes:
+        </p>
+        <ul className="text-sm text-zinc-700 space-y-2 list-disc pl-5">
+          <li><strong>Description</strong> — what the project does and what problem it solves</li>
+          <li><strong>Tech stack</strong> — core technologies used in the project</li>
+          <li><strong>Features</strong> — 3-5 key features of the project</li>
+          <li><strong>Audience</strong> — who the project is built for</li>
+        </ul>
+        <p className="text-sm text-zinc-700 leading-relaxed">
+          The summary is cached in the database and automatically refreshed every 7 days. Tippers see this summary on the <strong>About</strong> tab of your repo page, helping them understand what they are contributing to.
+        </p>
+      </section>
+
+      <section className="border-t rule pt-10 space-y-6">
+        <h2 className="serif text-2xl font-semibold">Tabbed repo pages</h2>
+        <p className="text-sm text-zinc-700 leading-relaxed">
+          Each repo page on Opentip has two tabs:
+        </p>
+        <div className="space-y-3">
+          <div className="p-4 border rule rounded-sm">
+            <h3 className="font-medium text-sm">Tip</h3>
+            <p className="text-sm text-zinc-600 mt-1">The default tab. Shows the tipping form, stats (pending balance, total tipped, payout address), leaderboard, and recent tips.</p>
+          </div>
+          <div className="p-4 border rule rounded-sm">
+            <h3 className="font-medium text-sm">About</h3>
+            <p className="text-sm text-zinc-600 mt-1">Shows the AI-generated summary and any links added by the repo owner. This is what tippers see when they want to learn about the project before tipping.</p>
+          </div>
+        </div>
+        <p className="text-sm text-zinc-700 leading-relaxed">
+          The active tab is controlled via URL parameter (<code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">?tab=about</code> or <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">?tab=tip</code>), making it shareable.
+        </p>
+      </section>
+
+      <section className="border-t rule pt-10 space-y-6">
+        <h2 className="serif text-2xl font-semibold">Managing links</h2>
+        <p className="text-sm text-zinc-700 leading-relaxed">
+          Repo owners can add custom links that appear on the About tab. These can be documentation, social media, community, or any other relevant URLs.
+        </p>
+        <p className="text-sm text-zinc-700 leading-relaxed">
+          To manage links, go to <a href="/dashboard/repos" className="text-accent underline underline-offset-4">Dashboard → Repos</a> and click <strong>Manage</strong> next to a repo. You can add up to 10 links, each with a title and URL.
+        </p>
+      </section>
+
+      <section className="border-t rule pt-10 space-y-6">
         <h2 className="serif text-2xl font-semibold">Step 4 — Claim tips</h2>
         <p className="text-sm text-zinc-700 leading-relaxed">
           When someone tips your repo, the USDC is held by the smart contract in a pending balance. To withdraw, connect the wallet that was registered as the payout address and click <strong>Claim</strong>.

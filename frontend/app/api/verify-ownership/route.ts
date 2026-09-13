@@ -5,6 +5,8 @@ import { signTypedData } from "viem/accounts";
 import { baseSepolia, base } from "viem/chains";
 import { randomBytes } from "crypto";
 import { getContractAddress } from "@/lib/contract";
+import { prisma } from "@/lib/prisma";
+import { generateRepoSummary } from "@/lib/ai";
 
 const chain = process.env.NEXT_PUBLIC_CHAIN === "base" ? base : baseSepolia;
 
@@ -97,6 +99,30 @@ export async function POST(req: NextRequest) {
     // Derive signer address from private key
     const { privateKeyToAccount } = await import("viem/accounts");
     const account = privateKeyToAccount(pk as `0x${string}`);
+
+    // Generate AI summary in background (non-blocking)
+    generateRepoSummary(owner, repo).then(async (summary) => {
+      try {
+        await prisma.repo.upsert({
+          where: { repo_id: repoId },
+          update: {
+            summary: JSON.stringify(summary),
+            summary_generated_at: new Date(),
+          },
+          create: {
+            repo_id: repoId,
+            payout_address: payoutAddress,
+            registered_at: new Date(),
+            summary: JSON.stringify(summary),
+            summary_generated_at: new Date(),
+          },
+        });
+      } catch (e) {
+        console.error("Failed to store summary after registration:", e);
+      }
+    }).catch((e) => {
+      console.error("Summary generation failed:", e);
+    });
 
     return NextResponse.json({
       ok: true,

@@ -11,12 +11,19 @@ const HIDDEN_PREFIXES = [
   "/onboarding",
   "/forgot-password",
   "/reset-password",
+  "/activity",
+  "/repos",
+  "/leaderboard",
+  "/dev",
 ];
 
 export default function Footer() {
   const pathname = usePathname();
 
   if (HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null;
+
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length === 2) return null;
 
   return (
     <footer className="w-full bg-accent text-white">

@@ -18,7 +18,8 @@ function truncate(addr: string){ return addr.slice(0,6)+"..."+addr.slice(-4); }
 export default function TipClient({ repoId }: { repoId: string }) {
   const router = useRouter();
   const repoIdLower = repoId.toLowerCase();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chain } = useAccount();
+  const isTestnet = chain?.id === 84532;
   const { open } = useAppKit();
   const { data: session } = useSession();
   const { showToast, updateToast, dismissToast } = useToast();
@@ -165,6 +166,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
     if (err) { showToast({ status:"error", title: err }); return; }
     if (!isConnected || !address || !contract) { showToast({ status:"error", title:"Connect wallet" }); return; }
     if (currency==="ETH") {
+      if (isTestnet) { showToast({ status:"error", title:"ETH tips not available on testnet", description:"Tip in USDC directly" }); return; }
       setTipFlow("sending");
       const chainId = 8453;
       const wei = parseEther(amount).toString();
@@ -172,7 +174,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
       try {
         const quote = await getRelayQuote({ chainId, amountWei: wei, recipient: address });
         updateToast(id, { status:"loading", title:"Confirm in wallet", description:`${amount} ETH → USDC`, duration: 0 });
-        const tx = quote.tx;
+        const tx = quote.steps[0].items[0].data;
         relaySend.sendTransaction({
           to: tx.to as `0x${string}`,
           data: tx.data as `0x${string}`,
@@ -336,7 +338,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
             </div>
             <select value={currency} onChange={e=>setCurrency(e.target.value as any)} className="h-9 bg-transparent border rule rounded-sm px-3 text-sm text-zinc-900">
               <option>USDC</option>
-              <option>ETH</option>
+              {!isTestnet && <option>ETH</option>}
             </select>
             {isConnected ? (
               <span className="stats text-xs text-zinc-700 border rule rounded-sm px-2 py-1 h-9 flex items-center">{address?.slice(0, 6)}...{address?.slice(-4)}</span>

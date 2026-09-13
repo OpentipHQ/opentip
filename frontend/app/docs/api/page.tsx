@@ -70,6 +70,31 @@ export default function ApiPage() {
             path="/api/registered-repos"
             description="Repos registered by the current user (through their linked wallets). Requires authentication."
           />
+          <Endpoint
+            method="GET"
+            path="/api/repos/summary"
+            description="AI-generated summary for a registered repo. Uses Groq to analyze README, config files, and source code. Cached for 7 days. Auto-generated on first visit if missing."
+            params={[
+              { name: "repoId", type: "string", description: "Repo ID (e.g. owner/repo)", required: true },
+            ]}
+          />
+          <Endpoint
+            method="GET"
+            path="/api/repos/links"
+            description="Fetch custom links for a registered repo. Returns JSON array of {title, url} objects."
+            params={[
+              { name: "repoId", type: "string", description: "Repo ID (e.g. owner/repo)", required: true },
+            ]}
+          />
+          <Endpoint
+            method="PUT"
+            path="/api/repos/links"
+            description="Update custom links for a registered repo. Replaces all links. Max 10 links. Requires authentication (repo owner)."
+            params={[
+              { name: "repoId", type: "string", description: "Repo ID", required: true },
+              { name: "links", type: "array", description: "Array of {title, url} objects", required: true },
+            ]}
+          />
         </div>
       </section>
 

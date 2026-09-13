@@ -152,6 +152,11 @@ cp .env.example .env`}</CodeBlock>
                 <td className="py-3 text-zinc-600">Relay API key (ETH tips)</td>
               </tr>
               <tr className="border-b rule">
+                <td className="py-3 pr-4 font-mono text-xs text-accent">GROQ_API_KEY</td>
+                <td className="py-3 pr-4">Optional</td>
+                <td className="py-3 text-zinc-600">Groq API key (AI-generated repo summaries)</td>
+              </tr>
+              <tr className="border-b rule">
                 <td className="py-3 pr-4 font-mono text-xs text-accent">GITHUB_TOKEN</td>
                 <td className="py-3 pr-4">Optional</td>
                 <td className="py-3 text-zinc-600">GitHub token (higher API rate limits)</td>
@@ -257,6 +262,8 @@ forge test`}</CodeBlock>
           <li>Set a display name</li>
           <li>Edit profile (bio, social links, pfp, header)</li>
           <li>Test forgot password flow</li>
+          <li>View AI-generated repo summary on About tab</li>
+          <li>Add/edit links on dashboard repos page</li>
           <li>Browse repos, activity, leaderboard pages</li>
           <li>Admin: pause/unpause, set fee, manage admins</li>
         </ul>
@@ -268,7 +275,7 @@ forge test`}</CodeBlock>
           <div className="p-4 border rule rounded-sm">
             <h3 className="font-medium text-sm">Frontend (Vercel)</h3>
             <ul className="text-sm text-zinc-600 mt-2 space-y-1 list-disc pl-5">
-              <li>Set all 18 environment variables in Vercel dashboard</li>
+              <li>Set all 19 environment variables in Vercel dashboard</li>
               <li>Set NEXTAUTH_URL to your production domain</li>
               <li>Deploy from the main branch</li>
             </ul>

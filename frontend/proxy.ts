@@ -34,7 +34,7 @@ export function proxy(request: NextRequest) {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' https://avatars.githubusercontent.com https://*.blob.core.windows.net data:",
-      "connect-src 'self' https://sepolia.base.org https://mainnet.base.org https://api.relay.link https://*.reown.com https://*.walletconnect.com wss://*.walletconnect.com",
+      "connect-src 'self' https://sepolia.base.org https://mainnet.base.org https://base-sepolia-rpc.publicnode.com https://base-rpc.publicnode.com https://*.drpc.org https://api.relay.link https://api.web3modal.org https://pulse.walletconnect.org https://*.reown.com https://*.walletconnect.com https://rpc.walletconnect.org wss://*.walletconnect.com",
       "frame-src 'self' https://*.reown.com https://*.walletconnect.com",
     ].join("; ")
   );

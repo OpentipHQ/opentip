@@ -20,7 +20,7 @@ createAppKit({
   adapters: [wagmiAdapter],
   projectId: projectId || "demo",
   networks: [base, baseSepolia],
-  defaultNetwork: base,
+  defaultNetwork: process.env.NEXT_PUBLIC_CHAIN === "base" ? base : baseSepolia,
   metadata,
   features: { analytics: true },
 });

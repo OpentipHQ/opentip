@@ -75,6 +75,11 @@ export default function ResourcesPage() {
       <section className="border-t rule pt-10 space-y-6">
         <h2 className="serif text-2xl font-semibold">Integrations</h2>
         <div className="space-y-3">
+          <a href="https://groq.com" target="_blank" rel="noopener noreferrer" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
+            <h3 className="font-medium text-sm">Groq</h3>
+            <p className="text-sm text-zinc-600 mt-1">Powers AI-generated repository summaries.</p>
+            <p className="text-sm text-accent mt-1">groq.com →</p>
+          </a>
           <a href="https://relay.link" target="_blank" rel="noopener noreferrer" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
             <h3 className="font-medium text-sm">Relay</h3>
             <p className="text-sm text-zinc-600 mt-1">Powers ETH→USDC same-chain swaps for tips.</p>

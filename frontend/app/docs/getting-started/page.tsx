@@ -36,6 +36,9 @@ export default function GettingStartedPage() {
         <p className="text-sm text-zinc-700 leading-relaxed">
           For example: <a href="/vercel/next.js" className="text-accent underline underline-offset-4">opentip.tech/vercel/next.js</a>
         </p>
+        <p className="text-sm text-zinc-700 leading-relaxed">
+          Each repo page has two tabs — <strong>Tip</strong> (tipping form and stats) and <strong>About</strong> (AI-generated summary and developer links). Check the About tab to learn what a project does before tipping.
+        </p>
       </section>
 
       <section className="border-t rule pt-10 space-y-6">

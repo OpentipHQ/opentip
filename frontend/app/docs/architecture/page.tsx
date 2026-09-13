@@ -45,6 +45,10 @@ export default function ArchitecturePage() {
 │Postgres│    │  (Base)     │   │  Services  │
 └───────┘    └─────────────┘   └────────────┘
 
+External Services:
+  Groq (AI summaries) · Relay (ETH swaps) · Azure Blob (uploads)
+  Resend (emails) · GitHub API (repos, ownership)
+
 ┌─────────────────────────────────────────────────────────┐
 │                     Indexer                             │
 │           Node.js · Azure Container Apps                │
@@ -85,6 +89,10 @@ export default function ArchitecturePage() {
           <div className="p-3 border rule rounded-sm">
             <p className="font-medium text-sm">Azure Blob Storage</p>
             <p className="text-xs text-zinc-600 mt-1">Profile picture and header image uploads</p>
+          </div>
+          <div className="p-3 border rule rounded-sm">
+            <p className="font-medium text-sm">Groq</p>
+            <p className="text-xs text-zinc-600 mt-1">AI-powered repo summaries (GPT-OSS)</p>
           </div>
           <div className="p-3 border rule rounded-sm">
             <p className="font-medium text-sm">Resend</p>
@@ -249,7 +257,7 @@ Both flows:
       <section className="border-t rule pt-10 space-y-6">
         <h2 className="serif text-2xl font-semibold">Environment variables</h2>
         <p className="text-sm text-zinc-700 leading-relaxed">
-          The frontend requires 18 environment variables to run. The indexer requires 6.
+          The frontend requires 19 environment variables to run (including <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">GROQ_API_KEY</code> for AI summaries). The indexer requires 6.
         </p>
         <a href="/docs/contributing" className="inline-block text-sm text-accent underline underline-offset-4">
           See the full list in Contributing →

@@ -35,10 +35,13 @@ model IndexerState {
 }
 
 model Repo {
-  repo_id        String   @id
-  payout_address String   @db.VarChar(42)
-  registered_at  DateTime
-  updated_at     DateTime @updatedAt
+  repo_id              String    @id
+  payout_address       String    @db.VarChar(42)
+  registered_at        DateTime
+  updated_at           DateTime  @updatedAt
+  summary              String?   @db.Text
+  summary_generated_at DateTime?
+  links                String?   @db.Text
 }
 
 model User {

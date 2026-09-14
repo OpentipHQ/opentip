@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/motion/button";
 import { useEffect, useState } from "react";
 import { Plus, Minus } from "lucide-react";
+import DemoVideo from "@/components/DemoVideo";
 
 export default function Home() {
   const [stats, setStats] = useState<{ totalVolume: string; totalTips: number; developersPaid: number } | null>(null);
@@ -54,6 +55,18 @@ export default function Home() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* See it in action */}
+      <section className="py-16 md:py-24 border-b rule">
+        <div className="grid md:grid-cols-12 gap-12">
+          <div className="md:col-span-4">
+            <h2 className="serif fluid-heading font-semibold tracking-tight">See it in action</h2>
+          </div>
+          <div className="md:col-span-8">
+            <DemoVideo src="/opentip_demo.mp4" poster="/opentip_demo_poster.jpg" />
           </div>
         </div>
       </section>

@@ -12,3 +12,5 @@ broadcast/
 lib/
 .DS_Store
 *.log
+
+.vercel

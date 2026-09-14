@@ -262,24 +262,26 @@ export default function TipClient({ repoId }: { repoId: string }) {
     <div className="space-y-0">
 
       {/* Stats strip */}
-      <section className="py-8 border-b rule fluid-grid-3 gap-4">
-        <div>
-          <div className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">Pending</div>
-          <div className="stats mt-2 text-2xl flex items-baseline gap-2 text-zinc-900">
-            {pending!==undefined ? formatUnits(pending as bigint,6) : <Loader size={16} variant="dots" />}
-            <span className="text-xs text-zinc-500 font-sans">USDC</span>
+      <section className="py-8 border-b rule">
+        <div className="flex flex-col sm:flex-row sm:divide-x rule">
+          <div className="flex-1 sm:px-4 py-2 sm:py-0">
+            <div className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">Pending</div>
+            <div className="stats mt-2 text-2xl flex items-baseline gap-2 text-zinc-900">
+              {pending!==undefined ? formatUnits(pending as bigint,6) : <Loader size={16} variant="dots" />}
+              <span className="text-xs text-zinc-500 font-sans">USDC</span>
+            </div>
           </div>
-        </div>
-        <div className="border-b sm:border-b-0 sm:border-l rule pl-4">
-          <div className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">Total tipped</div>
-          <div className="stats mt-2 text-2xl flex items-baseline gap-2 text-zinc-900">
-            {isTotalPending ? <Loader size={16} variant="dots" /> : totalTipped!==undefined ? formatUnits(totalTipped as bigint,6) : "—"}
-            <span className="text-xs text-zinc-500 font-sans">USDC</span>
+          <div className="flex-1 sm:px-4 py-2 sm:py-0">
+            <div className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">Total tipped</div>
+            <div className="stats mt-2 text-2xl flex items-baseline gap-2 text-zinc-900">
+              {isTotalPending ? <Loader size={16} variant="dots" /> : totalTipped!==undefined ? formatUnits(totalTipped as bigint,6) : "—"}
+              <span className="text-xs text-zinc-500 font-sans">USDC</span>
+            </div>
           </div>
-        </div>
-        <div className="border-b sm:border-b-0 sm:border-l rule pl-4">
-          <div className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">Payout</div>
-          <div className="stats mt-2 text-sm text-zinc-700">{payout ? truncate(payout as string) : "—"}</div>
+          <div className="flex-1 sm:px-4 py-2 sm:py-0">
+            <div className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">Payout</div>
+            <div className="stats mt-2 text-sm text-zinc-700">{payout ? truncate(payout as string) : "—"}</div>
+          </div>
         </div>
       </section>
 
@@ -332,7 +334,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
 
           <div className="flex flex-wrap gap-3 items-end">
             <div className="flex-1 min-w-0 max-w-[200px]">
-              <Input label="Amount" value={amount} onChange={(v)=>{ setAmount(v); setAmountError(validateAmount(v)); }} error={amountError} reserveErrorLine leftIcon={currency==="USDC" ? <Coins /> : <Wallet />} placeholder="5.00" />
+              <Input value={amount} onChange={(v)=>{ setAmount(v); setAmountError(validateAmount(v)); }} error={amountError} leftIcon={currency==="USDC" ? <Coins /> : <Wallet />} placeholder="Amount" className="gap-0" />
             </div>
             <select value={currency} onChange={e=>setCurrency(e.target.value as any)} className="h-9 bg-transparent border rule rounded-sm px-3 text-sm text-zinc-900">
               <option>USDC</option>
@@ -346,8 +348,8 @@ export default function TipClient({ repoId }: { repoId: string }) {
           </div>
 
           <div className="flex flex-wrap gap-3 items-end">
-            <div className="flex-1 min-w-0">
-              <Input value={displayName} onChange={setDisplayName} placeholder="Display name (optional)" />
+            <div className="w-full max-w-[280px]">
+              <Input value={displayName} onChange={setDisplayName} placeholder="Display name (optional)" className="gap-0" />
             </div>
             <Button variant="ghost" size="sm" onClick={saveDisplayName}>Save</Button>
           </div>

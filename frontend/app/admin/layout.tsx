@@ -132,7 +132,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   });
 
   return (
-    <div className="flex min-h-[80vh] -mx-16 md:-mx-40">
+    <div className="flex min-h-[80vh] fluid-page-neg">
       {/* Desktop sidebar */}
       <aside
         className={`hidden md:flex flex-col border-r rule transition-all duration-200 ${

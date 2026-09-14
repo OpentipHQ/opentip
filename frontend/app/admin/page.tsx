@@ -41,7 +41,7 @@ export default function AdminOverview() {
       <h1 className="serif text-2xl font-semibold">Overview</h1>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard label="Total tips" value={formatUsdc(stats.totalTipsUsdc)} sub="USDC" />
         <StatCard label="Platform fees" value={formatUsdc(stats.totalFeesUsdc)} sub="USDC" />
         <StatCard label="Treasury balance" value={formatUsdc(stats.treasuryBalance || "0")} sub="USDC" />
@@ -55,7 +55,7 @@ export default function AdminOverview() {
         {stats.recentTips.length === 0 ? (
           <p className="text-sm text-zinc-500">No tips yet</p>
         ) : (
-          <div className="border rule rounded-sm overflow-hidden">
+          <div className="border rule rounded-sm overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b rule bg-zinc-900/5">

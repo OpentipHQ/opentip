@@ -79,10 +79,6 @@ export default function DocsPage() {
             <h3 className="font-medium">Smart Contract</h3>
             <p className="text-sm text-zinc-600 mt-1">Full reference for the on-chain contract — functions, events, and security model.</p>
           </Link>
-          <Link href="/docs/api" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
-            <h3 className="font-medium">API Reference</h3>
-            <p className="text-sm text-zinc-600 mt-1">REST endpoints for repos, tips, profiles, and account management.</p>
-          </Link>
           <Link href="/docs/architecture" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
             <h3 className="font-medium">Architecture</h3>
             <p className="text-sm text-zinc-600 mt-1">System design, indexer, auth flow, and infrastructure.</p>

@@ -293,7 +293,7 @@ export default function SmartContractPage() {
         <p className="text-sm text-zinc-700">
           The full contract source is available at <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">contracts/src/Opentip.sol</code> in the repository.
         </p>
-        <a href="https://github.com/opentip" target="_blank" rel="noopener noreferrer" className="inline-block mt-3 text-sm text-accent underline underline-offset-4">
+        <a href="https://github.com/opentiphq" target="_blank" rel="noopener noreferrer" className="inline-block mt-3 text-sm text-accent underline underline-offset-4">
           View on GitHub →
         </a>
       </section>

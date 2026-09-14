@@ -27,15 +27,15 @@ export default function ResourcesPage() {
       <section className="border-t rule pt-10 space-y-6">
         <h2 className="serif text-2xl font-semibold">GitHub</h2>
         <div className="space-y-3">
-          <a href="https://github.com/opentip" target="_blank" rel="noopener noreferrer" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
+          <a href="https://github.com/opentiphq" target="_blank" rel="noopener noreferrer" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
             <h3 className="font-medium text-sm">Opentip Organization</h3>
             <p className="text-sm text-zinc-600 mt-1">All repositories, issues, and source code.</p>
-            <p className="text-sm text-accent mt-1">github.com/opentip →</p>
+            <p className="text-sm text-accent mt-1">github.com/opentiphq →</p>
           </a>
-          <a href="https://github.com/opentip/opentip" target="_blank" rel="noopener noreferrer" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
+          <a href="https://github.com/opentiphq/opentip" target="_blank" rel="noopener noreferrer" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
             <h3 className="font-medium text-sm">Main Repository</h3>
             <p className="text-sm text-zinc-600 mt-1">Monorepo with frontend, indexer, and contracts.</p>
-            <p className="text-sm text-accent mt-1">github.com/opentip/opentip →</p>
+            <p className="text-sm text-accent mt-1">github.com/opentiphq/opentip →</p>
           </a>
         </div>
       </section>
@@ -43,10 +43,10 @@ export default function ResourcesPage() {
       <section className="border-t rule pt-10 space-y-6">
         <h2 className="serif text-2xl font-semibold">Social</h2>
         <div className="space-y-3">
-          <a href="https://twitter.com/opentip" target="_blank" rel="noopener noreferrer" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
+          <a href="https://x.com/opentip_tech" target="_blank" rel="noopener noreferrer" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
             <h3 className="font-medium text-sm">Twitter / X</h3>
             <p className="text-sm text-zinc-600 mt-1">Updates, announcements, and community.</p>
-            <p className="text-sm text-accent mt-1">twitter.com/opentip →</p>
+            <p className="text-sm text-accent mt-1">x.com/opentip_tech →</p>
           </a>
         </div>
       </section>
@@ -117,10 +117,6 @@ export default function ResourcesPage() {
           <a href="/docs/smart-contract" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
             <h3 className="font-medium text-sm">Smart Contract</h3>
             <p className="text-sm text-zinc-600 mt-1">Full on-chain reference.</p>
-          </a>
-          <a href="/docs/api" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
-            <h3 className="font-medium text-sm">API Reference</h3>
-            <p className="text-sm text-zinc-600 mt-1">REST endpoints for building on Opentip.</p>
           </a>
         </div>
       </section>

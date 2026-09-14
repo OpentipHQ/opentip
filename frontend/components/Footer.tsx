@@ -50,8 +50,8 @@ export default function Footer() {
               <p className="font-medium uppercase tracking-wider text-[0.65rem] opacity-60 mb-3">Resources</p>
               <div className="space-y-2 opacity-80">
                 <Link href="/docs" className="block hover:opacity-100 transition-opacity">Documentation</Link>
-                <a href="https://github.com/opentip" target="_blank" rel="noopener noreferrer" className="block hover:opacity-100 transition-opacity">GitHub</a>
-                <a href="https://twitter.com/opentip" target="_blank" rel="noopener noreferrer" className="block hover:opacity-100 transition-opacity">Twitter</a>
+                <a href="https://github.com/opentiphq" target="_blank" rel="noopener noreferrer" className="block hover:opacity-100 transition-opacity">GitHub</a>
+                <a href="https://x.com/opentip_tech" target="_blank" rel="noopener noreferrer" className="block hover:opacity-100 transition-opacity">Twitter</a>
               </div>
             </div>
             <div>

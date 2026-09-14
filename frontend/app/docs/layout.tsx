@@ -9,7 +9,6 @@ const SECTIONS = [
   { href: "/docs/getting-started", label: "Getting Started" },
   { href: "/docs/for-developers", label: "For Developers" },
   { href: "/docs/smart-contract", label: "Smart Contract" },
-  { href: "/docs/api", label: "API Reference" },
   { href: "/docs/architecture", label: "Architecture" },
   { href: "/docs/contributing", label: "Contributing" },
   { href: "/docs/resources", label: "Resources" },

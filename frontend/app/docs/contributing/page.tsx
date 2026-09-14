@@ -34,7 +34,7 @@ export default function ContributingPage() {
 
       <section className="border-t rule pt-10 space-y-6">
         <h2 className="serif text-2xl font-semibold">Clone & install</h2>
-        <CodeBlock>{`git clone https://github.com/opentip/opentip.git
+        <CodeBlock>{`git clone https://github.com/opentiphq/opentip.git
 cd opentip
 npm install`}</CodeBlock>
         <p className="text-sm text-zinc-700 leading-relaxed">

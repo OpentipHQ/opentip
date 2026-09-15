@@ -32,7 +32,7 @@ async function getFromBlock(): Promise<bigint> {
   return latest > 10000n ? latest - 10000n : 0n;
 }
 
-const MAX_RANGE = 10000n; // sepolia.base.org limits eth_getLogs to 10k blocks
+const MAX_RANGE = 2000n; // Base mainnet RPC limits eth_getLogs to 2k blocks
 
 async function getLogsBatched(fromBlock: bigint, toBlock: bigint) {
   const all: any[] = [];

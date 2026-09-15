@@ -104,8 +104,10 @@ cp .env.example .env   # fill in PRIVATE_KEY, BASE_SEPOLIA_RPC, ETHERSCAN_API_KE
 forge script script/Deploy.s.sol:Deploy --rpc-url $BASE_SEPOLIA_RPC --broadcast --verify
 ```
 
-The contract is deployed and verified on Base Sepolia:
-- **Contract:** [`0xeD13dB8234d437771e115419BF7498Ddef90Dc8D`](https://sepolia.basescan.org/address/0xed13db8234d437771e115419bf7498ddef90dc8d)
+The contract is deployed and verified on Base mainnet:
+- **Contract (mainnet):** [`0xA45Be472a64eE6Daa093c6a975Cd8908C615d594`](https://basescan.org/address/0xA45Be472a64eE6Daa093c6a975Cd8908C615d594)
+- **Contract (testnet):** [`0xeD13dB8234d437771e115419BF7498Ddef90Dc8D`](https://sepolia.basescan.org/address/0xed13db8234d437771e115419bf7498ddef90dc8d)
+- **USDC (mainnet):** `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`
 - **USDC (testnet):** `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
 
 ### 3. Database
@@ -252,4 +254,5 @@ MIT
 - **GitHub:** [github.com/opentiphq](https://github.com/opentiphq)
 - **X / Twitter:** [@opentip_tech](https://x.com/opentip_tech)
 - **Email:** [support@opentip.tech](mailto:support@opentip.tech)
+- **Contract (mainnet):** [Basescan](https://basescan.org/address/0xA45Be472a64eE6Daa093c6a975Cd8908C615d594)
 - **Contract (testnet):** [Basescan](https://sepolia.basescan.org/address/0xed13db8234d437771e115419bf7498ddef90dc8d)

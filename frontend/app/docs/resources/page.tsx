@@ -16,6 +16,11 @@ export default function ResourcesPage() {
       <section className="border-t rule pt-10 space-y-6">
         <h2 className="serif text-2xl font-semibold">Smart Contract</h2>
         <div className="space-y-3">
+          <a href="https://basescan.org/address/0xA45Be472a64eE6Daa093c6a975Cd8908C615d594" target="_blank" rel="noopener noreferrer" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
+            <h3 className="font-medium text-sm">Base (Mainnet)</h3>
+            <code className="block mt-2 font-mono text-xs text-zinc-500 break-all">0xA45Be472a64eE6Daa093c6a975Cd8908C615d594</code>
+            <p className="text-sm text-accent mt-1">View on Basescan →</p>
+          </a>
           <a href="https://sepolia.basescan.org/address/0xed13db8234d437771e115419bf7498ddef90dc8d" target="_blank" rel="noopener noreferrer" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
             <h3 className="font-medium text-sm">Base Sepolia (Testnet)</h3>
             <code className="block mt-2 font-mono text-xs text-zinc-500 break-all">0xeD13dB8234d437771e115419BF7498Ddef90Dc8D</code>

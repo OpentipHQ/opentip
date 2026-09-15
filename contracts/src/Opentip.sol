@@ -12,7 +12,7 @@ import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 /// @title Opentip — repo-level tip jar on Base (USDC only, pull payments)
 /// @notice Tips are always credited as USDC (6 decimals). ETH is swapped to USDC offchain via Relay before calling receiveTip.
-/// @dev Chain: Base Sepolia testnet first, then Base mainnet. No cross-chain logic in v1.
+/// @dev Deployed on Base mainnet (0xA45Be472a64eE6Daa093c6a975Cd8908C615d594). No cross-chain logic in v1.
 contract Opentip is Ownable2Step, Pausable, ReentrancyGuard, EIP712 {
     using SafeERC20 for IERC20;
 

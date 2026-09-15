@@ -86,7 +86,8 @@ export default function SmartContractPage() {
             </div>
             <div className="p-4 border rule rounded-sm">
               <p className="text-xs text-zinc-500 uppercase tracking-wider">Mainnet (Base)</p>
-              <p className="text-sm text-zinc-500 mt-2">Not yet deployed</p>
+              <code className="block mt-2 font-mono text-sm break-all">0xA45Be472a64eE6Daa093c6a975Cd8908C615d594</code>
+              <a href="https://basescan.org/address/0xA45Be472a64eE6Daa093c6a975Cd8908C615d594" target="_blank" rel="noopener noreferrer" className="inline-block mt-2 text-xs text-accent underline underline-offset-4">Basescan →</a>
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -255,8 +256,8 @@ export default function SmartContractPage() {
 {`{
   name: "Opentip",
   version: "1",
-  chainId: 84532,
-  verifyingContract: "0xeD13dB8234d437771e115419BF7498Ddef90Dc8D"
+  chainId: 8453,
+  verifyingContract: "0xA45Be472a64eE6Daa093c6a975Cd8908C615d594"
 }`}
             </code>
           </div>

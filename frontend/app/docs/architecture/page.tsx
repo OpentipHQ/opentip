@@ -234,7 +234,7 @@ Both flows:
           </div>
           <div className="p-4 border rule rounded-sm">
             <h3 className="font-medium text-sm">Contract → Base (Foundry)</h3>
-            <p className="text-sm text-zinc-600 mt-1">Deployed via Foundry scripts. Verified on Basescan. Currently on Base Sepolia (testnet).</p>
+            <p className="text-sm text-zinc-600 mt-1">Deployed via Foundry scripts. Verified on Basescan. Live on Base mainnet.</p>
           </div>
         </div>
       </section>

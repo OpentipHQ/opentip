@@ -101,13 +101,13 @@ export default function DocsPage() {
       <section className="border-t rule pt-10">
         <h2 className="serif text-2xl font-semibold mb-4">Contract</h2>
         <p className="text-sm text-zinc-600">
-          Deployed on Base Sepolia (testnet):
+          Deployed on Base mainnet:
         </p>
         <code className="block mt-3 bg-zinc-900 text-zinc-100 p-4 rounded-sm font-mono text-sm break-all">
-          0xeD13dB8234d437771e115419BF7498Ddef90Dc8D
+          0xA45Be472a64eE6Daa093c6a975Cd8908C615d594
         </code>
         <a
-          href="https://sepolia.basescan.org/address/0xed13db8234d437771e115419bf7498ddef90dc8d"
+          href="https://basescan.org/address/0xA45Be472a64eE6Daa093c6a975Cd8908C615d594"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block mt-3 text-sm text-accent underline underline-offset-4"

@@ -22,4 +22,16 @@ forge verify-contract 0x5b73C5498c1E3b4dbA84de0F1833c4a029d90519 src/Opentip.sol
 ```
 
 ## Base Mainnet (8453) — Production
-- Not yet deployed
+- **Contract:** `0xA45Be472a64eE6Daa093c6a975Cd8908C615d594`
+- **USDC:** `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`
+- **Owner/Deployer:** `0x4950A3333eE2577360d1b022952BB325F362542F`
+- **Registrar Signer:** `0xbe615CDD9cc49a7620b9F77d8ED957DC442d3fD9`
+- **Treasury:** `0x4950A3333eE2577360d1b022952BB325F362542F`
+- **feeBps:** 500 (5%)
+- **Basescan:** https://basescan.org/address/0xA45Be472a64eE6Daa093c6a975Cd8908C615d594
+
+### Env wiring
+- `frontend/.env` → `NEXT_PUBLIC_CHAIN=base`
+- `frontend/.env` → `NEXT_PUBLIC_BASE_CONTRACT=0xA45Be472a64eE6Daa093c6a975Cd8908C615d594`
+- `indexer/.env` → `NEXT_PUBLIC_CHAIN=base`
+- `indexer/.env` → `CONTRACT_ADDRESS=0xA45Be472a64eE6Daa093c6a975Cd8908C615d594`

@@ -73,6 +73,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
   ]).finally(()=>setTipsLoading(false)); }, [repoIdLower]);
 
   const [relayTxHash, setRelayTxHash] = useState<`0x${string}` | undefined>(undefined);
+  const [relayQuote, setRelayQuote] = useState<any>(null);
   const relayReceipt = useWaitForTransactionReceipt({ hash: relayTxHash });
 
   const approveW = useWriteContract();
@@ -86,10 +87,11 @@ export default function TipClient({ repoId }: { repoId: string }) {
   const claimReceipt = useWaitForTransactionReceipt({ hash: claimW.data });
   const registerReceipt = useWaitForTransactionReceipt({ hash: registerW.data });
 
-  const validateAmount = (v: string) => {
+  const validateAmount = (v: string, cur?: string) => {
     const n = Number(v);
+    const c = cur || currency;
     if (!v || isNaN(n) || n <=0) return "Enter an amount";
-    if (currency==="USDC" && parseUnits(v||"0",6) < BigInt(1_000_000)) return "Minimum $1";
+    if (c==="USDC" && parseUnits(v||"0",6) < BigInt(1_000_000)) return "Minimum $1";
     return undefined;
   };
 
@@ -135,17 +137,25 @@ export default function TipClient({ repoId }: { repoId: string }) {
   useEffect(()=>{
     if (relayTxHash && relayReceipt.isSuccess) {
       if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
-      showToast({ status:"success", title:"ETH tip sent", description:`${amount} ETH → USDC` });
-      setTipFlow("success"); setTimeout(()=>setTipFlow("idle"),1600);
+      const usdcOut = relayQuote?.details?.currencyOut?.amount;
+      const usdcFormatted = usdcOut ? formatUnits(BigInt(usdcOut), 6) : null;
+      if (usdcFormatted) {
+        setCurrency("USDC");
+        setAmount(usdcFormatted);
+        showToast({ status:"success", title:"Swapped to USDC", description:`${usdcFormatted} USDC received — approve the tip` });
+      } else {
+        showToast({ status:"success", title:"Swap complete", description:"Switch to USDC and enter the amount you received" });
+      }
+      setTipFlow("idle");
       setRelayTxHash(undefined);
-      fetch(`/api/tips?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setTips).catch(()=>{});
-      fetch(`/api/leaderboard?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setLeaderboard).catch(()=>{});
+      setRelayQuote(null);
     }
     if (relayTxHash && relayReceipt.isError) {
       if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
-      showToast({ status:"error", title:"ETH tip failed" });
+      showToast({ status:"error", title:"Swap failed", description:"ETH → USDC swap did not complete" });
       setTipFlow("error"); setTimeout(()=>setTipFlow("idle"),2000);
       setRelayTxHash(undefined);
+      setRelayQuote(null);
     }
   }, [relayReceipt.isSuccess, relayReceipt.isError, relayTxHash]);
 
@@ -171,7 +181,8 @@ export default function TipClient({ repoId }: { repoId: string }) {
       const id = showLoading("Fetching Relay quote...", `${amount} ETH → USDC`);
       try {
         const quote = await getRelayQuote({ amountWei: wei, recipient: address });
-        updateToast(id, { status:"loading", title:"Confirm in wallet", description:`${amount} ETH → USDC`, duration: 0 });
+        setRelayQuote(quote);
+        updateToast(id, { status:"loading", title:"Confirm in wallet", description:`Swapping ${amount} ETH for USDC`, duration: 0 });
         const tx = quote.steps[0].items[0].data;
         relaySend.sendTransaction({
           to: tx.to as `0x${string}`,

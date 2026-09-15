@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Suspense } from "react";
+import { notFound } from "next/navigation";
 import { fetchRepoMeta } from "@/lib/github";
 import { prisma } from "@/lib/prisma";
 import { generateRepoSummary } from "@/lib/ai";
@@ -61,8 +62,9 @@ export default async function RepoPage({ params }: { params: Promise<{ owner: st
   try {
     const repoRecord = await prisma.repo.findUnique({
       where: { repo_id: repoId.toLowerCase() },
-      select: { payout_address: true },
+      select: { payout_address: true, hidden: true },
     });
+    if (!repoRecord || repoRecord.hidden) notFound();
     if (repoRecord) {
       const wallet = await prisma.userWallet.findUnique({
         where: { address: repoRecord.payout_address },

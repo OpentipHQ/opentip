@@ -2,7 +2,7 @@ import { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const repos = await prisma.repo.findMany({ select: { repo_id: true } });
+  const repos = await prisma.repo.findMany({ where: { hidden: false }, select: { repo_id: true } });
   const devs = await prisma.user.findMany({ where: { login: { not: null } }, select: { login: true } });
 
   return [

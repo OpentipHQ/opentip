@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
           repoId: repo.repo_id,
           payoutAddress: repo.payout_address,
           registeredAt: repo.registered_at,
+          hidden: repo.hidden,
           totalTipped: Number(stats._sum.usdc_amount || 0),
           totalFees: Number(stats._sum.fee_amount || 0),
           tipCount: stats._count || 0,

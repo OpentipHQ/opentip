@@ -71,7 +71,7 @@ export default async function DevProfilePage({
 
   const repos = walletAddresses.length > 0
     ? await prisma.repo.findMany({
-        where: { payout_address: { in: walletAddresses } },
+        where: { payout_address: { in: walletAddresses }, hidden: false },
         select: {
           repo_id: true,
           registered_at: true,

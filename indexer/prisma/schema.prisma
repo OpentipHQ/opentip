@@ -39,6 +39,7 @@ model Repo {
   payout_address String   @db.VarChar(42)
   registered_at  DateTime
   updated_at     DateTime @updatedAt
+  hidden         Boolean  @default(false)
 }
 
 model User {

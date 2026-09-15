@@ -21,6 +21,28 @@ export default function AdminRepos() {
   const [reassignTarget, setReassignTarget] = useState<string | null>(null);
   const [newPayout, setNewPayout] = useState("");
   const [reassigning, setReassigning] = useState(false);
+  const [toggling, setToggling] = useState<string | null>(null);
+
+  const handleToggleHidden = async (repoId: string, currentHidden: boolean) => {
+    setToggling(repoId);
+    try {
+      const res = await fetch(`/api/admin/repos/${encodeURIComponent(repoId)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hidden: !currentHidden }),
+      });
+      const j = await res.json();
+      if (j.ok) {
+        setRepos(prev => prev.map(r => r.repoId === repoId ? { ...r, hidden: j.hidden } : r));
+        showToast({ status: "success", title: j.hidden ? "Repo hidden" : "Repo visible" });
+      } else {
+        showToast({ status: "error", title: "Failed", description: j.error });
+      }
+    } catch (e: any) {
+      showToast({ status: "error", title: "Failed", description: e.message });
+    }
+    setToggling(null);
+  };
 
   useEffect(() => {
     fetch("/api/admin/repos")
@@ -83,16 +105,26 @@ export default function AdminRepos() {
               <th className="text-left px-4 py-2 font-medium text-zinc-600">Payout</th>
               <th className="text-right px-4 py-2 font-medium text-zinc-600">Balance</th>
               <th className="text-right px-4 py-2 font-medium text-zinc-600">Tips</th>
+              <th className="text-center px-4 py-2 font-medium text-zinc-600">Hidden</th>
               <th className="text-right px-4 py-2 font-medium text-zinc-600">Action</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((repo) => (
-              <tr key={repo.repoId} className="border-b rule last:border-0">
+              <tr key={repo.repoId} className={`border-b rule last:border-0 ${repo.hidden ? "opacity-50" : ""}`}>
                 <td className="px-4 py-2 font-mono text-xs">{repo.repoId}</td>
                 <td className="px-4 py-2 font-mono text-xs">{truncate(repo.payoutAddress)}</td>
                 <td className="px-4 py-2 text-right stats text-xs">{formatUsdc(repo.totalTipped)} USDC</td>
                 <td className="px-4 py-2 text-right stats text-xs">{repo.tipCount}</td>
+                <td className="px-4 py-2 text-center">
+                  <button
+                    onClick={() => handleToggleHidden(repo.repoId, !!repo.hidden)}
+                    disabled={toggling === repo.repoId}
+                    className={`text-xs px-2 py-1 rounded-sm border rule transition-colors ${repo.hidden ? "bg-red-50 text-red-600 hover:bg-red-100" : "bg-zinc-50 text-zinc-600 hover:bg-zinc-100"}`}
+                  >
+                    {toggling === repo.repoId ? "..." : repo.hidden ? "Hidden" : "Visible"}
+                  </button>
+                </td>
                 <td className="px-4 py-2 text-right">
                   <Button variant="ghost" size="sm" onClick={() => setReassignTarget(repo.repoId)}>
                     Reassign

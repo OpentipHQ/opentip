@@ -146,6 +146,22 @@ export default function TipClient({ repoId }: { repoId: string }) {
       } else {
         showToast({ status:"success", title:"Swap complete", description:"Switch to USDC and enter the amount you received" });
       }
+      const checkEndpoint = relayQuote?.steps?.[0]?.items?.[0]?.check?.endpoint;
+      const requestId = relayQuote?.requestId;
+      const relayKey = process.env.NEXT_PUBLIC_RELAY_API_KEY;
+      const relayHeaders: Record<string, string> = {};
+      if (relayKey) relayHeaders["x-relay-api-key"] = relayKey;
+      if (checkEndpoint) {
+        console.log("[Relay] polling check endpoint:", checkEndpoint);
+        fetch(`https://api.relay.link${checkEndpoint}`, { headers: relayHeaders })
+          .then(r => r.json()).then(d => console.log("[Relay] check response:", d))
+          .catch(e => console.error("[Relay] check failed:", e));
+      } else if (requestId) {
+        console.log("[Relay] no check endpoint, using requestId:", requestId);
+        fetch(`https://api.relay.link/intents/status/v3?requestId=${requestId}`, { headers: relayHeaders })
+          .then(r => r.json()).then(d => console.log("[Relay] status response:", d))
+          .catch(e => console.error("[Relay] status failed:", e));
+      }
       setTipFlow("idle");
       setRelayTxHash(undefined);
       setRelayQuote(null);
@@ -181,6 +197,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
       const id = showLoading("Fetching Relay quote...", `${amount} ETH → USDC`);
       try {
         const quote = await getRelayQuote({ amountWei: wei, recipient: address });
+        console.log("[Relay] quote:", JSON.stringify(quote, null, 2));
         setRelayQuote(quote);
         updateToast(id, { status:"loading", title:"Confirm in wallet", description:`Swapping ${amount} ETH for USDC`, duration: 0 });
         const tx = quote.steps[0].items[0].data;

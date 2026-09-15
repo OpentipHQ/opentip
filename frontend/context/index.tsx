@@ -1,6 +1,6 @@
 "use client";
 
-import { wagmiAdapter, projectId } from "@/config";
+import { wagmiAdapter, projectId, networks } from "@/config";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createAppKit } from "@reown/appkit/react";
 import { base, baseSepolia } from "@reown/appkit/networks";
@@ -13,13 +13,13 @@ const metadata = {
   name: "Opentip",
   description: "Open-source tip jar on Base — tip any GitHub repo in crypto",
   url: "https://opentip.tech",
-  icons: ["https://avatars.githubusercontent.com/u/179229932"],
+  icons: ["https://opentip.tech/Opentip.png"],
 };
 
 createAppKit({
   adapters: [wagmiAdapter],
   projectId: projectId || "demo",
-  networks: [base, baseSepolia],
+  networks,
   defaultNetwork: process.env.NEXT_PUBLIC_CHAIN === "base" ? base : baseSepolia,
   metadata,
   features: { analytics: true },

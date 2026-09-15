@@ -1,4 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" baseProfile="tiny-ps">
+  <title>Opentip</title>
   <rect width="200" height="200" fill="#ffffff"/>
   <g fill="#1f21b6">
     <rect x="92" y="15" width="16" height="90" transform="rotate(0,100,100)"/>

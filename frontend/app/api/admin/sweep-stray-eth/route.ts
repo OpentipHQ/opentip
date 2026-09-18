@@ -3,23 +3,26 @@ import { handleAdminRequest, auditLog } from "@/lib/admin-api";
 import { getOwnerWallet } from "@/lib/admin-wallet";
 import { opentipV2Abi } from "@/lib/contract";
 import { CONTRACT_ADDRESS } from "@/lib/chain";
-import { validate, reassignPayoutSchema } from "@/lib/validations";
+import { validate, addressSchema } from "@/lib/validations";
+import { z } from "zod";
+
+const sweepSchema = z.object({ address: addressSchema });
 
 export async function POST(req: NextRequest) {
-  return handleAdminRequest(req, "write", async (admin) => {
+  return handleAdminRequest(req, "critical", async (admin) => {
     const body = await req.json();
-    const data = validate(reassignPayoutSchema, body);
+    const data = validate(sweepSchema, body);
     if (!CONTRACT_ADDRESS) throw new Error("contract not configured");
 
     const wallet = getOwnerWallet();
     const hash = await wallet.writeContract({
-      address: CONTRACT_ADDRESS!,
+      address: CONTRACT_ADDRESS,
       abi: opentipV2Abi,
-      functionName: "adminReassignPayout",
-      args: [data.repoId, data.address as `0x${string}`],
+      functionName: "sweepStrayEth",
+      args: [data.address as `0x${string}`],
     });
 
-    await auditLog(admin.address, "reassign_payout", { repoId: data.repoId, address: data.address }, hash);
+    await auditLog(admin.address, "sweep_stray_eth", { address: data.address }, hash);
     return { ok: true, txHash: hash };
   });
 }

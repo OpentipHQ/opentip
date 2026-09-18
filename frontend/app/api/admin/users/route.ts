@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
 
         const tipStats = await prisma.tip.aggregate({
           where: { tipper_address: { in: walletAddresses } },
-          _sum: { usdc_amount: true },
+          _sum: { amount: true },
           _count: true,
         });
 
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
           createdAt: user.createdAt,
           wallets: user.wallets,
           tipsReceived: tipStats._count || 0,
-          totalTipped: Number(tipStats._sum.usdc_amount || 0),
+          totalTipped: Number(tipStats._sum.amount || 0),
         };
       })
     );

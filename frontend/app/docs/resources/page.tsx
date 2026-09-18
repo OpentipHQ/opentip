@@ -85,11 +85,6 @@ export default function ResourcesPage() {
             <p className="text-sm text-zinc-600 mt-1">Powers AI-generated repository summaries.</p>
             <p className="text-sm text-accent mt-1">groq.com →</p>
           </a>
-          <a href="https://relay.link" target="_blank" rel="noopener noreferrer" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
-            <h3 className="font-medium text-sm">Relay</h3>
-            <p className="text-sm text-zinc-600 mt-1">Powers ETH→USDC same-chain swaps for tips.</p>
-            <p className="text-sm text-accent mt-1">relay.link →</p>
-          </a>
           <a href="https://reown.com" target="_blank" rel="noopener noreferrer" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
             <h3 className="font-medium text-sm">Reown (WalletConnect)</h3>
             <p className="text-sm text-zinc-600 mt-1">Wallet connection modal used by Opentip.</p>

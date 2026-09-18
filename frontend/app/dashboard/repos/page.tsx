@@ -2,11 +2,13 @@
 import { useSession } from "next-auth/react";
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
+import { formatUnits } from "viem";
 import { Button } from "@/components/motion/button";
 import { Loader } from "@/components/motion/loader";
 import { useAccount, useReadContracts } from "wagmi";
-import { opentipAbi } from "@/lib/contract";
-import { CONTRACT_ADDRESS, CHAIN_ID } from "@/lib/chain";
+import { opentipV2Abi } from "@/lib/contract";
+import { CONTRACT_ADDRESS, CHAIN_ID, USDC_ADDRESS, ETH_ADDRESS, OAR_ADDRESS, getTokenDecimals } from "@/lib/chain";
+import { fmtUsd } from "@/lib/prices";
 
 type LinkItem = { title: string; url: string };
 
@@ -138,25 +140,31 @@ export default function DashboardRepos() {
   const [registeredRepos, setRegisteredRepos] = useState<any[]>([]);
   const [loadingRegistered, setLoadingRegistered] = useState(true);
   const [expandedRepo, setExpandedRepo] = useState<string | null>(null);
+  const [prices, setPrices] = useState<Record<string, number>>({});
 
-  const onChainContracts = contract && registeredRepos.length > 0 ? registeredRepos.flatMap((r: any) => [
-    { address: contract, abi: opentipAbi, functionName: "getPendingBalance" as const, args: [r.repo_id], chainId: CHAIN_ID },
-    { address: contract, abi: opentipAbi, functionName: "getTotalTipped" as const, args: [r.repo_id], chainId: CHAIN_ID },
-  ]) : [];
+  const tokens = [USDC_ADDRESS, ETH_ADDRESS, OAR_ADDRESS];
+  const onChainContracts = contract && registeredRepos.length > 0 ? registeredRepos.flatMap((r: any) =>
+    tokens.flatMap((token) => [
+      { address: contract, abi: opentipV2Abi, functionName: "getPendingBalance" as const, args: [r.repo_id, token], chainId: CHAIN_ID },
+      { address: contract, abi: opentipV2Abi, functionName: "getTotalTipped" as const, args: [r.repo_id, token], chainId: CHAIN_ID },
+    ])
+  ) : [];
 
   const { data: onChainData } = useReadContracts({ contracts: onChainContracts });
 
   const onChainMap = useMemo(() => {
-    const map: Record<string, { pending: string; total: string }> = {};
+    const map: Record<string, { pending: Record<string, bigint>; total: Record<string, bigint> }> = {};
     for (let i = 0; i < registeredRepos.length; i++) {
-      const pendingResult = onChainData?.[i * 2];
-      const totalResult = onChainData?.[i * 2 + 1];
-      if (pendingResult?.status === "success" && totalResult?.status === "success") {
-        map[registeredRepos[i].repo_id] = {
-          pending: (pendingResult.result as bigint).toString(),
-          total: (totalResult.result as bigint).toString(),
-        };
+      const pending: Record<string, bigint> = {};
+      const total: Record<string, bigint> = {};
+      for (let t = 0; t < tokens.length; t++) {
+        const idx = i * tokens.length * 2 + t * 2;
+        const pendingResult = onChainData?.[idx];
+        const totalResult = onChainData?.[idx + 1];
+        pending[tokens[t]] = pendingResult?.status === "success" ? (pendingResult.result as bigint) : 0n;
+        total[tokens[t]] = totalResult?.status === "success" ? (totalResult.result as bigint) : 0n;
       }
+      map[registeredRepos[i].repo_id] = { pending, total };
     }
     return map;
   }, [onChainData, registeredRepos]);
@@ -164,6 +172,7 @@ export default function DashboardRepos() {
   useEffect(() => {
     if (status !== "authenticated") return;
     fetch("/api/registered-repos").then(r => r.json()).then(j => Array.isArray(j) ? setRegisteredRepos(j) : setRegisteredRepos([])).finally(() => setLoadingRegistered(false));
+    fetch("/api/prices").then(r => r.json()).then(setPrices).catch(() => {});
   }, [status]);
 
   if (status === "loading") return <div className="py-20 flex justify-center"><Loader variant="spinner" size={24} /></div>;
@@ -180,18 +189,28 @@ export default function DashboardRepos() {
         <ul className="divide-y rule">
           {registeredRepos.map((r: any) => {
             const onChain = onChainMap[r.repo_id];
-            const pending = onChain ? (Number(onChain.pending) / 1e6).toFixed(2) : "—";
-            const total = onChain ? (Number(onChain.total) / 1e6).toFixed(2) : "—";
             const isClaimant = address && contract && r.payout_address.toLowerCase() === address.toLowerCase();
             const isExpanded = expandedRepo === r.repo_id;
+
+            let pendingUsd = 0;
+            let totalUsd = 0;
+            if (onChain) {
+              for (const token of tokens) {
+                const dec = getTokenDecimals(token);
+                const price = prices[token.toLowerCase()] ?? 0;
+                pendingUsd += Number(formatUnits(onChain.pending[token] ?? 0n, dec)) * price;
+                totalUsd += Number(formatUnits(onChain.total[token] ?? 0n, dec)) * price;
+              }
+            }
+
             return (
               <li key={r.repo_id} className="py-4">
 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
                   <div>
                     <Link href={`/${r.repo_id}`} className="font-mono text-sm underline underline-offset-4 hover:text-accent">{r.repo_id}</Link>
                     <div className="flex gap-4 mt-1">
-                      <span className="stats text-xs text-zinc-500">pending: ${pending}</span>
-                      <span className="stats text-xs text-zinc-500">total: ${total}</span>
+                      <span className="stats text-xs text-zinc-500">pending: {fmtUsd(pendingUsd)}</span>
+                      <span className="stats text-xs text-zinc-500">total: {fmtUsd(totalUsd)}</span>
                       <span className="stats text-xs text-zinc-500">{r.tip_count} tips</span>
                     </div>
                   </div>

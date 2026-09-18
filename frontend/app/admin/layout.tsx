@@ -13,6 +13,8 @@ const NAV_ITEMS = [
   { href: "/admin/users", label: "Users", icon: UsersIcon, role: "viewer" },
   { href: "/admin/activity", label: "Activity", icon: ActivityIcon, role: "viewer" },
   { href: "/admin/admins", label: "Admins", icon: AdminsIcon, role: "owner" },
+  { href: "/admin/tokens", label: "Tokens", icon: TokensIcon, role: "owner" },
+  { href: "/admin/migrate", label: "Migrate", icon: MigrateIcon, role: "owner" },
 ];
 
 function OverviewIcon({ className }: { className?: string }) {
@@ -76,6 +78,25 @@ function AdminsIcon({ className }: { className?: string }) {
   return (
     <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  );
+}
+
+function TokensIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 6v12" />
+      <path d="M15 9.5c0-1.38-1.34-2.5-3-2.5s-3 1.12-3 2.5 1.34 2.5 3 2.5 3 1.12 3 2.5-1.34 2.5-3 2.5" />
+    </svg>
+  );
+}
+
+function MigrateIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 12h14" />
+      <polyline points="12 5 19 12 12 19" />
     </svg>
   );
 }

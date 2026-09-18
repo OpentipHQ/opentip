@@ -54,7 +54,7 @@ export default function ForDevelopersPage() {
           <div className="p-4 border rule rounded-sm">
             <h3 className="font-medium text-sm">What happens behind the scenes</h3>
             <p className="text-sm text-zinc-600 mt-1">
-              Opentip checks the GitHub API to confirm you own or have write access to the repository. If verified, the server signs an EIP-712 registration permit using the registrar key. This signature is submitted to the smart contract along with your payout address.
+              Opentip checks the GitHub API to confirm you own or have write access to the repository. If verified, the server signs an EIP-712 registration permit using the registrar key. This signature expires in 5 minutes and is submitted to the smart contract along with your payout address. The on-chain expiry is hard-capped at 10 minutes.
             </p>
           </div>
         </div>
@@ -112,14 +112,14 @@ export default function ForDevelopersPage() {
       <section className="border-t rule pt-10 space-y-6">
         <h2 className="serif text-2xl font-semibold">Step 4 — Claim tips</h2>
         <p className="text-sm text-zinc-700 leading-relaxed">
-          When someone tips your repo, the USDC is held by the smart contract in a pending balance. To withdraw, connect the wallet that was registered as the payout address and click <strong>Claim</strong>.
+          When someone tips your repo, the tokens (USDC, ETH, or OAR) are held by the smart contract in a per-token pending balance. To withdraw, connect the wallet that was registered as the payout address and click <strong>Claim all</strong>.
         </p>
         <p className="text-sm text-zinc-700 leading-relaxed">
           The full pending balance (after the 5% fee) is transferred to your wallet in one transaction.
         </p>
         <div className="p-4 border rule rounded-sm bg-accent/5">
           <p className="text-sm text-zinc-700">
-            <strong>Important:</strong> Only the wallet registered as the payout address can claim tips. If you lose access to this wallet, contact us — the contract owner can reassign the payout address as an emergency recovery measure.
+            <strong>Important:</strong> Only the wallet registered as the payout address can claim tips. If you lose access to this wallet, you must first link and verify your new wallet in <a href="/dashboard/wallets" className="text-accent underline underline-offset-4">Dashboard → Wallets</a>. Then contact us — the contract owner can reassign the payout address to your verified wallet as an emergency recovery measure.
           </p>
         </div>
       </section>
@@ -172,9 +172,9 @@ export default function ForDevelopersPage() {
           Opentip uses a pull payment pattern. Tips are not sent directly to your wallet. Instead:
         </p>
         <ol className="text-sm text-zinc-700 space-y-2 list-decimal pl-5">
-          <li>The tipper approves and sends USDC to the contract.</li>
-          <li>The contract deducts 5% to the treasury and credits 95% to the repo&apos;s pending balance.</li>
-          <li>You (the payout address holder) call <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">claim()</code> to withdraw.</li>
+          <li>The tipper sends tokens (USDC via approve+transfer, ETH via payable call, or OAR via approve+transfer) to the contract.</li>
+          <li>The contract deducts 5% to the treasury and credits 95% to the repo&apos;s pending balance for that token.</li>
+          <li>You (the payout address holder) call <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">claimAll()</code> to withdraw all tokens at once.</li>
         </ol>
         <p className="text-sm text-zinc-700 leading-relaxed">
           This model means you control when you withdraw, and the contract never has custody of your funds beyond what you are owed.

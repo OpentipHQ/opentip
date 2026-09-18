@@ -80,14 +80,14 @@ export default function SmartContractPage() {
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 border rule rounded-sm">
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Testnet (Base Sepolia)</p>
-              <code className="block mt-2 font-mono text-sm break-all">0xeD13dB8234d437771e115419BF7498Ddef90Dc8D</code>
-              <a href="https://sepolia.basescan.org/address/0xed13db8234d437771e115419bf7498ddef90dc8d" target="_blank" rel="noopener noreferrer" className="inline-block mt-2 text-xs text-accent underline underline-offset-4">Basescan →</a>
-            </div>
-            <div className="p-4 border rule rounded-sm">
-              <p className="text-xs text-zinc-500 uppercase tracking-wider">Mainnet (Base)</p>
+              <p className="text-xs text-zinc-500 uppercase tracking-wider">V1 (USDC-only)</p>
               <code className="block mt-2 font-mono text-sm break-all">0xA45Be472a64eE6Daa093c6a975Cd8908C615d594</code>
               <a href="https://basescan.org/address/0xA45Be472a64eE6Daa093c6a975Cd8908C615d594" target="_blank" rel="noopener noreferrer" className="inline-block mt-2 text-xs text-accent underline underline-offset-4">Basescan →</a>
+            </div>
+            <div className="p-4 border rule rounded-sm">
+              <p className="text-xs text-zinc-500 uppercase tracking-wider">V2 (Multi-token)</p>
+              <code className="block mt-2 font-mono text-sm break-all text-zinc-400">Not yet deployed</code>
+              <p className="text-xs text-zinc-500 mt-2">Supports USDC, ETH, OAR. Deploy via DeployV2.s.sol</p>
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -100,12 +100,12 @@ export default function SmartContractPage() {
               <p className="font-mono text-sm">MIT</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">Lines</p>
-              <p className="font-mono text-sm">298</p>
+              <p className="text-xs text-zinc-500">Tokens</p>
+              <p className="font-mono text-sm">USDC · ETH · OAR</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">USDC (Testnet)</p>
-              <code className="font-mono text-xs break-all">0x036CbD53842c5426634e7929541eC2318f3dCF7e</code>
+              <p className="text-xs text-zinc-500">Fee</p>
+              <p className="font-mono text-sm">5% (500 bps)</p>
             </div>
           </div>
         </div>
@@ -145,11 +145,6 @@ export default function SmartContractPage() {
             </thead>
             <tbody>
               <tr className="border-b rule">
-                <td className="py-3 pr-4 font-mono text-xs text-accent">MIN_TIP</td>
-                <td className="py-3 pr-4 font-mono text-xs">1e6</td>
-                <td className="py-3 text-zinc-600">Minimum tip: 1 USDC ($1)</td>
-              </tr>
-              <tr className="border-b rule">
                 <td className="py-3 pr-4 font-mono text-xs text-accent">MAX_FEE_BPS</td>
                 <td className="py-3 pr-4 font-mono text-xs">1000</td>
                 <td className="py-3 text-zinc-600">Maximum fee: 10%</td>
@@ -169,8 +164,9 @@ export default function SmartContractPage() {
         <FuncTable rows={[
           { name: "registerRepo", params: "repoId, payoutAddress, expiry, nonce, signature", returns: "—", modifier: "whenNotPaused", description: "Register a repo with an EIP-712 signed permit. Validates format, expiry, and signature." },
           { name: "updatePayoutAddress", params: "repoId, newAddress", returns: "—", modifier: "whenNotPaused", description: "Rotate the payout wallet for a registered repo. Only callable by current payout address." },
-          { name: "receiveTip", params: "repoId, usdcAmount", returns: "—", modifier: "nonReentrant, whenNotPaused", description: "Accept a USDC tip. Pulls USDC from msg.sender, splits fee, credits pending balance." },
-          { name: "claim", params: "repoId", returns: "—", modifier: "nonReentrant, whenNotPaused", description: "Withdraw all pending USDC for a repo. Only callable by the payout address." },
+          { name: "receiveTipEth", params: "repoId", returns: "—", modifier: "payable, nonReentrant, whenNotPaused", description: "Accept an ETH tip. Splits fee, credits pending balance in ETH." },
+          { name: "receiveTip", params: "repoId, token, amount", returns: "—", modifier: "nonReentrant, whenNotPaused", description: "Accept an ERC-20 tip (USDC, OAR, etc). Pulls tokens from msg.sender, splits fee, credits pending balance." },
+          { name: "claimAll", params: "repoId", returns: "—", modifier: "nonReentrant, whenNotPaused", description: "Withdraw all pending tokens (ETH + ERC-20) in a single transaction. Only callable by the payout address." },
         ]} />
 
         <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mt-8">Admin Functions</h3>
@@ -178,20 +174,25 @@ export default function SmartContractPage() {
           { name: "pause", params: "—", returns: "—", modifier: "onlyOwner", description: "Emergency pause. Blocks register, update, tip, and claim." },
           { name: "unpause", params: "—", returns: "—", modifier: "onlyOwner", description: "Resume operations after a pause." },
           { name: "setFeeBps", params: "newFeeBps", returns: "—", modifier: "onlyOwner", description: "Update platform fee. Capped at MAX_FEE_BPS (1000 = 10%)." },
-          { name: "setTreasuryAddress", params: "newTreasury", returns: "—", modifier: "onlyOwner", description: "Change the treasury address. Migratable to Gnosis Safe." },
-          { name: "withdrawTreasury", params: "amount", returns: "—", modifier: "onlyOwner, nonReentrant", description: "Withdraw accumulated fees to the treasury address." },
-          { name: "setRegistrarSigner", params: "newSigner", returns: "—", modifier: "onlyOwner", description: "Rotate the EIP-712 registrar signer. Old key is immediately invalidated." },
-          { name: "adminReassignPayout", params: "repoId, newAddress", returns: "—", modifier: "onlyOwner", description: "Emergency recovery: reassign payout address if wallet key is lost." },
+          { name: "setTreasuryAddress", params: "newTreasury", returns: "—", modifier: "onlyOwner", description: "Change the treasury address." },
+          { name: "withdrawTreasury", params: "token, amount", returns: "—", modifier: "onlyOwner, nonReentrant", description: "Withdraw accumulated fees for a specific token." },
+          { name: "setRegistrarSigner", params: "newSigner", returns: "—", modifier: "onlyOwner", description: "Rotate the EIP-712 registrar signer." },
+          { name: "adminReassignPayout", params: "repoId, newAddress", returns: "—", modifier: "onlyOwner", description: "Emergency recovery: reassign payout address. Developer must first link and verify the new wallet in their dashboard." },
+          { name: "adminMigrateRepo", params: "repoId, payoutAddress", returns: "—", modifier: "onlyOwner", description: "Migrate a v1 repo to v2. Disabled after migrationDeadline." },
+          { name: "addToken", params: "token, decimals", returns: "—", modifier: "onlyOwner", description: "Register a new ERC-20 token for tipping." },
+          { name: "removeToken", params: "token", returns: "—", modifier: "onlyOwner", description: "Remove a token from accepting new tips. Existing pending balances remain claimable via everAcceptedTokens." },
+          { name: "sweepStrayEth", params: "to", returns: "—", modifier: "onlyOwner, nonReentrant", description: "Recover ETH sent directly to the contract outside receiveTipEth." },
+          { name: "setMigrationDeadline", params: "deadline", returns: "—", modifier: "onlyOwner", description: "Set a deadline after which adminMigrateRepo is disabled. Pass 0 to re-enable." },
         ]} />
 
         <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mt-8">View Functions</h3>
         <FuncTable rows={[
-          { name: "getPendingBalance", params: "repoId", returns: "uint256", modifier: "view", description: "USDC available to claim for a repo." },
+          { name: "getPendingBalance", params: "repoId, token", returns: "uint256", modifier: "view", description: "Amount of a specific token available to claim for a repo." },
           { name: "getPayoutAddress", params: "repoId", returns: "address", modifier: "view", description: "The wallet that can claim tips for a repo." },
-          { name: "getTotalTipped", params: "repoId", returns: "uint256", modifier: "view", description: "Lifetime gross tip amount for a repo." },
+          { name: "getTotalTipped", params: "repoId, token", returns: "uint256", modifier: "view", description: "Lifetime gross tip amount for a repo in a specific token." },
           { name: "getTotalTipCount", params: "repoId", returns: "uint256", modifier: "view", description: "Lifetime tip count for a repo." },
-          { name: "getFeeBps", params: "—", returns: "uint256", modifier: "view", description: "Current platform fee in basis points." },
-          { name: "getTreasuryBalance", params: "—", returns: "uint256", modifier: "view", description: "Accumulated unwithdrawn fees." },
+          { name: "feeBps", params: "—", returns: "uint256", modifier: "view", description: "Current platform fee in basis points." },
+          { name: "treasuryBalances", params: "token", returns: "uint256", modifier: "view", description: "Accumulated unwithdrawn fees for a token." },
           { name: "isRegistered", params: "repoId", returns: "bool", modifier: "view", description: "Whether a repo has been registered." },
         ]} />
       </Section>
@@ -200,13 +201,14 @@ export default function SmartContractPage() {
         <EventTable rows={[
           { name: "RepoRegistered", params: "repoId, payoutAddress (indexed), timestamp", description: "Emitted when a new repo is registered." },
           { name: "PayoutAddressUpdated", params: "repoId, oldAddress, newAddress (indexed)", description: "Emitted when a payout wallet is rotated." },
-          { name: "TipReceived", params: "tipper (indexed), repoId, usdcAmount, feeAmount, timestamp", description: "Emitted on every tip." },
-          { name: "Claimed", params: "payoutAddress (indexed), repoId, amount, timestamp", description: "Emitted when a developer claims tips." },
-          { name: "TreasuryWithdrawn", params: "to (indexed), amount, timestamp", description: "Emitted when treasury funds are withdrawn." },
+          { name: "TipReceived", params: "tipper (indexed), repoId, token, amount, feeAmount, timestamp", description: "Emitted on every tip (ETH or ERC-20)." },
+          { name: "Claimed", params: "repoId, payoutAddress (indexed), token, amount, timestamp", description: "Emitted when a developer claims tips." },
+          { name: "TreasuryWithdrawn", params: "to (indexed), token, amount, timestamp", description: "Emitted when treasury funds are withdrawn." },
           { name: "FeeUpdated", params: "oldFeeBps, newFeeBps", description: "Emitted when the platform fee changes." },
           { name: "TreasuryAddressUpdated", params: "oldTreasury (indexed), newTreasury (indexed)", description: "Emitted when the treasury address changes." },
           { name: "RegistrarSignerUpdated", params: "oldSigner (indexed), newSigner (indexed)", description: "Emitted when the registrar signer is rotated." },
-          { name: "AdminPayoutReassigned", params: "repoId, oldAddress, newAddress, admin (indexed)", description: "Emitted when an admin reassigns a payout address." },
+          { name: "TokenAdded", params: "token (indexed), decimals", description: "Emitted when a new token is registered for tipping." },
+          { name: "TokenRemoved", params: "token (indexed)", description: "Emitted when a token is removed." },
         ]} />
       </Section>
 
@@ -218,12 +220,12 @@ export default function SmartContractPage() {
           <div className="p-4 border rule rounded-sm">
             <h3 className="font-medium text-sm">How fees flow</h3>
             <ol className="text-sm text-zinc-600 mt-2 space-y-1 list-decimal pl-5">
-              <li>Tipper sends USDC via <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">receiveTip()</code></li>
-              <li>Fee = <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">usdcAmount * feeBps / 10000</code></li>
-              <li>Fee credited to <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">treasuryBalance</code></li>
-              <li>Net amount (usdcAmount - fee) credited to repo&apos;s <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">pendingBalance</code></li>
-              <li>Developer calls <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">claim()</code> to withdraw their share</li>
-              <li>Owner calls <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">withdrawTreasury()</code> to collect fees</li>
+              <li>Tipper sends tokens via <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">receiveTipEth()</code> (ETH) or <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">receiveTip()</code> (ERC-20)</li>
+              <li>Fee = <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">amount * feeBps / 10000</code></li>
+              <li>Fee credited to <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">treasuryBalance[token]</code></li>
+              <li>Net amount (amount - fee) credited to repo&apos;s <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">pendingBalance[token]</code></li>
+              <li>Developer calls <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">claimAll()</code> to withdraw all tokens</li>
+              <li>Owner calls <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">withdrawTreasury(token, amount)</code> to collect fees per token</li>
             </ol>
           </div>
         </div>
@@ -240,6 +242,9 @@ export default function SmartContractPage() {
             <li>User submits the signature on-chain via <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">registerRepo()</code></li>
             <li>Contract verifies the registrar signer matches, stores the repo</li>
           </ol>
+          <p className="text-sm text-zinc-700 leading-relaxed">
+            The signature expires after 5 minutes (backend) with a hard cap of 10 minutes enforced on-chain. This limits the window for replay attacks while giving ample time for normal transaction submission.
+          </p>
           <div className="p-4 border rule rounded-sm">
             <h3 className="font-medium text-sm">Repo ID validation rules</h3>
             <ul className="text-sm text-zinc-600 mt-2 space-y-1 list-disc pl-5">
@@ -255,9 +260,9 @@ export default function SmartContractPage() {
             <code className="block mt-2 bg-zinc-900 text-zinc-100 p-3 rounded-sm font-mono text-xs">
 {`{
   name: "Opentip",
-  version: "1",
+  version: "2",
   chainId: 8453,
-  verifyingContract: "0xA45Be472a64eE6Daa093c6a975Cd8908C615d594"
+  verifyingContract: "0x..."
 }`}
             </code>
           </div>
@@ -268,7 +273,7 @@ export default function SmartContractPage() {
         <div className="space-y-3">
           <div className="p-4 border rule rounded-sm">
             <h3 className="font-medium text-sm">Reentrancy protection</h3>
-            <p className="text-sm text-zinc-600 mt-1">All state-changing external functions (<code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">receiveTip</code>, <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">claim</code>, <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">withdrawTreasury</code>) use <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">nonReentrant</code>.</p>
+            <p className="text-sm text-zinc-600 mt-1">All state-changing external functions (<code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">receiveTip</code>, <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">receiveTipEth</code>, <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">claimAll</code>, <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">withdrawTreasury</code>) use <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">nonReentrant</code>.</p>
           </div>
           <div className="p-4 border rule rounded-sm">
             <h3 className="font-medium text-sm">Pausable</h3>
@@ -283,8 +288,16 @@ export default function SmartContractPage() {
             <p className="text-sm text-zinc-600 mt-1">All functions update state before making external calls (USDC transfers), following the CEI pattern.</p>
           </div>
           <div className="p-4 border rule rounded-sm">
-            <h3 className="font-medium text-sm">Minimum tip enforcement</h3>
-            <p className="text-sm text-zinc-600 mt-1">The contract rejects tips below 1 USDC (<code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">MIN_TIP = 1e6</code>) to prevent dust attacks.</p>
+            <h3 className="font-medium text-sm">Stray ETH protection</h3>
+            <p className="text-sm text-zinc-600 mt-1">ETH sent outside <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">receiveTipEth()</code> is tracked separately as <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">strayEth</code> and can be swept by the owner via <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">sweepStrayEth()</code>.</p>
+          </div>
+          <div className="p-4 border rule rounded-sm">
+            <h3 className="font-medium text-sm">Token removal safety</h3>
+            <p className="text-sm text-zinc-600 mt-1">Removing a token stops new tips but existing pending balances remain claimable. <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">claimAll()</code> iterates over <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">everAcceptedTokens</code>, a permanent record of all tokens that were ever added.</p>
+          </div>
+          <div className="p-4 border rule rounded-sm">
+            <h3 className="font-medium text-sm">Signature expiry bound</h3>
+            <p className="text-sm text-zinc-600 mt-1">Registration signatures are capped at 10 minutes maximum validity. The backend signs with a 5-minute expiry.</p>
           </div>
         </div>
       </Section>
@@ -292,7 +305,7 @@ export default function SmartContractPage() {
       <section className="border-t rule pt-10">
         <h2 className="serif text-2xl font-semibold mb-4">Source code</h2>
         <p className="text-sm text-zinc-700">
-          The full contract source is available at <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">contracts/src/Opentip.sol</code> in the repository.
+          The full contract source is available at <code className="bg-zinc-900/10 px-1.5 py-0.5 rounded-sm font-mono text-xs">contracts/src/OpentipV2.sol</code> in the repository.
         </p>
         <a href="https://github.com/opentiphq" target="_blank" rel="noopener noreferrer" className="inline-block mt-3 text-sm text-accent underline underline-offset-4">
           View on GitHub →

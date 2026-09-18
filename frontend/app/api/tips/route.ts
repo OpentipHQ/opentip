@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getTokenSymbol, getTokenDecimals } from "@/lib/chain";
 
 export async function GET(req: NextRequest) {
   const repoId = req.nextUrl.searchParams.get("repoId")?.toLowerCase() || null;
@@ -25,7 +26,10 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(
     tips.map(t => ({
       ...t,
-      usdc_amount: t.usdc_amount.toString(),
+      amount: t.amount.toString(),
+      token: t.token,
+      symbol: getTokenSymbol(t.token),
+      decimals: getTokenDecimals(t.token),
       fee_amount: t.fee_amount.toString(),
       block_number: t.block_number.toString(),
       display_name: nameMap.get(t.tipper_address.toLowerCase()) || null,

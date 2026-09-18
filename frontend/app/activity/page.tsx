@@ -5,6 +5,7 @@ import { Button } from "@/components/motion/button";
 import { Loader } from "@/components/motion/loader";
 import { ExternalLink } from "lucide-react";
 import { getBasescanTxUrl } from "@/lib/basescan";
+import { getTokenSymbol, getTokenDecimals } from "@/lib/chain";
 
 const PAGE_SIZE = 20;
 
@@ -64,7 +65,7 @@ export default function ActivityFeed() {
                       <div className="flex items-center gap-2">
                         <Link href={`/${t.repo_id}`} className="font-mono text-sm underline underline-offset-4 hover:text-accent">{t.repo_id}</Link>
                         <span className="text-xs text-zinc-500">received</span>
-                        <span className="stats text-sm font-medium">${(Number(t.usdc_amount) / 1e6).toFixed(2)}</span>
+                        <span className="stats text-sm font-medium">{(Number(t.amount) / Math.pow(10, getTokenDecimals(t.token))).toFixed(2)} {getTokenSymbol(t.token)}</span>
                       </div>
                       <div className="flex items-center gap-3 text-xs text-zinc-500">
                         <span>by {t.display_name || truncate(t.tipper_address)}</span>

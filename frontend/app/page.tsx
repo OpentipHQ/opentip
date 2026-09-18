@@ -5,9 +5,12 @@ import { Button } from "@/components/motion/button";
 import { useEffect, useState } from "react";
 import { Plus, Minus } from "lucide-react";
 import DemoVideo from "@/components/DemoVideo";
+import { getTokenSymbol, getTokenDecimals } from "@/lib/chain";
+import { fmtUsd } from "@/lib/prices";
 
 export default function Home() {
-  const [stats, setStats] = useState<{ totalVolume: string; totalTips: number; developersPaid: number } | null>(null);
+  const [stats, setStats] = useState<{ tokenVolumes: { token: string; total: string }[]; totalTips: number; developersPaid: number } | null>(null);
+  const [prices, setPrices] = useState<Record<string, number>>({});
   const [openFaqs, setOpenFaqs] = useState<Set<number>>(new Set());
 
   const toggleFaq = (i: number) => {
@@ -21,6 +24,7 @@ export default function Home() {
 
   useEffect(() => {
     fetch("/api/stats").then(r => r.json()).then(setStats).catch(() => {});
+    fetch("/api/prices").then(r => r.json()).then(setPrices).catch(() => {});
   }, []);
 
   return (
@@ -44,14 +48,24 @@ export default function Home() {
           <div className="md:col-span-4 flex flex-col justify-end space-y-8">
             <Image src="/opentip-hero-mockup-nobg.png" alt="Opentip interface mockup" width={380} height={300} className="w-full max-w-[380px] mx-auto mix-blend-multiply" />
             <div className="border-t rule pt-8">
-              <div className="grid grid-cols-2 divide-x rule">
-                <div className="px-3">
-                  <div className="stats text-3xl font-bold tracking-tight">{stats ? `$${(Number(stats.totalVolume) / 1e6).toFixed(0)}` : "—"}</div>
-                  <div className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500 mt-1">tipped so far</div>
-                </div>
-                <div className="px-3">
-                  <div className="stats text-3xl font-bold tracking-tight">{stats ? stats.developersPaid.toLocaleString() : "—"}</div>
-                  <div className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500 mt-1">developers paid</div>
+              <div className="flex items-baseline gap-6">
+                {(() => {
+                  const totalUsd = (stats?.tokenVolumes || []).reduce((sum, v) => {
+                    const decimals = getTokenDecimals(v.token);
+                    const amount = Number(v.total) / Math.pow(10, decimals);
+                    const price = prices[v.token?.toLowerCase()] ?? 0;
+                    return sum + amount * price;
+                  }, 0);
+                  return (
+                    <div className="flex items-baseline gap-2">
+                      <span className="stats text-2xl font-bold tracking-tight">{totalUsd > 0 ? fmtUsd(totalUsd) : "—"}</span>
+                      <span className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">volume</span>
+                    </div>
+                  );
+                })()}
+                <div className="flex items-baseline gap-2">
+                  <span className="stats text-2xl font-bold tracking-tight">{stats ? stats.developersPaid.toLocaleString() : "—"}</span>
+                  <span className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">developers</span>
                 </div>
               </div>
             </div>
@@ -108,7 +122,7 @@ export default function Home() {
               <div className="stats text-2xl font-bold">02</div>
               <h3 className="font-semibold text-sm">Send a tip. No account needed.</h3>
               <p className="text-sm text-zinc-600 leading-relaxed">
-                Connect a wallet, pick an amount, send it. You can tip in ETH or USDC — either way, the developer only ever sees USDC land in their balance. Your $10 stays worth $10, no matter what the market does five minutes later.
+                Connect a wallet, pick an amount, send it. You can tip in ETH, USDC, or OAR — the developer claims whichever tokens you send, straight from the smart contract.
               </p>
             </div>
             <div className="space-y-4 border-t rule pt-6">
@@ -210,7 +224,7 @@ export default function Home() {
           <div className="md:col-span-8">
             {[
               { q: "Do I need an account to tip someone?", a: "No. Just a wallet. Tip a repo the same way you'd send anyone money — connect, send, gone." },
-              { q: "What if I tip in ETH — does the developer get ETH?", a: "No, they get USDC. Your ETH is swapped automatically before it reaches the contract, so what you send in value is close to what they receive, regardless of ETH's price that day." },
+              { q: "What if I tip in ETH — does the developer get ETH?", a: "Yes. Tips stay in the token you send. ETH tips are held as ETH in the contract, USDC as USDC, and so on. The developer claims all their pending tokens whenever they want." },
               { q: "What chain does this run on?", a: "Base. It's cheap and fast enough that a $1 tip doesn't get eaten alive by gas fees." },
               { q: "Can anyone claim any repo's tips?", a: "No. Only whoever verifies ownership through GitHub can register a repo and set the wallet that claims its funds." },
               { q: "Has the contract been audited?", a: "Not yet — this is early. The code is open and verified on Basescan, so you don't have to take our word for it, but we're not going to pretend a formal audit has happened when it hasn't." },

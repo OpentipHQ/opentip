@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  const [volumeResult] = await prisma.$queryRaw<[{ total: bigint }]>`
-    SELECT COALESCE(SUM(usdc_amount), 0) as total FROM "Tip"
+  const rows: any[] = await prisma.$queryRaw`
+    SELECT token, SUM(amount)::text as total
+    FROM "Tip"
+    GROUP BY token
   `;
-  
+
   const tipCount = await prisma.tip.count();
 
   const [developerResult] = await prisma.$queryRaw<[{ count: bigint }]>`
@@ -15,7 +17,7 @@ export async function GET() {
   `;
 
   return NextResponse.json({
-    totalVolume: volumeResult.total.toString(),
+    tokenVolumes: rows.map((r: any) => ({ token: r.token, total: r.total })),
     totalTips: tipCount,
     developersPaid: Number(developerResult.count),
   });

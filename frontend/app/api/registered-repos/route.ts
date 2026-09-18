@@ -23,13 +23,13 @@ export async function GET(_req: NextRequest) {
   const tipAgg = await prisma.tip.groupBy({
     by: ["repo_id"],
     where: { repo_id: { in: repoIds } },
-    _sum: { usdc_amount: true },
+    _sum: { amount: true },
     _count: true,
   });
 
-  const tipMap = new Map<string, { total: bigint; count: number }>();
+  const tipMap = new Map<string, { total: string; count: number }>();
   for (const row of tipAgg) {
-    tipMap.set(row.repo_id, { total: row._sum.usdc_amount ?? BigInt(0), count: row._count });
+    tipMap.set(row.repo_id, { total: row._sum.amount?.toString() ?? "0", count: row._count });
   }
 
   return NextResponse.json(
@@ -39,7 +39,7 @@ export async function GET(_req: NextRequest) {
         repo_id: r.repo_id,
         payout_address: r.payout_address,
         registered_at: r.registered_at,
-        total_tipped: (agg?.total ?? BigInt(0)).toString(),
+        total_tipped: agg?.total ?? "0",
         tip_count: (agg?.count ?? 0).toString(),
       };
     })

@@ -4,10 +4,10 @@ import { useRouter } from "next/navigation";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSignMessage, useSendTransaction } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import { signIn, useSession } from "next-auth/react";
-import { parseUnits, formatUnits, parseEther } from "viem";
-import { opentipAbi, usdcAbi } from "@/lib/contract";
-import { CONTRACT_ADDRESS, USDC_ADDRESS, CHAIN_ID } from "@/lib/chain";
-import { getRelayQuote } from "@/lib/relay";
+import { parseUnits, formatUnits, parseEther, encodeFunctionData } from "viem";
+import { opentipV2Abi, erc20Abi } from "@/lib/contract";
+import { CHAIN_ID, CONTRACT_ADDRESS, USDC_ADDRESS, OAR_ADDRESS, ETH_ADDRESS, TOKEN_CONFIG, getTokenSymbol, getTokenDecimals } from "@/lib/chain";
+import { fmtUsd } from "@/lib/prices";
 import { useToast } from "@/app/providers";
 import { Input } from "@/components/motion/input";
 import { Button, StatefulButton } from "@/components/motion/button";
@@ -15,6 +15,21 @@ import { Loader } from "@/components/motion/loader";
 import { Coins, Wallet, Copy } from "lucide-react";
 
 function truncate(addr: string){ return addr.slice(0,6)+"..."+addr.slice(-4); }
+
+type TokenInfo = { symbol: string; decimals: number; name: string; address: `0x${string}` };
+const TOKENS: TokenInfo[] = [
+  { symbol: "USDC", decimals: 6, name: "USD Coin", address: USDC_ADDRESS },
+  { symbol: "ETH", decimals: 18, name: "Ethereum", address: ETH_ADDRESS },
+  { symbol: "OAR", decimals: 18, name: "Oarcoin", address: OAR_ADDRESS },
+];
+
+function formatAmount(raw: bigint, token: TokenInfo): string {
+  const formatted = formatUnits(raw, token.decimals);
+  const n = parseFloat(formatted);
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  if (n >= 1) return n.toFixed(2);
+  return n.toFixed(4);
+}
 
 export default function TipClient({ repoId }: { repoId: string }) {
   const router = useRouter();
@@ -25,19 +40,27 @@ export default function TipClient({ repoId }: { repoId: string }) {
   const { showToast, updateToast, dismissToast } = useToast();
   const { signMessageAsync } = useSignMessage();
   const contract = CONTRACT_ADDRESS;
-  const usdc = USDC_ADDRESS;
 
-  const { data: isRegistered, isPending: isRegPending } = useReadContract({ address: contract, abi: opentipAbi, functionName: "isRegistered", args: [repoIdLower], chainId: CHAIN_ID, query: { enabled: !!contract } });
-  const { data: pending } = useReadContract({ address: contract, abi: opentipAbi, functionName: "getPendingBalance", args: [repoIdLower], chainId: CHAIN_ID, query: { enabled: !!contract && !!isRegistered } });
-  const { data: totalTipped, isPending: isTotalPending } = useReadContract({ address: contract, abi: opentipAbi, functionName: "getTotalTipped", args: [repoIdLower], chainId: CHAIN_ID, query: { enabled: !!contract } });
-  const { data: payout } = useReadContract({ address: contract, abi: opentipAbi, functionName: "getPayoutAddress", args: [repoIdLower], chainId: CHAIN_ID, query: { enabled: !!contract && !!isRegistered } });
-  const { data: allowance } = useReadContract({ address: usdc, abi: usdcAbi, functionName: "allowance", args: address && contract ? [address, contract] : undefined, chainId: CHAIN_ID, query: { enabled: !!address && !!usdc && !!contract && !!isRegistered } as any });
+  const { data: isRegistered, isPending: isRegPending } = useReadContract({ address: contract, abi: opentipV2Abi, functionName: "isRegistered", args: [repoIdLower], chainId: CHAIN_ID, query: { enabled: !!contract } });
+  const { data: payout } = useReadContract({ address: contract, abi: opentipV2Abi, functionName: "getPayoutAddress", args: [repoIdLower], chainId: CHAIN_ID, query: { enabled: !!contract && !!isRegistered } });
+  const { data: totalTipCount, isPending: isCountPending } = useReadContract({ address: contract, abi: opentipV2Abi, functionName: "getTotalTipCount", args: [repoIdLower], chainId: CHAIN_ID, query: { enabled: !!contract && !!isRegistered } });
+
+  // Per-token pending balances
+  const { data: pendingUSDC } = useReadContract({ address: contract, abi: opentipV2Abi, functionName: "getPendingBalance", args: [repoIdLower, USDC_ADDRESS], chainId: CHAIN_ID, query: { enabled: !!contract && !!isRegistered } });
+  const { data: pendingETH } = useReadContract({ address: contract, abi: opentipV2Abi, functionName: "getPendingBalance", args: [repoIdLower, ETH_ADDRESS], chainId: CHAIN_ID, query: { enabled: !!contract && !!isRegistered } });
+  const { data: pendingOAR } = useReadContract({ address: contract, abi: opentipV2Abi, functionName: "getPendingBalance", args: [repoIdLower, OAR_ADDRESS], chainId: CHAIN_ID, query: { enabled: !!contract && !!isRegistered } });
+
+  // Per-token total tipped
+  const { data: totalUSDC } = useReadContract({ address: contract, abi: opentipV2Abi, functionName: "getTotalTipped", args: [repoIdLower, USDC_ADDRESS], chainId: CHAIN_ID, query: { enabled: !!contract } });
+  const { data: totalETH } = useReadContract({ address: contract, abi: opentipV2Abi, functionName: "getTotalTipped", args: [repoIdLower, ETH_ADDRESS], chainId: CHAIN_ID, query: { enabled: !!contract } });
+  const { data: totalOAR } = useReadContract({ address: contract, abi: opentipV2Abi, functionName: "getTotalTipped", args: [repoIdLower, OAR_ADDRESS], chainId: CHAIN_ID, query: { enabled: !!contract } });
 
   const [amount, setAmount] = useState("5");
-  const [currency, setCurrency] = useState<"USDC"|"ETH">("USDC");
+  const [selectedToken, setSelectedToken] = useState<string>(USDC_ADDRESS);
   const [displayName, setDisplayName] = useState("");
   const [tips, setTips] = useState<any[]>([]);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [prices, setPrices] = useState<Record<string, number>>({});
   const [tipsLoading, setTipsLoading] = useState(true);
   const [amountError, setAmountError] = useState<string | undefined>(undefined);
   const [tipFlow, setTipFlow] = useState<"idle"|"approving"|"sending"|"success"|"error">("idle");
@@ -46,6 +69,19 @@ export default function TipClient({ repoId }: { repoId: string }) {
   const [ownership, setOwnership] = useState<{ owns?: boolean; via?: string; loading?: boolean; signature?: string; expiry?: string; nonce?: string }>({});
   const [wallets, setWallets] = useState<any[]>([]);
   const loadingToastRef = useRef<string | null>(null);
+
+  const currentToken = TOKENS.find(t => t.address === selectedToken) || TOKENS[0];
+  const isETH = selectedToken === ETH_ADDRESS;
+
+  // Allowance for ERC-20 tokens
+  const { data: allowance } = useReadContract({
+    address: selectedToken as `0x${string}`,
+    abi: erc20Abi,
+    functionName: "allowance",
+    args: address && contract ? [address, contract] : undefined,
+    chainId: CHAIN_ID,
+    query: { enabled: !!address && !!contract && !!isRegistered && !isETH } as any,
+  });
 
   useEffect(() => {
     if (!isConnected && tipFlow !== "idle") {
@@ -69,38 +105,38 @@ export default function TipClient({ repoId }: { repoId: string }) {
 
   useEffect(()=>{ setTipsLoading(true); Promise.all([
     fetch(`/api/tips?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setTips).catch(()=>{}),
-    fetch(`/api/leaderboard?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setLeaderboard).catch(()=>{})
+    fetch(`/api/leaderboard?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setLeaderboard).catch(()=>{}),
+    fetch(`/api/prices`).then(r=>r.json()).then(setPrices).catch(()=>{})
   ]).finally(()=>setTipsLoading(false)); }, [repoIdLower]);
-
-  const [relayTxHash, setRelayTxHash] = useState<`0x${string}` | undefined>(undefined);
-  const [relayQuote, setRelayQuote] = useState<any>(null);
-  const relayReceipt = useWaitForTransactionReceipt({ hash: relayTxHash });
 
   const approveW = useWriteContract();
   const tipW = useWriteContract();
   const claimW = useWriteContract();
   const registerW = useWriteContract();
-  const relaySend = useSendTransaction();
+  const ethSend = useSendTransaction();
 
   const approveReceipt = useWaitForTransactionReceipt({ hash: approveW.data });
   const tipReceipt = useWaitForTransactionReceipt({ hash: tipW.data });
   const claimReceipt = useWaitForTransactionReceipt({ hash: claimW.data });
   const registerReceipt = useWaitForTransactionReceipt({ hash: registerW.data });
+  const ethReceipt = useWaitForTransactionReceipt({ hash: ethSend.data });
 
-  const validateAmount = (v: string, cur?: string) => {
+  const validateAmount = (v: string, token: TokenInfo) => {
     const n = Number(v);
-    const c = cur || currency;
-    if (!v || isNaN(n) || n <=0) return "Enter an amount";
-    if (c==="USDC" && parseUnits(v||"0",6) < BigInt(1_000_000)) return "Minimum $1";
+    if (!v || isNaN(n) || n <= 0) return "Enter an amount";
+    try {
+      parseUnits(v, token.decimals);
+    } catch { return "Invalid amount"; }
     return undefined;
   };
 
+  // ERC-20 approve receipt
   useEffect(()=>{
     if (tipFlow==="approving" && approveReceipt.isSuccess && approveW.data) {
-      const baseUnits = parseUnits(amount, 6);
+      const baseUnits = parseUnits(amount, currentToken.decimals);
       setTipFlow("sending");
-      showLoading("Sending tip...", `${amount} USDC → ${repoIdLower}`);
-      tipW.writeContract({ address: contract!, abi: opentipAbi, functionName: "receiveTip", args: [repoIdLower, baseUnits] });
+      showLoading("Sending tip...", `${amount} ${currentToken.symbol} → ${repoIdLower}`);
+      tipW.writeContract({ address: contract!, abi: opentipV2Abi, functionName: "receiveTip", args: [repoIdLower, selectedToken as `0x${string}`, baseUnits] });
     }
     if (tipFlow==="approving" && approveReceipt.isError) {
       if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
@@ -109,10 +145,11 @@ export default function TipClient({ repoId }: { repoId: string }) {
     }
   }, [approveReceipt.isSuccess, approveReceipt.isError]);
 
+  // ERC-20 tip receipt
   useEffect(()=>{
     if (tipFlow==="sending" && tipReceipt.isSuccess) {
       if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
-      showToast({ status:"success", title:"Tip sent", description:`${amount} ${currency} → ${repoIdLower}` });
+      showToast({ status:"success", title:"Tip sent", description:`${amount} ${currentToken.symbol} → ${repoIdLower}` });
       setTipFlow("success"); setTimeout(()=>setTipFlow("idle"), 1600);
       fetch(`/api/tips?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setTips).catch(()=>{});
       fetch(`/api/leaderboard?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setLeaderboard).catch(()=>{});
@@ -124,124 +161,103 @@ export default function TipClient({ repoId }: { repoId: string }) {
     }
   }, [tipReceipt.isSuccess, tipReceipt.isError]);
 
+  // ETH send receipt
   useEffect(()=>{
-    if (claimState==="loading" && claimReceipt.isSuccess) { setClaimState("success"); showToast({ status:"success", title:"Claimed", description: formatUnits((pending as bigint)||BigInt(0),6)+" USDC" }); setTimeout(()=>setClaimState("idle"),1600); }
-    if (claimState==="loading" && claimReceipt.isError) { setClaimState("error"); showToast({ status:"error", title:"Claim failed" }); setTimeout(()=>setClaimState("idle"),2000); }
+    if (tipFlow==="sending" && ethReceipt.isSuccess) {
+      if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
+      showToast({ status:"success", title:"Tip sent", description:`${amount} ETH → ${repoIdLower}` });
+      setTipFlow("success"); setTimeout(()=>setTipFlow("idle"), 1600);
+      fetch(`/api/tips?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setTips).catch(()=>{});
+      fetch(`/api/leaderboard?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setLeaderboard).catch(()=>{});
+    }
+    if (tipFlow==="sending" && ethReceipt.isError) {
+      if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
+      showToast({ status:"error", title:"Tip failed", description: (ethReceipt.error as any)?.message?.slice(0,120) });
+      setTipFlow("error"); setTimeout(()=>setTipFlow("idle"), 2000);
+    }
+  }, [ethReceipt.isSuccess, ethReceipt.isError]);
+
+  useEffect(()=>{
+    if (ethSend.data) {
+      // ethSend.data is the tx hash
+    }
+    if (ethSend.error) {
+      if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
+      showToast({ status:"error", title:"Transaction rejected", description: ethSend.error.message?.slice(0,100) });
+      setTipFlow("error"); setTimeout(()=>setTipFlow("idle"),2000);
+    }
+  }, [ethSend.data, ethSend.error]);
+
+  // Claim all receipt
+  useEffect(()=>{
+    if (claimState==="loading" && claimReceipt.isSuccess) {
+      setClaimState("success");
+      showToast({ status:"success", title:"Claimed all tokens" });
+      setTimeout(()=>setClaimState("idle"),1600);
+    }
+    if (claimState==="loading" && claimReceipt.isError) {
+      setClaimState("error");
+      showToast({ status:"error", title:"Claim failed" });
+      setTimeout(()=>setClaimState("idle"),2000);
+    }
   }, [claimReceipt.isSuccess, claimReceipt.isError]);
 
+  // Register receipt
   useEffect(()=>{
     if (registerState==="loading" && registerReceipt.isSuccess) { setRegisterState("success"); showToast({ status:"success", title:"Registered", description: repoIdLower }); setTimeout(()=>setRegisterState("idle"),1600); }
     if (registerState==="loading" && registerReceipt.isError) { setRegisterState("error"); showToast({ status:"error", title:"Register failed" }); setTimeout(()=>setRegisterState("idle"),2000); }
   }, [registerReceipt.isSuccess, registerReceipt.isError]);
 
-  useEffect(()=>{
-    if (relayTxHash && relayReceipt.isSuccess) {
-      if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
-      const usdcOut = relayQuote?.details?.currencyOut?.amount;
-      const usdcFormatted = usdcOut ? formatUnits(BigInt(usdcOut), 6) : null;
-      if (usdcFormatted) {
-        setCurrency("USDC");
-        setAmount(usdcFormatted);
-        showToast({ status:"success", title:"Swapped to USDC", description:`${usdcFormatted} USDC received — approve the tip` });
-      } else {
-        showToast({ status:"success", title:"Swap complete", description:"Switch to USDC and enter the amount you received" });
-      }
-      const checkEndpoint = relayQuote?.steps?.[0]?.items?.[0]?.check?.endpoint;
-      const requestId = relayQuote?.requestId;
-      const relayKey = process.env.NEXT_PUBLIC_RELAY_API_KEY;
-      const relayHeaders: Record<string, string> = {};
-      if (relayKey) relayHeaders["x-relay-api-key"] = relayKey;
-      if (checkEndpoint) {
-        console.log("[Relay] polling check endpoint:", checkEndpoint);
-        fetch(`https://api.relay.link${checkEndpoint}`, { headers: relayHeaders })
-          .then(r => r.json()).then(d => console.log("[Relay] check response:", d))
-          .catch(e => console.error("[Relay] check failed:", e));
-      } else if (requestId) {
-        console.log("[Relay] no check endpoint, using requestId:", requestId);
-        fetch(`https://api.relay.link/intents/status/v3?requestId=${requestId}`, { headers: relayHeaders })
-          .then(r => r.json()).then(d => console.log("[Relay] status response:", d))
-          .catch(e => console.error("[Relay] status failed:", e));
-      }
-      setTipFlow("idle");
-      setRelayTxHash(undefined);
-      setRelayQuote(null);
-    }
-    if (relayTxHash && relayReceipt.isError) {
-      if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
-      showToast({ status:"error", title:"Swap failed", description:"ETH → USDC swap did not complete" });
-      setTipFlow("error"); setTimeout(()=>setTipFlow("idle"),2000);
-      setRelayTxHash(undefined);
-      setRelayQuote(null);
-    }
-  }, [relayReceipt.isSuccess, relayReceipt.isError, relayTxHash]);
-
-  useEffect(()=>{
-    if (relaySend.data) {
-      setRelayTxHash(relaySend.data);
-    }
-    if (relaySend.error) {
-      if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
-      showToast({ status:"error", title:"Transaction rejected", description: relaySend.error.message?.slice(0,100) });
-      setTipFlow("error"); setTimeout(()=>setTipFlow("idle"),2000);
-    }
-  }, [relaySend.data, relaySend.error]);
-
   const onTipClick = async () => {
-    const err = validateAmount(amount);
+    const err = validateAmount(amount, currentToken);
     setAmountError(err);
     if (err) { showToast({ status:"error", title: err }); return; }
     if (!isConnected || !address || !contract) { showToast({ status:"error", title:"Connect wallet" }); return; }
-    if (currency==="ETH") {
+
+    if (isETH) {
       setTipFlow("sending");
-      const wei = parseEther(amount).toString();
-      const id = showLoading("Fetching Relay quote...", `${amount} ETH → USDC`);
-      try {
-        const quote = await getRelayQuote({ amountWei: wei, recipient: address });
-        console.log("[Relay] quote:", JSON.stringify(quote, null, 2));
-        setRelayQuote(quote);
-        updateToast(id, { status:"loading", title:"Confirm in wallet", description:`Swapping ${amount} ETH for USDC`, duration: 0 });
-        const tx = quote.steps[0].items[0].data;
-        relaySend.sendTransaction({
-          to: tx.to as `0x${string}`,
-          data: tx.data as `0x${string}`,
-          value: BigInt(tx.value),
-        });
-      } catch(e:any){ updateToast(id, { status:"error", title:"Relay quote failed", description: e.message?.slice(0,120) }); setTipFlow("error"); setTimeout(()=>setTipFlow("idle"),2000); }
+      showLoading("Sending ETH tip...", `${amount} ETH → ${repoIdLower}`);
+      const wei = parseEther(amount);
+      ethSend.sendTransaction({
+        to: contract,
+        value: wei,
+        data: encodeFunctionData({ abi: opentipV2Abi, functionName: "receiveTipEth", args: [repoIdLower] }),
+      });
       return;
     }
-    const baseUnits = parseUnits(amount, 6);
+
+    // ERC-20 flow
+    const baseUnits = parseUnits(amount, currentToken.decimals);
     const currentAllowance = (allowance as bigint) || BigInt(0);
     if (currentAllowance < baseUnits) {
       setTipFlow("approving");
-      showLoading("Approving spend...", `${amount} USDC`);
-      approveW.writeContract({ address: usdc!, abi: usdcAbi, functionName: "approve", args: [contract!, baseUnits] });
+      showLoading("Approving spend...", `${amount} ${currentToken.symbol}`);
+      approveW.writeContract({ address: selectedToken as `0x${string}`, abi: erc20Abi, functionName: "approve", args: [contract!, baseUnits] });
     } else {
       setTipFlow("sending");
-      showLoading("Sending tip...", `${amount} USDC → ${repoIdLower}`);
-      tipW.writeContract({ address: contract!, abi: opentipAbi, functionName: "receiveTip", args: [repoIdLower, baseUnits] });
+      showLoading("Sending tip...", `${amount} ${currentToken.symbol} → ${repoIdLower}`);
+      tipW.writeContract({ address: contract!, abi: opentipV2Abi, functionName: "receiveTip", args: [repoIdLower, selectedToken as `0x${string}`, baseUnits] });
     }
   };
 
-  const onClaim = () => {
+  const onClaimAll = () => {
     if (!contract) return;
     setClaimState("loading");
-    claimW.writeContract({ address: contract, abi: opentipAbi, functionName: "claim", args: [repoIdLower] });
+    claimW.writeContract({ address: contract, abi: opentipV2Abi, functionName: "claimAll", args: [repoIdLower] });
   };
 
   const onRegister = async () => {
     if (!contract || !address) return;
-    // If we already have a signature, use it directly
     if (ownership.signature && ownership.expiry && ownership.nonce) {
       setRegisterState("loading");
       registerW.writeContract({
         address: contract,
-        abi: opentipAbi,
+        abi: opentipV2Abi,
         functionName: "registerRepo",
         args: [repoIdLower, address as `0x${string}`, BigInt(ownership.expiry), BigInt(ownership.nonce), ownership.signature as `0x${string}`],
       });
       return;
     }
-    // Otherwise, get signature from backend first
     await checkOwnershipAndSign();
   };
 
@@ -282,9 +298,17 @@ export default function TipClient({ repoId }: { repoId: string }) {
     } catch(e:any){ showToast({ status:"error", title:"Save failed", description: e.message?.slice(0,100) }); }
   };
 
-  const tipButtonText = tipFlow==="approving" ? "Approving spend..." : tipFlow==="sending" ? "Sending..." : tipFlow==="success" ? "Tip sent" : tipFlow==="error" ? "Try again" : `Tip ${amount} ${currency}`;
+  const tipButtonText = tipFlow==="approving" ? "Approving spend..." : tipFlow==="sending" ? "Sending..." : tipFlow==="success" ? "Tip sent" : tipFlow==="error" ? "Try again" : `Tip ${amount} ${currentToken.symbol}`;
 
-  if (contract === undefined) return <div className="py-12 text-sm text-zinc-600">Contract address not configured. Set NEXT_PUBLIC_BASE_CONTRACT or NEXT_PUBLIC_BASE_SEPOLIA_CONTRACT in .env</div>;
+  const pendingBalances = [
+    { token: TOKENS[0], raw: pendingUSDC as bigint | undefined },
+    { token: TOKENS[1], raw: pendingETH as bigint | undefined },
+    { token: TOKENS[2], raw: pendingOAR as bigint | undefined },
+  ].filter(b => b.raw && b.raw > 0n);
+
+  const hasPendingClaim = pendingBalances.length > 0;
+
+  if (contract === undefined) return <div className="py-12 text-sm text-zinc-600">Contract address not configured.</div>;
 
   return (
     <div className="space-y-0">
@@ -294,17 +318,46 @@ export default function TipClient({ repoId }: { repoId: string }) {
         <div className="flex flex-col sm:flex-row sm:divide-x rule">
           <div className="flex-1 sm:px-4 py-2 sm:py-0">
             <div className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">Pending</div>
-            <div className="stats mt-2 text-2xl flex items-baseline gap-2 text-zinc-900">
-              {pending!==undefined ? formatUnits(pending as bigint,6) : <Loader size={16} variant="dots" />}
-              <span className="text-xs text-zinc-500 font-sans">USDC</span>
+            <div className="mt-2 space-y-1">
+              {pendingBalances.length === 0 ? (
+                <div className="stats text-lg text-zinc-400">—</div>
+              ) : pendingBalances.map(b => (
+                <div key={b.token.symbol} className="stats text-lg flex items-baseline gap-2 text-zinc-900">
+                  {formatAmount(b.raw!, b.token)}
+                  <span className="text-xs text-zinc-500 font-sans">{b.token.symbol}</span>
+                </div>
+              ))}
             </div>
           </div>
           <div className="flex-1 sm:px-4 py-2 sm:py-0">
             <div className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">Total tipped</div>
-            <div className="stats mt-2 text-2xl flex items-baseline gap-2 text-zinc-900">
-              {isTotalPending ? <Loader size={16} variant="dots" /> : totalTipped!==undefined ? formatUnits(totalTipped as bigint,6) : "—"}
-              <span className="text-xs text-zinc-500 font-sans">USDC</span>
+            <div className="mt-2 space-y-1">
+              {totalUSDC && (totalUSDC as bigint) > 0n && (
+                <div className="stats text-lg flex items-baseline gap-2 text-zinc-900">
+                  {formatAmount(totalUSDC as bigint, TOKENS[0])}
+                  <span className="text-xs text-zinc-500 font-sans">USDC</span>
+                </div>
+              )}
+              {totalETH && (totalETH as bigint) > 0n && (
+                <div className="stats text-lg flex items-baseline gap-2 text-zinc-900">
+                  {formatAmount(totalETH as bigint, TOKENS[1])}
+                  <span className="text-xs text-zinc-500 font-sans">ETH</span>
+                </div>
+              )}
+              {totalOAR && (totalOAR as bigint) > 0n && (
+                <div className="stats text-lg flex items-baseline gap-2 text-zinc-900">
+                  {formatAmount(totalOAR as bigint, TOKENS[2])}
+                  <span className="text-xs text-zinc-500 font-sans">OAR</span>
+                </div>
+              )}
+              {(!totalUSDC || (totalUSDC as bigint) === 0n) && (!totalETH || (totalETH as bigint) === 0n) && (!totalOAR || (totalOAR as bigint) === 0n) && (
+                <div className="stats text-lg text-zinc-400">—</div>
+              )}
             </div>
+          </div>
+          <div className="flex-1 sm:px-4 py-2 sm:py-0">
+            <div className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">Tips</div>
+            <div className="stats mt-2 text-lg text-zinc-900">{isCountPending ? <Loader size={16} variant="dots" /> : totalTipCount?.toString() || "0"}</div>
           </div>
           <div className="flex-1 sm:px-4 py-2 sm:py-0">
             <div className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">Payout</div>
@@ -329,7 +382,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
             </div>
           ) : wallets.length === 0 ? (
             <div className="space-y-4">
-              <p className="text-zinc-600 max-w-lg">You need to link a wallet first. This wallet receives USDC tips.</p>
+              <p className="text-zinc-600 max-w-lg">You need to link a wallet first. This wallet receives tips.</p>
               <Button onClick={() => router.push("/onboarding")}>Link wallet →</Button>
             </div>
           ) : (
@@ -362,11 +415,12 @@ export default function TipClient({ repoId }: { repoId: string }) {
 
           <div className="flex flex-wrap gap-3 items-end">
             <div className="flex-1 min-w-0 max-w-[200px]">
-              <Input value={amount} onChange={(v)=>{ setAmount(v); setAmountError(validateAmount(v)); }} error={amountError} leftIcon={currency==="USDC" ? <Coins /> : <Wallet />} placeholder="Amount" className="gap-0" />
+              <Input value={amount} onChange={(v)=>{ setAmount(v); setAmountError(validateAmount(v, currentToken)); }} error={amountError} leftIcon={isETH ? <Wallet /> : <Coins />} placeholder="Amount" className="gap-0" />
             </div>
-            <select value={currency} onChange={e=>setCurrency(e.target.value as any)} className="h-9 bg-transparent border rule rounded-sm px-3 text-sm text-zinc-900">
-              <option>USDC</option>
-              <option>ETH</option>
+            <select value={selectedToken} onChange={e=>{ setSelectedToken(e.target.value); setAmountError(undefined); }} className="h-9 bg-transparent border rule rounded-sm px-3 text-sm text-zinc-900">
+              <option value={USDC_ADDRESS}>USDC</option>
+              <option value={ETH_ADDRESS}>ETH</option>
+              <option value={OAR_ADDRESS}>OAR</option>
             </select>
             {isConnected ? (
               <span className="stats text-xs text-zinc-700 border rule rounded-sm px-2 py-1 h-9 flex items-center">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
@@ -382,13 +436,13 @@ export default function TipClient({ repoId }: { repoId: string }) {
             <Button variant="ghost" size="sm" onClick={saveDisplayName}>Save</Button>
           </div>
 
-          <div className="flex gap-3 items-center">
+          <div className="flex gap-3 items-center flex-wrap">
             <StatefulButton state={tipFlow==="approving"||tipFlow==="sending"?"loading": tipFlow==="success"?"success": tipFlow==="error"?"error":"idle"} onClick={onTipClick} disabled={tipFlow==="approving"||tipFlow==="sending"}>
               {tipButtonText}
             </StatefulButton>
-            {address && payout && (address.toLowerCase() === (payout as string).toLowerCase()) && (
-              <StatefulButton state={claimState==="loading"?"loading": claimState==="success"?"success": claimState==="error"?"error":"idle"} onClick={onClaim} variant="secondary">
-                Claim {pending? formatUnits(pending as bigint,6):"0"} USDC
+            {address && payout && (address.toLowerCase() === (payout as string).toLowerCase()) && hasPendingClaim && (
+              <StatefulButton state={claimState==="loading"?"loading": claimState==="success"?"success": claimState==="error"?"error":"idle"} onClick={onClaimAll} variant="secondary">
+                Claim tips
               </StatefulButton>
             )}
           </div>
@@ -407,12 +461,24 @@ export default function TipClient({ repoId }: { repoId: string }) {
             <p className="text-xs text-zinc-500 mt-3">No tips yet.</p>
           ) : (
             <ul className="mt-3 divide-y rule">
-              {leaderboard.map((r:any)=>(
-                <li key={r.tipper_address} className="flex justify-between py-3">
-                  <span className="text-sm text-zinc-700">{r.display_name || truncate(r.tipper_address)}</span>
-                  <span className="stats text-sm text-zinc-900">${(Number(r.total)/1e6).toFixed(2)}</span>
-                </li>
-              ))}
+              {(() => {
+                const merged = new Map<string, { display_name: string|null; tipper_address: string; usd: number }>();
+                for (const r of leaderboard as any[]) {
+                  const key = r.tipper_address.toLowerCase();
+                  if (!merged.has(key)) merged.set(key, { display_name: r.display_name, tipper_address: r.tipper_address, usd: 0 });
+                  const entry = merged.get(key)!;
+                  const decimals = r.decimals ?? getTokenDecimals(r.token);
+                  const amount = Number(r.total) / Math.pow(10, decimals);
+                  const price = prices[r.token?.toLowerCase()] ?? 0;
+                  entry.usd += amount * price;
+                }
+                return [...merged.values()].sort((a, b) => b.usd - a.usd).slice(0, 10).map((r) => (
+                  <li key={r.tipper_address} className="flex justify-between py-3">
+                    <span className="text-sm text-zinc-700">{r.display_name || truncate(r.tipper_address)}</span>
+                    <span className="stats text-sm text-zinc-900">{fmtUsd(r.usd)}</span>
+                  </li>
+                ));
+              })()}
             </ul>
           )}
         </div>
@@ -427,7 +493,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
               {tips.slice(0,10).map((t:any)=>(
                 <li key={t.id} className="flex justify-between py-3">
                   <span className="text-xs text-zinc-600">{truncate(t.tipper_address)}</span>
-                  <span className="stats text-sm text-zinc-900">${(Number(t.usdc_amount)/1e6).toFixed(2)}</span>
+                  <span className="stats text-sm text-zinc-900">{(Number(t.amount)/Math.pow(10,getTokenDecimals(t.token))).toFixed(2)} {t.symbol || "USDC"}</span>
                 </li>
               ))}
             </ul>

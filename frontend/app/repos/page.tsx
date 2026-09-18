@@ -135,10 +135,6 @@ export default function ReposDirectory() {
                     <div className="flex items-center justify-between mt-4 pt-3 border-t rule">
                       <div className="flex gap-4">
                         <div>
-                          <div className="stats text-sm font-medium">${(Number(r.total_tipped) / 1e6).toFixed(2)}</div>
-                          <div className="text-[0.6rem] uppercase tracking-[0.15em] text-zinc-500 mt-0.5">tipped</div>
-                        </div>
-                        <div>
                           <div className="stats text-sm font-medium">{r.tip_count}</div>
                           <div className="text-[0.6rem] uppercase tracking-[0.15em] text-zinc-500 mt-0.5">tips</div>
                         </div>

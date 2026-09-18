@@ -2,10 +2,13 @@
 import { useState, useEffect } from "react";
 import { Loader } from "@/components/motion/loader";
 import { getBasescanTxUrl } from "@/lib/basescan";
+import { getTokenSymbol, getTokenDecimals } from "@/lib/chain";
 
-function formatUsdc(raw: number | string): string {
-  const num = typeof raw === "string" ? Number(raw) / 1e6 : raw / 1e6;
-  return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function formatAmount(raw: number | string, token: string): string {
+  const num = typeof raw === "string" ? Number(raw) : raw;
+  const decimals = getTokenDecimals(token);
+  const val = num / Math.pow(10, decimals);
+  return val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function truncate(addr: string): string {
@@ -43,6 +46,7 @@ export default function AdminActivity() {
               <th className="text-left px-4 py-2 font-medium text-zinc-600">Tipper</th>
               <th className="text-left px-4 py-2 font-medium text-zinc-600">Repo</th>
               <th className="text-right px-4 py-2 font-medium text-zinc-600">Amount</th>
+              <th className="text-left px-4 py-2 font-medium text-zinc-600">Token</th>
               <th className="text-right px-4 py-2 font-medium text-zinc-600">Fee</th>
               <th className="text-right px-4 py-2 font-medium text-zinc-600">Tx</th>
               <th className="text-right px-4 py-2 font-medium text-zinc-600">Time</th>
@@ -53,8 +57,9 @@ export default function AdminActivity() {
               <tr key={i} className="border-b rule last:border-0">
                 <td className="px-4 py-2 font-mono text-xs">{truncate(tip.tipper_address)}</td>
                 <td className="px-4 py-2 font-mono text-xs">{tip.repo_id}</td>
-                <td className="px-4 py-2 text-right stats text-xs">{formatUsdc(tip.usdc_amount)} USDC</td>
-                <td className="px-4 py-2 text-right stats text-xs text-zinc-500">{formatUsdc(tip.fee_amount)}</td>
+                <td className="px-4 py-2 text-right stats text-xs">{formatAmount(tip.amount, tip.token)}</td>
+                <td className="px-4 py-2 text-xs text-zinc-500">{getTokenSymbol(tip.token)}</td>
+                <td className="px-4 py-2 text-right stats text-xs text-zinc-500">{formatAmount(tip.fee_amount, tip.token)}</td>
                 <td className="px-4 py-2 text-right">
                   <a
                     href={getBasescanTxUrl(tip.tx_hash)}

@@ -2,11 +2,6 @@
 import { useState, useEffect } from "react";
 import { Loader } from "@/components/motion/loader";
 
-function formatUsdc(raw: number | string): string {
-  const num = typeof raw === "string" ? Number(raw) / 1e6 : raw / 1e6;
-  return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
 function truncate(addr: string): string {
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
 }
@@ -54,7 +49,6 @@ export default function AdminUsers() {
               <th className="text-left px-4 py-2 font-medium text-zinc-600">User</th>
               <th className="text-left px-4 py-2 font-medium text-zinc-600">Wallet(s)</th>
               <th className="text-right px-4 py-2 font-medium text-zinc-600">Tips sent</th>
-              <th className="text-right px-4 py-2 font-medium text-zinc-600">Total tipped</th>
               <th className="text-right px-4 py-2 font-medium text-zinc-600">Joined</th>
             </tr>
           </thead>
@@ -74,7 +68,6 @@ export default function AdminUsers() {
                   )}
                 </td>
                 <td className="px-4 py-2 text-right stats text-xs">{user.tipsReceived}</td>
-                <td className="px-4 py-2 text-right stats text-xs">{formatUsdc(user.totalTipped)} USDC</td>
                 <td className="px-4 py-2 text-right text-xs text-zinc-500">{new Date(user.createdAt).toLocaleDateString()}</td>
               </tr>
             ))}

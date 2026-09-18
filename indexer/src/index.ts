@@ -8,9 +8,11 @@ const prisma = new PrismaClient({ log: ["warn", "error"] });
 const abi = parseAbi([
   "event RepoRegistered(string repoId, address indexed payoutAddress, uint256 timestamp)",
   "event PayoutAddressUpdated(string repoId, address oldAddress, address indexed newAddress)",
-  "event TipReceived(address indexed tipper, string repoId, uint256 usdcAmount, uint256 feeAmount, uint256 timestamp)",
-  "event Claimed(string repoId, address indexed payoutAddress, uint256 amount, uint256 timestamp)",
-  "event TreasuryWithdrawn(address indexed to, uint256 amount, uint256 timestamp)",
+  "event TipReceived(address indexed tipper, string repoId, address indexed token, uint256 amount, uint256 feeAmount, uint256 timestamp)",
+  "event Claimed(string repoId, address indexed payoutAddress, address indexed token, uint256 amount, uint256 timestamp)",
+  "event TreasuryWithdrawn(address indexed to, address indexed token, uint256 amount, uint256 timestamp)",
+  "event TokenAdded(address token, uint8 decimals)",
+  "event TokenRemoved(address token)",
 ]);
 
 const chain = process.env.NEXT_PUBLIC_CHAIN === "base" ? base : baseSepolia;
@@ -70,6 +72,16 @@ async function withDbRetry<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
   throw new Error("unreachable");
 }
 
+function getTokenSymbol(token: string): string {
+  if (!token) return "USDC";
+  const addr = token.toLowerCase();
+  if (addr === "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913") return "USDC";
+  if (addr === "0x0000000000000000000000000000000000000000" || addr === "0") return "ETH";
+  if (addr === "0x6f19171963b7095d039372d0962512259187e4e6") return "OAR";
+  if (addr === "0x5ef2370e0fb0444cc06a18476101d18adc933b3d") return "OAR";
+  return "TOKEN";
+}
+
 async function tick() {
   const fromBlock = await withDbRetry(() => getFromBlock());
   const toBlock = await client.getBlockNumber();
@@ -82,8 +94,9 @@ async function tick() {
     const eventName = log.eventName as string;
     const args: any = log.args;
     if (eventName === "TipReceived") {
-      // deterministic id = tx_hash + logIndex to make replays idempotent (cuid would duplicate on retry after P1001)
+      // deterministic id = tx_hash + logIndex to make replays idempotent
       const id = `${log.transactionHash}_${log.logIndex ?? 0}`;
+      const tokenAddress = args.token || "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"; // default to USDC for v1 compat
       await withDbRetry(() =>
         prisma.tip.upsert({
           where: { id },
@@ -91,8 +104,9 @@ async function tick() {
             id,
             tipper_address: args.tipper.toLowerCase(),
             repo_id: args.repoId,
-            usdc_amount: BigInt(args.usdcAmount.toString()),
-            fee_amount: BigInt(args.feeAmount.toString()),
+            token: tokenAddress.toLowerCase(),
+            amount: args.amount.toString(),
+            fee_amount: args.feeAmount.toString(),
             timestamp: new Date(Number(args.timestamp) * 1000),
             tx_hash: log.transactionHash!,
             block_number: log.blockNumber!,
@@ -111,7 +125,7 @@ async function tick() {
     } else if (eventName === "PayoutAddressUpdated") {
       await withDbRetry(() => prisma.repo.update({ where: { repo_id: args.repoId }, data: { payout_address: args.newAddress.toLowerCase() } }).catch(() => null as any));
     }
-    // Claimed / TreasuryWithdrawn only need checkpoint
+    // Claimed / TreasuryWithdrawn / TokenAdded / TokenRemoved only need checkpoint
   }
 
   await withDbRetry(() =>

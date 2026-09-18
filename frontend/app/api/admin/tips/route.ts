@@ -17,7 +17,8 @@ export async function GET(req: NextRequest) {
         select: {
           tipper_address: true,
           repo_id: true,
-          usdc_amount: true,
+          amount: true,
+          token: true,
           fee_amount: true,
           timestamp: true,
           tx_hash: true,
@@ -30,7 +31,8 @@ export async function GET(req: NextRequest) {
     return {
       tips: tips.map((t) => ({
         ...t,
-        usdc_amount: Number(t.usdc_amount),
+        amount: Number(t.amount),
+        token: t.token,
         fee_amount: Number(t.fee_amount),
         block_number: Number(t.block_number),
       })),

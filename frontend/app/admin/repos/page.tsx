@@ -4,11 +4,6 @@ import { Button } from "@/components/motion/button";
 import { Loader } from "@/components/motion/loader";
 import { useToast } from "@/app/providers";
 
-function formatUsdc(raw: number | string): string {
-  const num = typeof raw === "string" ? Number(raw) / 1e6 : raw / 1e6;
-  return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
 function truncate(addr: string): string {
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
 }
@@ -103,7 +98,6 @@ export default function AdminRepos() {
             <tr className="border-b rule bg-zinc-900/5">
               <th className="text-left px-4 py-2 font-medium text-zinc-600">Repo</th>
               <th className="text-left px-4 py-2 font-medium text-zinc-600">Payout</th>
-              <th className="text-right px-4 py-2 font-medium text-zinc-600">Balance</th>
               <th className="text-right px-4 py-2 font-medium text-zinc-600">Tips</th>
               <th className="text-center px-4 py-2 font-medium text-zinc-600">Hidden</th>
               <th className="text-right px-4 py-2 font-medium text-zinc-600">Action</th>
@@ -114,7 +108,6 @@ export default function AdminRepos() {
               <tr key={repo.repoId} className={`border-b rule last:border-0 ${repo.hidden ? "opacity-50" : ""}`}>
                 <td className="px-4 py-2 font-mono text-xs">{repo.repoId}</td>
                 <td className="px-4 py-2 font-mono text-xs">{truncate(repo.payoutAddress)}</td>
-                <td className="px-4 py-2 text-right stats text-xs">{formatUsdc(repo.totalTipped)} USDC</td>
                 <td className="px-4 py-2 text-right stats text-xs">{repo.tipCount}</td>
                 <td className="px-4 py-2 text-center">
                   <button

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/motion/button";
 import { Loader } from "@/components/motion/loader";
 import { useToast } from "@/app/providers";
-import { opentipAbi } from "@/lib/contract";
+import { opentipV2Abi } from "@/lib/contract";
 import { VIEM_CHAIN, CONTRACT_ADDRESS } from "@/lib/chain";
 import { createPublicClient, http } from "viem";
 
@@ -18,7 +18,7 @@ export default function AdminRegistrar() {
 
   useEffect(() => {
     if (!CONTRACT_ADDRESS) { setFetching(false); return; }
-    client.readContract({ address: CONTRACT_ADDRESS, abi: opentipAbi, functionName: "registrarSigner" })
+    client.readContract({ address: CONTRACT_ADDRESS, abi: opentipV2Abi, functionName: "registrarSigner" })
       .then((addr) => setCurrentSigner(addr as string))
       .catch(() => {})
       .finally(() => setFetching(false));

@@ -22,16 +22,16 @@ export async function GET(req: NextRequest) {
     });
 
     const repoIds = repos.map(r => r.repo_id);
-    const tipAgg = repoIds.length > 0 ? await prisma.tip.groupBy({
-      by: ["repo_id"],
-      where: { repo_id: { in: repoIds } },
-      _sum: { usdc_amount: true },
-      _count: true,
-    }) : [];
+    const tipAgg: any[] = repoIds.length > 0 ? await prisma.$queryRaw`
+      SELECT repo_id, SUM(amount)::text as total, COUNT(*)::int as count
+      FROM "Tip"
+      WHERE repo_id = ANY(${repoIds})
+      GROUP BY repo_id
+    ` : [];
 
-    const tipMap = new Map<string, { total: bigint; count: number }>();
+    const tipMap = new Map<string, { total: string; count: number }>();
     for (const row of tipAgg) {
-      tipMap.set(row.repo_id, { total: row._sum.usdc_amount ?? BigInt(0), count: row._count });
+      tipMap.set(row.repo_id, { total: row.total ?? "0", count: row.count ?? 0 });
     }
 
     return NextResponse.json({
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
           repo_id: r.repo_id,
           payout_address: r.payout_address,
           registered_at: r.registered_at,
-          total_tipped: (agg?.total ?? BigInt(0)).toString(),
+          total_tipped: agg?.total ?? "0",
           tip_count: agg?.count ?? 0,
         };
       }),
@@ -58,16 +58,16 @@ export async function GET(req: NextRequest) {
   }
 
   const repoIds = repos.map(r => r.repo_id);
-  const tipAgg = await prisma.tip.groupBy({
-    by: ["repo_id"],
-    where: { repo_id: { in: repoIds } },
-    _sum: { usdc_amount: true },
-    _count: true,
-  });
+  const tipAgg: any[] = await prisma.$queryRaw`
+    SELECT repo_id, SUM(amount)::text as total, COUNT(*)::int as count
+    FROM "Tip"
+    WHERE repo_id = ANY(${repoIds})
+    GROUP BY repo_id
+  `;
 
-  const tipMap = new Map<string, { total: bigint; count: number }>();
+  const tipMap = new Map<string, { total: string; count: number }>();
   for (const row of tipAgg) {
-    tipMap.set(row.repo_id, { total: row._sum.usdc_amount ?? BigInt(0), count: row._count });
+    tipMap.set(row.repo_id, { total: row.total ?? "0", count: row.count ?? 0 });
   }
 
   let items = repos.map(r => {
@@ -76,13 +76,13 @@ export async function GET(req: NextRequest) {
       repo_id: r.repo_id,
       payout_address: r.payout_address,
       registered_at: r.registered_at,
-      total_tipped: (agg?.total ?? BigInt(0)).toString(),
+      total_tipped: agg?.total ?? "0",
       tip_count: agg?.count ?? 0,
     };
   });
 
   if (sort === "tipped") {
-    items.sort((a, b) => Number(BigInt(b.total_tipped) - BigInt(a.total_tipped)));
+    items.sort((a, b) => Number(BigInt(b.total_tipped) > BigInt(a.total_tipped)) || -Number(BigInt(b.total_tipped) < BigInt(a.total_tipped)));
   } else if (sort === "tips") {
     items.sort((a, b) => b.tip_count - a.tip_count);
   }

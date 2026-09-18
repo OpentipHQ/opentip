@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
       repos.map(async (repo) => {
         const stats = await prisma.tip.aggregate({
           where: { repo_id: repo.repo_id },
-          _sum: { usdc_amount: true, fee_amount: true },
+          _sum: { amount: true, fee_amount: true },
           _count: true,
         });
         return {
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
           payoutAddress: repo.payout_address,
           registeredAt: repo.registered_at,
           hidden: repo.hidden,
-          totalTipped: Number(stats._sum.usdc_amount || 0),
+          totalTipped: Number(stats._sum.amount || 0),
           totalFees: Number(stats._sum.fee_amount || 0),
           tipCount: stats._count || 0,
         };

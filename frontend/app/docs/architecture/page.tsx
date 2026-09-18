@@ -46,7 +46,7 @@ export default function ArchitecturePage() {
 └───────┘    └─────────────┘   └────────────┘
 
 External Services:
-  Groq (AI summaries) · Relay (ETH swaps) · Azure Blob (uploads)
+  Groq (AI summaries) · Azure Blob (uploads)
   Resend (emails) · GitHub API (repos, ownership)
 
 ┌─────────────────────────────────────────────────────────┐
@@ -97,10 +97,6 @@ External Services:
           <div className="p-3 border rule rounded-sm">
             <p className="font-medium text-sm">Resend</p>
             <p className="text-xs text-zinc-600 mt-1">Transactional email (password reset)</p>
-          </div>
-          <div className="p-3 border rule rounded-sm">
-            <p className="font-medium text-sm">Relay</p>
-            <p className="text-xs text-zinc-600 mt-1">Same-chain ETH→USDC swap for ETH tips</p>
           </div>
         </div>
       </section>

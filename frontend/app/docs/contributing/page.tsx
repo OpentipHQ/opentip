@@ -147,11 +147,6 @@ cp .env.example .env`}</CodeBlock>
                 <td className="py-3 text-zinc-600">Azure Blob Storage key</td>
               </tr>
               <tr className="border-b rule">
-                <td className="py-3 pr-4 font-mono text-xs text-accent">NEXT_PUBLIC_RELAY_API_KEY</td>
-                <td className="py-3 pr-4">Optional</td>
-                <td className="py-3 text-zinc-600">Relay API key (ETH tips)</td>
-              </tr>
-              <tr className="border-b rule">
                 <td className="py-3 pr-4 font-mono text-xs text-accent">GROQ_API_KEY</td>
                 <td className="py-3 pr-4">Optional</td>
                 <td className="py-3 text-zinc-600">Groq API key (AI-generated repo summaries)</td>
@@ -257,7 +252,8 @@ forge test`}</CodeBlock>
           <li>Link a wallet on Base Sepolia</li>
           <li>Register a repo (verify ownership → sign → on-chain tx)</li>
           <li>Send a USDC tip (approve + receiveTip)</li>
-          <li>Send an ETH tip (Relay swap)</li>
+          <li>Send an ETH tip (payable receiveTipEth)</li>
+          <li>Send an OAR tip (approve + receiveTip)</li>
           <li>Claim tips as the payout address holder</li>
           <li>Set a display name</li>
           <li>Edit profile (bio, social links, pfp, header)</li>

@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
+import { fmtUsd } from "@/lib/prices";
 
 function renderBioWithLinks(bio: string) {
   const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[^\s]*)/g;
@@ -41,13 +42,13 @@ interface ProfileData {
   };
   repos: {
     repo_id: string;
-    total_tipped: string;
+    total_tipped: number;
     tip_count: number;
   }[];
   stats: {
-    total_tipped: string;
+    total_tipped_usd: number;
+    total_claimed_usd: number;
     total_tips: number;
-    tips_claimed: number;
     repo_count: number;
   };
 }
@@ -169,8 +170,12 @@ export default function ProfileClient({ data, contributions }: { data: ProfileDa
       <section className="border-t border-b rule py-6">
         <div className="flex justify-center fluid-gap">
           <div className="text-center">
-            <div className="stats text-2xl font-medium">${data.stats.total_tipped}</div>
+            <div className="stats text-2xl font-medium">{fmtUsd(data.stats.total_tipped_usd)}</div>
             <div className="text-xs text-zinc-500 mt-1">total tipped</div>
+          </div>
+          <div className="text-center">
+            <div className="stats text-2xl font-medium">{fmtUsd(data.stats.total_claimed_usd)}</div>
+            <div className="text-xs text-zinc-500 mt-1">tips claimed</div>
           </div>
           <div className="text-center">
             <div className="stats text-2xl font-medium">{data.stats.repo_count}</div>
@@ -179,10 +184,6 @@ export default function ProfileClient({ data, contributions }: { data: ProfileDa
           <div className="text-center">
             <div className="stats text-2xl font-medium">{data.stats.total_tips}</div>
             <div className="text-xs text-zinc-500 mt-1">tips received</div>
-          </div>
-          <div className="text-center">
-            <div className="stats text-2xl font-medium">${data.stats.tips_claimed.toFixed(2)}</div>
-            <div className="text-xs text-zinc-500 mt-1">tips claimed</div>
           </div>
         </div>
       </section>
@@ -198,7 +199,6 @@ export default function ProfileClient({ data, contributions }: { data: ProfileDa
                   <div>
                     <Link href={`/${r.repo_id}`} className="font-mono text-sm underline underline-offset-4 hover:text-accent">{r.repo_id}</Link>
                     <div className="flex gap-4 mt-1">
-                      <span className="stats text-xs text-zinc-500">${(Number(r.total_tipped) / 1e6).toFixed(2)} tipped</span>
                       <span className="stats text-xs text-zinc-500">{r.tip_count} tips</span>
                     </div>
                   </div>

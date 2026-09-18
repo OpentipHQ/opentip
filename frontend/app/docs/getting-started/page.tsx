@@ -18,7 +18,7 @@ export default function GettingStartedPage() {
         <ul className="text-sm text-zinc-700 space-y-2 list-disc pl-5">
           <li>A crypto wallet (MetaMask, Rainbow, Coinbase Wallet, etc.)</li>
           <li>ETH on Base for gas fees (tips are free to send — gas is minimal on Base L2)</li>
-          <li>USDC on Base for tipping (or ETH — it gets swapped automatically)</li>
+          <li>USDC, ETH, or OAR on Base for tipping</li>
         </ul>
       </section>
 
@@ -63,7 +63,13 @@ export default function GettingStartedPage() {
           <div className="p-4 border rule rounded-sm">
             <h3 className="font-medium text-sm">ETH tips</h3>
             <p className="text-sm text-zinc-600 mt-1">
-              Select ETH, enter a dollar amount. Opentip uses Relay to swap your ETH to USDC on the same chain before delivering the tip. You will see a quote showing the ETH amount needed. One transaction covers everything.
+              Select ETH, enter an amount. Your wallet sends ETH directly to the contract via a payable call. No swaps needed.
+            </p>
+          </div>
+          <div className="p-4 border rule rounded-sm">
+            <h3 className="font-medium text-sm">OAR tips</h3>
+            <p className="text-sm text-zinc-600 mt-1">
+              Select OAR (Oarcoin), enter an amount. Same flow as USDC — approve once, then tip in a single transaction.
             </p>
           </div>
         </div>

@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE "IndexerState" ALTER COLUMN "last_block" SET DATA TYPE TEXT;
+
+-- AlterTable
+ALTER TABLE "Tip" ALTER COLUMN "fee_amount" SET DATA TYPE TEXT,
+ALTER COLUMN "block_number" SET DATA TYPE TEXT,
+ALTER COLUMN "amount" SET DATA TYPE TEXT;

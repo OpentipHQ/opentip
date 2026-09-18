@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
     // Generate nonce and expiry
     const nonce = randomBytes(16).readBigUInt64BE(0);
-    const expiry = BigInt(Math.floor(Date.now() / 1000) + 3600); // 1 hour
+    const expiry = BigInt(Math.floor(Date.now() / 1000) + 300); // 5 minutes
 
     // Sign EIP-712 locally with registrar key (no RPC needed)
     const pk = process.env.REGISTRAR_PRIVATE_KEY;
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       privateKey: pk as `0x${string}`,
       domain: {
         name: "Opentip",
-        version: "1",
+        version: "2",
         chainId: BigInt(CHAIN_ID),
         verifyingContract: CONTRACT_ADDRESS!,
       },

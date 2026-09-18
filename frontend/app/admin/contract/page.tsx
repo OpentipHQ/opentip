@@ -2,21 +2,32 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/motion/button";
 import { useToast } from "@/app/providers";
+import { USDC_ADDRESS, OAR_ADDRESS, ETH_ADDRESS } from "@/lib/chain";
+
+const TOKEN_OPTIONS = [
+  { address: ETH_ADDRESS, symbol: "ETH", decimals: 18 },
+  { address: USDC_ADDRESS, symbol: "USDC", decimals: 6 },
+  { address: OAR_ADDRESS, symbol: "OAR", decimals: 18 },
+];
 
 export default function AdminContract() {
   const { showToast, dismissToast } = useToast();
   const [feeBps, setFeeBps] = useState("");
   const [treasury, setTreasury] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawToken, setWithdrawToken] = useState(USDC_ADDRESS);
   const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
-  const [treasuryBalance, setTreasuryBalance] = useState<string | null>(null);
+  const [treasuryBalances, setTreasuryBalances] = useState<Record<string, string>>({});
+  const [strayEth, setStrayEth] = useState("0");
+  const [migrationDeadline, setMigrationDeadline] = useState(0);
+  const [sweepAddress, setSweepAddress] = useState("");
+  const [deadlineTimestamp, setDeadlineTimestamp] = useState("");
 
   useEffect(() => {
     fetch("/api/admin/stats").then(r => r.json()).then(j => {
-      if (j.treasuryBalance) {
-        const bal = Number(j.treasuryBalance) / 1e6;
-        setTreasuryBalance(bal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-      }
+      if (j.treasuryBalances) setTreasuryBalances(j.treasuryBalances);
+      if (j.strayEth) setStrayEth(j.strayEth);
+      if (j.migrationDeadline) setMigrationDeadline(j.migrationDeadline);
     }).catch(() => {});
   }, []);
 
@@ -38,6 +49,32 @@ export default function AdminContract() {
     }
     setLoading((prev) => ({ ...prev, [key]: false }));
   };
+
+  const withdrawAll = async () => {
+    setLoading((prev) => ({ ...prev, withdrawAll: true }));
+    const toastId = showToast({ status: "loading", title: "Withdrawing all tokens...", duration: 0 });
+    try {
+      const res = await fetch("/api/admin/withdraw-all", { method: "POST" });
+      const j = await res.json();
+      dismissToast(toastId);
+      if (j.ok) {
+        const count = j.results?.length || 0;
+        showToast({ status: "success", title: `${count} token${count !== 1 ? "s" : ""} withdrawn` });
+      } else {
+        showToast({ status: "error", title: "Failed", description: j.error });
+      }
+    } catch (e: any) {
+      dismissToast(toastId);
+      showToast({ status: "error", title: "Failed", description: e.message });
+    }
+    setLoading((prev) => ({ ...prev, withdrawAll: false }));
+  };
+
+  const selectedTokenConfig = TOKEN_OPTIONS.find(t => t.address === withdrawToken) || TOKEN_OPTIONS[1];
+  const currentBalance = treasuryBalances[withdrawToken.toLowerCase()] || "0";
+  const formattedBalance = Number(currentBalance) / Math.pow(10, selectedTokenConfig.decimals);
+  const formattedStrayEth = Number(strayEth) / 1e18;
+  const deadlineDate = migrationDeadline > 0 ? new Date(migrationDeadline * 1000) : null;
 
   return (
     <div className="space-y-8 max-w-lg">
@@ -108,13 +145,30 @@ export default function AdminContract() {
 
       {/* Withdraw */}
       <section className="space-y-3">
-        <h2 className="text-sm font-medium">Withdraw treasury</h2>
-        {treasuryBalance !== null && (
-          <p className="text-xs text-zinc-500">Available: <span className="stats text-zinc-900">{treasuryBalance} USDC</span></p>
-        )}
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-medium">Withdraw treasury</h2>
+          <Button variant="secondary" onClick={withdrawAll} disabled={loading.withdrawAll}>
+            {loading.withdrawAll ? "Sending..." : "Withdraw all"}
+          </Button>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {TOKEN_OPTIONS.map(t => {
+            const bal = Number(treasuryBalances[t.address.toLowerCase()] || "0") / Math.pow(10, t.decimals);
+            return (
+              <button
+                key={t.address}
+                onClick={() => setWithdrawToken(t.address)}
+                className={`border rule rounded-sm p-2 text-left transition-colors ${withdrawToken === t.address ? "border-accent bg-accent/5" : "hover:bg-zinc-50"}`}
+              >
+                <div className="text-xs font-medium">{t.symbol}</div>
+                <div className="stats text-xs text-zinc-600">{bal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</div>
+              </button>
+            );
+          })}
+        </div>
         <div className="flex gap-3 items-end">
           <div className="flex-1 max-w-[160px]">
-            <label className="block text-xs text-zinc-500 mb-1">Amount (USDC)</label>
+            <label className="block text-xs text-zinc-500 mb-1">Amount ({selectedTokenConfig.symbol})</label>
             <input
               type="text"
               value={withdrawAmount}
@@ -123,11 +177,88 @@ export default function AdminContract() {
               className="w-full bg-transparent border rule rounded-sm px-3 py-1.5 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:border-accent"
             />
           </div>
-          <Button onClick={() => action("withdraw", "/api/admin/withdraw", { amount: withdrawAmount })} disabled={loading.withdraw || !withdrawAmount}>
+          <Button onClick={() => action("withdraw", "/api/admin/withdraw", { token: withdrawToken, amount: withdrawAmount })} disabled={loading.withdraw || !withdrawAmount}>
             {loading.withdraw ? "Sending..." : "Withdraw"}
           </Button>
         </div>
-        <p className="text-xs text-zinc-500">Sends accumulated fees to the treasury address.</p>
+        <p className="text-xs text-zinc-500">Sends accumulated fees for the selected token to the treasury address.</p>
+      </section>
+
+      <div className="border-t rule" />
+
+      {/* Stray ETH */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-medium">Stray ETH</h2>
+        <p className="text-xs text-zinc-600">
+          ETH accidentally sent directly to the contract. Balance: <span className="font-mono">{formattedStrayEth.toFixed(6)} ETH</span>
+        </p>
+        <div className="flex gap-3 items-end">
+          <div className="flex-1">
+            <label className="block text-xs text-zinc-500 mb-1">Send to address</label>
+            <input
+              type="text"
+              value={sweepAddress}
+              onChange={(e) => setSweepAddress(e.target.value)}
+              placeholder="0x..."
+              className="w-full bg-transparent border rule rounded-sm px-3 py-1.5 text-sm text-zinc-900 font-mono placeholder:text-zinc-500 outline-none focus:border-accent"
+            />
+          </div>
+          <Button
+            onClick={() => action("sweepStrayEth", "/api/admin/sweep-stray-eth", { address: sweepAddress })}
+            disabled={loading.sweepStrayEth || !sweepAddress || formattedStrayEth === 0}
+          >
+            {loading.sweepStrayEth ? "Sending..." : "Sweep"}
+          </Button>
+        </div>
+        <p className="text-xs text-zinc-500">Sends all stray ETH to the specified address.</p>
+      </section>
+
+      <div className="border-t rule" />
+
+      {/* Migration deadline */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-medium">Migration deadline</h2>
+        <p className="text-xs text-zinc-600">
+          Controls when v1→v2 repo migration closes. {deadlineDate
+            ? <>Current: <span className="font-mono">{deadlineDate.toUTCString()}</span></>
+            : <span className="text-zinc-400">Open-ended (no deadline set)</span>}
+        </p>
+        <div className="flex gap-3 items-end">
+          <div className="flex-1">
+            <label className="block text-xs text-zinc-500 mb-1">Unix timestamp (0 = open-ended)</label>
+            <input
+              type="number"
+              value={deadlineTimestamp}
+              onChange={(e) => setDeadlineTimestamp(e.target.value)}
+              placeholder={String(Math.floor(Date.now() / 1000))}
+              min="0"
+              className="w-full bg-transparent border rule rounded-sm px-3 py-1.5 text-sm text-zinc-900 font-mono placeholder:text-zinc-500 outline-none focus:border-accent"
+            />
+          </div>
+          <Button
+            onClick={() => action("setDeadline", "/api/admin/set-migration-deadline", { deadline: Number(deadlineTimestamp) || 0 })}
+            disabled={loading.setDeadline || deadlineTimestamp === ""}
+          >
+            {loading.setDeadline ? "Sending..." : "Set"}
+          </Button>
+        </div>
+        <div className="flex gap-3">
+          <Button
+            variant="secondary"
+            onClick={() => action("setDeadline", "/api/admin/set-migration-deadline", { deadline: Math.floor(Date.now() / 1000) })}
+            disabled={loading.setDeadline}
+          >
+            {loading.setDeadline ? "Sending..." : "Disable now"}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => action("setDeadline", "/api/admin/set-migration-deadline", { deadline: 0 })}
+            disabled={loading.setDeadline}
+          >
+            {loading.setDeadline ? "Sending..." : "Remove deadline"}
+          </Button>
+        </div>
+        <p className="text-xs text-zinc-500">Sets the unix timestamp after which migration is no longer allowed. "Disable now" closes migration immediately. "Remove deadline" re-opens it.</p>
       </section>
     </div>
   );

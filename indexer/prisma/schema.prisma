@@ -11,14 +11,16 @@ model Tip {
   id             String   @id @default(cuid())
   tipper_address String   @db.VarChar(42)
   repo_id        String
-  usdc_amount    BigInt   // stored as base units (6 decimals)
-  fee_amount     BigInt
+  token          String   @db.VarChar(42)
+  amount         Decimal  @db.Decimal(78, 0)
+  fee_amount     Decimal  @db.Decimal(78, 0)
   timestamp      DateTime
   tx_hash        String
   block_number   BigInt
 
   @@index([repo_id])
   @@index([tipper_address])
+  @@index([token])
   @@index([timestamp])
 }
 

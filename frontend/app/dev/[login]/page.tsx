@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
-import { formatUnits, parseAbiItem } from "viem";
-import { CHAIN_ID, CONTRACT_ADDRESS, getTokenDecimals } from "@/lib/chain";
+import { getTokenDecimals } from "@/lib/chain";
 import { prisma } from "@/lib/prisma";
 import { getTokenPrices } from "@/lib/prices";
 import ProfileClient from "./ProfileClient";

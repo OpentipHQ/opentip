@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     if (!CONTRACT_ADDRESS) throw new Error("contract not configured");
 
     const wallet = getOwnerWallet();
-    const hash = await wallet.writeContract({
+    const hash = await (wallet.writeContract as any)({
       address: CONTRACT_ADDRESS!,
       abi: opentipV2Abi,
       functionName: "setRegistrarSigner",

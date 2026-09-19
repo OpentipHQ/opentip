@@ -8,7 +8,7 @@ import { Button, StatefulButton } from "@/components/motion/button";
 import { useToast } from "@/app/providers";
 
 export default function AdminTokensPage() {
-  const { address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
   const { open } = useAppKit();
   const { showToast } = useToast();
   const contract = CONTRACT_ADDRESS;

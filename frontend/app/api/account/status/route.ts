@@ -15,6 +15,7 @@ export async function GET() {
     where: { id: userId },
     select: {
       email: true,
+      emailVerified: true,
       passwordHash: true,
       githubId: true,
       login: true,
@@ -39,6 +40,7 @@ export async function GET() {
     hasEmail,
     hasPassword,
     email: user.email,
+    emailVerified: !!user.emailVerified,
     githubLogin: hasGithub ? user.login : null,
     pfp: user.pfp,
     header: user.header,

@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     const decimals = getTokenDecimals(data.token);
     const amount = parseUnits(data.amount, decimals);
     const wallet = getOwnerWallet();
-    const hash = await wallet.writeContract({
+    const hash = await (wallet.writeContract as any)({
       address: CONTRACT_ADDRESS,
       abi: opentipV2Abi,
       functionName: "withdrawTreasury",

@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   const projectId = process.env.NEXT_PUBLIC_PROJECT_ID;
   const rpcUrl = projectId
     ? `https://rpc.walletconnect.org/v1/?chainId=eip155:8453&projectId=${projectId}`
-    : "https://mainnet.base.org";
+    : (process.env.RPC_URL || "https://mainnet.base.org");
   const client = createPublicClient({ chain: base, transport: http(rpcUrl) });
 
   let verified = false;

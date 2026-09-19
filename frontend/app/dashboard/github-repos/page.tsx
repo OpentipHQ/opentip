@@ -18,7 +18,7 @@ export default function DashboardGithubRepos() {
 
   useEffect(() => {
     if (status !== "authenticated") return;
-    fetch("/api/github/repos?per_page=100").then(r => r.json()).then(j => Array.isArray(j) ? setRepos(j) : setRepos([])).finally(() => setLoading(false));
+    fetch("/api/github/repos?per_page=100").then(r => r.json()).then(j => Array.isArray(j) ? setRepos(j) : setRepos([])).catch(() => setRepos([])).finally(() => setLoading(false));
   }, [status]);
 
   const filtered = useMemo(() => {

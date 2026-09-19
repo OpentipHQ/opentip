@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { handleAdminRequest, auditLog } from "@/lib/admin-api";
-import { createPublicClient, http, parseUnits } from "viem";
+import { createPublicClient, http } from "viem";
 import { getOwnerWallet } from "@/lib/admin-wallet";
 import { opentipV2Abi } from "@/lib/contract";
 import { VIEM_CHAIN, CONTRACT_ADDRESS, TOKEN_CONFIG, ETH_ADDRESS, getTokenDecimals } from "@/lib/chain";
@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   return handleAdminRequest(req, "critical", async (admin) => {
     if (!CONTRACT_ADDRESS) throw new Error("contract not configured");
 
-    const client = createPublicClient({ chain: VIEM_CHAIN, transport: http() });
+    const client = createPublicClient({ chain: VIEM_CHAIN, transport: http(process.env.RPC_URL || undefined) });
     const wallet = getOwnerWallet();
     const tokenAddrs = [ETH_ADDRESS, ...Object.keys(TOKEN_CONFIG).filter(a => a !== ETH_ADDRESS)] as `0x${string}`[];
 
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       });
 
       if (bal > 0n) {
-        const hash = await wallet.writeContract({
+        const hash = await (wallet.writeContract as any)({
           address: CONTRACT_ADDRESS,
           abi: opentipV2Abi,
           functionName: "withdrawTreasury",

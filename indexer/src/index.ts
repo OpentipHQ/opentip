@@ -15,8 +15,8 @@ const abi = parseAbi([
   "event TokenRemoved(address token)",
 ]);
 
-const chain = process.env.NEXT_PUBLIC_CHAIN === "base" ? base : baseSepolia;
-const rpcUrl = process.env.RPC_URL || (chain.id === 8453 ? "https://mainnet.base.org" : "https://sepolia.base.org");
+const chain = process.env.CHAIN === "base" ? base : baseSepolia;
+const rpcUrl = process.env.RPC_URL || "";
 const contractAddress = process.env.CONTRACT_ADDRESS as `0x${string}`;
 const pollMs = Number(process.env.POLL_MS || 12000);
 const startBlockEnv = process.env.START_BLOCK ? BigInt(process.env.START_BLOCK) : undefined;
@@ -34,7 +34,7 @@ async function getFromBlock(): Promise<bigint> {
   return latest > 10000n ? latest - 10000n : 0n;
 }
 
-const MAX_RANGE = 2000n; // Base mainnet RPC limits eth_getLogs to 2k blocks
+const MAX_RANGE = BigInt(process.env.GETLOGS_RANGE || "10"); // Alchemy free tier: max 10 blocks
 
 async function getLogsBatched(fromBlock: bigint, toBlock: bigint) {
   const all: any[] = [];
@@ -60,9 +60,10 @@ async function withDbRetry<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
     } catch (e: any) {
       const isP1001 = e?.code === "P1001" || String(e?.message || "").includes("Can't reach database server");
       if (isP1001 && i < retries - 1) {
-        console.warn(`[indexer] DB unreachable, retry ${i + 1}/${retries} in 2s...`);
+        const delay = Math.min(2000 * Math.pow(2, i), 16000);
+        console.warn(`[indexer] DB unreachable, retry ${i + 1}/${retries} in ${delay}ms...`);
         try { await prisma.$disconnect(); } catch {}
-        await new Promise((r) => setTimeout(r, 2000));
+        await new Promise((r) => setTimeout(r, delay));
         try { await prisma.$connect(); } catch {}
         continue;
       }
@@ -70,16 +71,6 @@ async function withDbRetry<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
     }
   }
   throw new Error("unreachable");
-}
-
-function getTokenSymbol(token: string): string {
-  if (!token) return "USDC";
-  const addr = token.toLowerCase();
-  if (addr === "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913") return "USDC";
-  if (addr === "0x0000000000000000000000000000000000000000" || addr === "0") return "ETH";
-  if (addr === "0x6f19171963b7095d039372d0962512259187e4e6") return "OAR";
-  if (addr === "0x5ef2370e0fb0444cc06a18476101d18adc933b3d") return "OAR";
-  return "TOKEN";
 }
 
 async function tick() {
@@ -139,13 +130,26 @@ async function tick() {
   if (logs.length) console.log(`[indexer] ${logs.length} events [${fromBlock}..${toBlock}]`);
 }
 
+let running = true;
+
+function shutdown() {
+  console.log("[indexer] shutting down...");
+  running = false;
+}
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
+
 async function main() {
   console.log(`[indexer] chain ${chain.id} contract ${contractAddress} rpc ${rpcUrl}`);
   // ensure state row exists
-  while (true) {
+  while (running) {
     try { await tick(); } catch (e) { console.error("[indexer] tick error", e); }
+    if (!running) break;
     await new Promise((r) => setTimeout(r, pollMs));
   }
+  await prisma.$disconnect();
+  process.exit(0);
 }
 
 main();

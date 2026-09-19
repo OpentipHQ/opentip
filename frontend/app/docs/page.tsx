@@ -104,10 +104,10 @@ export default function DocsPage() {
           Deployed on Base mainnet:
         </p>
         <code className="block mt-3 bg-zinc-900 text-zinc-100 p-4 rounded-sm font-mono text-sm break-all">
-          0xA45Be472a64eE6Daa093c6a975Cd8908C615d594
+          0xAf1b70F5BdDFfD64c5D7B971bA670e1ff65cB1bC
         </code>
         <a
-          href="https://basescan.org/address/0xA45Be472a64eE6Daa093c6a975Cd8908C615d594"
+          href="https://basescan.org/address/0xAf1b70F5BdDFfD64c5D7B971bA670e1ff65cB1bC"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block mt-3 text-sm text-accent underline underline-offset-4"

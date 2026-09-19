@@ -19,7 +19,7 @@ export async function POST() {
 
   const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&scope=read%3Auser+public_repo&state=${state}&redirect_uri=${encodeURIComponent(redirectUri)}`;
 
-  const response = NextResponse.json({ url, state });
+  const response = NextResponse.json({ url });
 
   response.cookies.set("github_link_state", state, {
     httpOnly: true,

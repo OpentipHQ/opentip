@@ -6,7 +6,7 @@ import { useAppKit } from "@reown/appkit/react";
 import { signIn, useSession } from "next-auth/react";
 import { parseUnits, formatUnits, parseEther, encodeFunctionData } from "viem";
 import { opentipV2Abi, erc20Abi } from "@/lib/contract";
-import { CHAIN_ID, CONTRACT_ADDRESS, USDC_ADDRESS, OAR_ADDRESS, ETH_ADDRESS, TOKEN_CONFIG, getTokenSymbol, getTokenDecimals } from "@/lib/chain";
+import { CHAIN_ID, CONTRACT_ADDRESS, USDC_ADDRESS, OAR_ADDRESS, ETH_ADDRESS, getTokenDecimals } from "@/lib/chain";
 import { fmtUsd } from "@/lib/prices";
 import { useToast } from "@/app/providers";
 import { Input } from "@/components/motion/input";
@@ -37,7 +37,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
   const { address, isConnected } = useAccount();
   const { open } = useAppKit();
   const { data: session } = useSession();
-  const { showToast, updateToast, dismissToast } = useToast();
+  const { showToast, dismissToast } = useToast();
   const { signMessageAsync } = useSignMessage();
   const contract = CONTRACT_ADDRESS;
 
@@ -178,15 +178,12 @@ export default function TipClient({ repoId }: { repoId: string }) {
   }, [ethReceipt.isSuccess, ethReceipt.isError]);
 
   useEffect(()=>{
-    if (ethSend.data) {
-      // ethSend.data is the tx hash
-    }
     if (ethSend.error) {
       if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
       showToast({ status:"error", title:"Transaction rejected", description: ethSend.error.message?.slice(0,100) });
       setTipFlow("error"); setTimeout(()=>setTipFlow("idle"),2000);
     }
-  }, [ethSend.data, ethSend.error]);
+  }, [ethSend.error]);
 
   // Claim all receipt
   useEffect(()=>{
@@ -282,7 +279,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
   };
 
   const copyLink = async () => {
-    const url = `https://opentip.tech/${repoIdLower}`;
+    const url = `${window.location.origin}/${repoIdLower}`;
     await navigator.clipboard.writeText(url);
     showToast({ status:"success", title:"Copied", description: url });
   };

@@ -81,13 +81,14 @@ export default function SmartContractPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 border rule rounded-sm">
               <p className="text-xs text-zinc-500 uppercase tracking-wider">V1 (USDC-only)</p>
-              <code className="block mt-2 font-mono text-sm break-all">0xA45Be472a64eE6Daa093c6a975Cd8908C615d594</code>
+              <code className="block mt-2 font-mono text-sm break-all text-zinc-400">Deprecated</code>
               <a href="https://basescan.org/address/0xA45Be472a64eE6Daa093c6a975Cd8908C615d594" target="_blank" rel="noopener noreferrer" className="inline-block mt-2 text-xs text-accent underline underline-offset-4">Basescan →</a>
             </div>
             <div className="p-4 border rule rounded-sm">
               <p className="text-xs text-zinc-500 uppercase tracking-wider">V2 (Multi-token)</p>
-              <code className="block mt-2 font-mono text-sm break-all text-zinc-400">Not yet deployed</code>
-              <p className="text-xs text-zinc-500 mt-2">Supports USDC, ETH, OAR. Deploy via DeployV2.s.sol</p>
+              <code className="block mt-2 font-mono text-sm break-all">0xAf1b70F5BdDFfD64c5D7B971bA670e1ff65cB1bC</code>
+              <a href="https://basescan.org/address/0xAf1b70F5BdDFfD64c5D7B971bA670e1ff65cB1bC" target="_blank" rel="noopener noreferrer" className="inline-block mt-2 text-xs text-accent underline underline-offset-4">Basescan →</a>
+              <p className="text-xs text-zinc-500 mt-2">Supports USDC, ETH, OAR</p>
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

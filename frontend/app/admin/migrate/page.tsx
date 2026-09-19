@@ -3,13 +3,13 @@ import { useState, useEffect } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import { opentipV2Abi } from "@/lib/contract";
-import { CONTRACT_ADDRESS, CHAIN_ID } from "@/lib/chain";
+import { CONTRACT_ADDRESS } from "@/lib/chain";
 import { Button, StatefulButton } from "@/components/motion/button";
 import { useToast } from "@/app/providers";
 import { Loader } from "@/components/motion/loader";
 
 export default function AdminMigratePage() {
-  const { address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
   const { open } = useAppKit();
   const { showToast } = useToast();
   const contract = CONTRACT_ADDRESS;

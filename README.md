@@ -10,7 +10,7 @@ The open-source tip jar on Base. Send crypto to the developers who build the too
 
 1. **Find a repo** — browse registered repositories on Opentip
 2. **Change one word in the URL** — replace `github.com` with `opentip.tech` (or visit directly)
-3. **Send a tip** — pay in USDC or ETH (ETH is swapped to USDC offchain via [Relay](https://relay.link))
+3. **Send a tip** — pay in ETH, USDC, or OAR
 4. **Developer claims** — the repo owner sets a payout address and pulls funds on-chain
 
 Opentip takes a **5% fee** on each tip to keep the platform running. **95% goes directly to the developer.** Minimum tip is $1 to prevent gas fees from eating small amounts.
@@ -19,15 +19,17 @@ Opentip takes a **5% fee** on each tip to keep the platform running. **95% goes 
 
 ## Features
 
-- **Repo-level tipping** — tips are tied to a specific GitHub repository
-- **USDC and ETH** — pay with either currency; ETH is converted to USDC via Relay before reaching the contract
+- **Multi-token tipping** — send ETH, USDC, or OAR; tips stay in the token you send
+- **Repo-level tips** — tips are tied to a specific GitHub repository
 - **Pull payments** — developers set a payout address and claim when ready
-- **AI-generated summaries** — Groq-powered codebase analysis displayed on each repo page
+- **Email verification** — 6-digit code flow with brute-force protection
+- **Password reset** — email-based reset via Resend
+- **AI-generated summaries** — Groq-powered codebase analysis on each repo page
 - **Developer profiles** — public profiles with stats, contribution heatmaps, and social links
+- **Leaderboard** — top supporters ranked by lifetime USD tipped
 - **Admin dashboard** — contract controls, fee management, treasury, user management
 - **GitHub OAuth** — sign in with GitHub to verify repo ownership
-- **Email/password auth** — optional email signup with password reset via Resend
-- **Leaderboard** — top supporters ranked by lifetime USDC tipped
+- **Email/password auth** — optional email signup with verification
 - **Profile customization** — upload profile picture and header image via Azure Blob Storage
 
 ---
@@ -38,13 +40,15 @@ Opentip takes a **5% fee** on each tip to keep the platform running. **95% goes 
 |-------|-----------|
 | Smart contract | Solidity 0.8.26, OpenZeppelin, Foundry |
 | Frontend | Next.js 16, React 19, Tailwind CSS, TypeScript |
-| Auth | NextAuth.js, GitHub OAuth, JWT |
+| Animation | Motion (Framer Motion) |
+| Validation | Zod |
+| Auth | NextAuth.js v4, GitHub OAuth, JWT |
 | Database | PostgreSQL (Azure), Prisma ORM |
 | Wallet | Reown AppKit (WalletConnect), wagmi, viem |
-| Indexer | Standalone Node.js, polls Base every 12s (Azure Container Apps) |
-| AI summaries | Groq API (openai/gpt-oss-20b) |
+| Indexer | Standalone Node.js, polls Base for events (Azure Container Apps) |
+| RPC | Alchemy (recommended), Base public RPC |
+| AI summaries | Groq API |
 | Image uploads | Azure Blob Storage |
-| Transaction routing | Relay API v2 |
 | Email | Resend |
 | Hosting | Vercel (frontend), Azure Container Apps (indexer) |
 
@@ -54,24 +58,32 @@ Opentip takes a **5% fee** on each tip to keep the platform running. **95% goes 
 
 ```
 opentip/
-├── contracts/          Solidity smart contract + Foundry tests
-│   ├── src/Opentip.sol
-│   ├── test/
-│   └── script/Deploy.s.sol
-├── frontend/           Next.js app (deployed to Vercel)
-│   ├── app/            Pages, API routes, layouts
-│   │   ├── [owner]/[repo]/   Public repo page (tip form + AI summary)
-│   │   ├── admin/            Admin dashboard (owner-only controls)
-│   │   ├── dashboard/        User dashboard (repos, account, profile)
-│   │   ├── dev/[login]/      Public developer profile
-│   │   ├── docs/             Documentation site (9 pages)
-│   │   ├── api/              REST API routes
-│   │   └── legal/            Terms of Service, Privacy Policy
-│   ├── components/     Shared UI components
-│   ├── lib/            Utilities (chain config, auth, contracts, AI, email)
-│   └── prisma/         Database schema
-├── indexer/            Event indexer (polls contract, syncs to DB)
-└── package.json        npm workspaces root
+├── contracts/              Solidity smart contract + Foundry tests
+│   ├── src/OpentipV2.sol   Multi-token contract (ETH, USDC, OAR)
+│   ├── src/Opentip.sol     V1 contract (deprecated, USDC-only)
+│   ├── test/               91 tests (36 V1 + 55 V2)
+│   └── script/DeployV2.s.sol
+├── frontend/               Next.js app (deployed to Vercel)
+│   ├── app/                Pages, API routes, layouts
+│   │   ├── [owner]/[repo]/ Public repo page (tip form + AI summary)
+│   │   ├── admin/          Admin dashboard (owner-only controls)
+│   │   ├── dashboard/      User dashboard (repos, account, profile)
+│   │   ├── dev/[login]/    Public developer profile
+│   │   ├── docs/           Documentation site
+│   │   ├── verify-email/   Email verification (6-digit code)
+│   │   ├── signin/         Sign in / sign up
+│   │   ├── onboarding/     Repo onboarding flow
+│   │   ├── activity/       Public tip activity feed
+│   │   ├── repos/          Browse registered repos
+│   │   ├── api/            REST API routes
+│   │   └── legal/          Terms of Service, Privacy Policy
+│   ├── components/         Shared UI components
+│   ├── config/             Reown AppKit / wagmi configuration
+│   ├── context/            React context providers
+│   ├── lib/                Utilities (chain, auth, contracts, email, prices)
+│   └── prisma/             Database schema
+├── indexer/                Event indexer (polls contract, syncs to DB)
+└── package.json            npm workspaces root
 ```
 
 ---
@@ -101,14 +113,22 @@ forge test -vvv
 
 # Deploy to Base Sepolia
 cp .env.example .env   # fill in PRIVATE_KEY, BASE_SEPOLIA_RPC, ETHERSCAN_API_KEY
-forge script script/Deploy.s.sol:Deploy --rpc-url $BASE_SEPOLIA_RPC --broadcast --verify
+forge script script/DeployV2.s.sol:DeployV2 --rpc-url $BASE_SEPOLIA_RPC --broadcast
+
+# Verify on Basescan
+forge build && forge verify-contract <CONTRACT_ADDRESS> src/OpentipV2.sol:OpentipV2 --chain-id 84532
 ```
 
-The contract is deployed and verified on Base mainnet:
-- **Contract (mainnet):** [`0xA45Be472a64eE6Daa093c6a975Cd8908C615d594`](https://basescan.org/address/0xA45Be472a64eE6Daa093c6a975Cd8908C615d594)
-- **Contract (testnet):** [`0xeD13dB8234d437771e115419BF7498Ddef90Dc8D`](https://sepolia.basescan.org/address/0xed13db8234d437771e115419bf7498ddef90dc8d)
-- **USDC (mainnet):** `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`
-- **USDC (testnet):** `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
+The contract is deployed and verified:
+
+- **V2 (Multi-token, mainnet):** [`0xAf1b70F5BdDFfD64c5D7B971bA670e1ff65cB1bC`](https://basescan.org/address/0xAf1b70F5BdDFfD64c5D7B971bA670e1ff65cB1bC) — ETH, USDC, OAR
+- **V1 (USDC-only, deprecated):** [`0xA45Be472a64eE6Daa093c6a975Cd8908C615d594`](https://basescan.org/address/0xA45Be472a64eE6Daa093c6a975Cd8908C615d594)
+- **V2 (testnet):** [`0xeD13dB8234d437771e115419BF7498Ddef90Dc8D`](https://sepolia.basescan.org/address/0xed13db8234d437771e115419bf7498ddef90dc8d)
+
+**Token addresses (mainnet):**
+
+- USDC: `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`
+- OAR: `0x6F19171963b7095d039372d0962512259187E4e6`
 
 ### 3. Database
 
@@ -122,11 +142,11 @@ cd ../frontend && npx prisma generate
 
 ```bash
 cd indexer
-cp .env.example .env   # fill in DATABASE_URL, RPC_URL, CONTRACT_ADDRESS
+cp .env.example .env   # fill in DATABASE_URL, RPC_URL, CONTRACT_ADDRESS, START_BLOCK
 npm run dev
 ```
 
-The indexer polls the contract every 12 seconds and syncs events to PostgreSQL.
+The indexer polls the contract for events and syncs to PostgreSQL.
 
 ### 5. Frontend
 
@@ -153,9 +173,17 @@ npm run dev            # http://localhost:3000
 | `NEXT_PUBLIC_CHAIN` | `baseSepolia` (testnet) or `base` (mainnet) |
 | `NEXT_PUBLIC_BASE_SEPOLIA_CONTRACT` | Testnet contract address |
 | `NEXT_PUBLIC_BASE_CONTRACT` | Mainnet contract address |
-| `NEXT_PUBLIC_RELAY_API_KEY` | Relay API key for ETH→USDC swaps |
+| `NEXT_PUBLIC_RPC_URL` | RPC endpoint for client-side wagmi/Reown (e.g. Alchemy) |
+| `RPC_URL` | RPC endpoint for server-side admin routes |
+| `START_BLOCK` | Contract deployment block for dev profile scanning |
+| `GETLOGS_RANGE` | Max blocks per `eth_getLogs` call (default: 10 for Alchemy free tier) |
+| `PRIVATE_KEY` | Owner wallet private key for on-chain admin transactions |
+| `OWNER_ADDRESS` | Owner wallet address for admin auth |
+| `REGISTRAR_PRIVATE_KEY` | Private key for EIP-712 registrar signer |
 | `GROQ_API_KEY` | Groq API key for AI-generated repo summaries |
-| `RESEND_API_KEY` | Resend API key (password reset emails) |
+| `RESEND_API_KEY` | Resend API key (verification + password reset emails) |
+| `RESEND_FROM` | Sender email address (e.g. `noreply@opentip.tech`) |
+| `GITHUB_TOKEN` | GitHub personal access token for API requests |
 | `AZURE_STORAGE_ACCOUNT` | Azure Blob Storage account name |
 | `AZURE_STORAGE_KEY` | Azure Blob Storage access key |
 
@@ -164,45 +192,71 @@ npm run dev            # http://localhost:3000
 | Variable | Description |
 |----------|-------------|
 | `DATABASE_URL` | PostgreSQL connection string |
-| `RPC_URL` | Base RPC endpoint |
+| `RPC_URL` | RPC endpoint (e.g. `https://base-mainnet.g.alchemy.com/v2/YOUR_KEY`) |
 | `CONTRACT_ADDRESS` | Deployed Opentip contract address |
 | `START_BLOCK` | Block number to start indexing from |
 | `POLL_MS` | Polling interval (default: 12000ms) |
+| `CHAIN` | `base` (mainnet) or `baseSepolia` (testnet) |
+| `GETLOGS_RANGE` | Max blocks per `eth_getLogs` call (default: 10) |
+
+### Contract deploy (`contracts/.env`)
+
+| Variable | Description |
+|----------|-------------|
+| `BASE_SEPOLIA_RPC` | Alchemy or public RPC for Base Sepolia |
+| `BASE_RPC` | Alchemy or public RPC for Base mainnet |
+| `PRIVATE_KEY` | Deployer wallet private key |
+| `ETHERSCAN_API_KEY` | Basescan API key for contract verification |
+| `TREASURY_ADDRESS` | Treasury wallet address (defaults to deployer) |
+| `FEE_BPS` | Fee in basis points (default: 500 = 5%) |
+| `REGISTRAR_SIGNER` | Address of the EIP-712 registrar signer |
 
 ---
 
 ## Architecture
 
-### Smart contract (`Opentip.sol`)
+### Smart contract (`OpentipV2.sol`)
 
 The on-chain contract handles:
+
 - **Repo registration** — EIP-712 signed registration with GitHub ownership verification
-- **Tip receiving** — USDC tips credited to the repo's pending balance
-- **Payout claims** — pull-payment pattern; developers set an address and claim
-- **Fee collection** — 5% fee routed to the treasury on each tip
+- **Multi-token tips** — ETH, USDC, OAR, or any registered ERC-20 token
+- **Payout claims** — pull-payment pattern; developers set an address and claim all tokens at once
+- **Fee collection** — 5% fee routed to the treasury per token
+- **Token management** — admin can add/remove supported tokens
+- **Stray ETH recovery** — ETH sent outside `receiveTipEth()` is tracked and sweepable
+- **Migration** — V1 repos can be migrated to V2 via `adminMigrateRepo()` with a deadline
 - **Admin controls** — pause/unpause, fee adjustment, treasury and registrar key rotation
 
 Key properties:
+
 - `Ownable2Step` — two-step ownership transfer for security
 - `Pausable` — emergency stop mechanism
 - `ReentrancyGuard` — prevents reentrancy attacks
-- `EIP-712` — typed structured data for off-chain signature verification
+- `EIP-712` — typed structured data for off-chain signature verification (domain version "2")
+- `everAcceptedTokens` — permanent record of all tokens that were ever tipped, ensures `claimAll()` works even after token removal
 
 ### Indexer
 
 A standalone Node.js service that:
-- Polls the contract for `TipReceived`, `RepoRegistered`, `Claimed`, and `TreasuryWithdrawn` events
-- Syncs event data to PostgreSQL
-- Runs on Azure Container Apps on a consumption plan (~$8-10/month)
+
+- Polls the contract for `TipReceived`, `RepoRegistered`, `PayoutAddressUpdated`, and other events
+- Syncs event data to PostgreSQL with idempotent upserts
+- Batches `eth_getLogs` calls with configurable block range (`GETLOGS_RANGE`)
+- Includes DB retry logic with exponential backoff
+- Runs on Azure Container Apps
 
 ### Frontend
 
 Next.js 16 app with:
+
 - **App Router** — file-based routing with layouts
 - **Server Components** — DB queries in server components (leaderboard, repo pages)
 - **Turbopack** — fast dev server and builds
-- **Fluid responsive design** — CSS `clamp()` for typography and spacing, flexbox for layouts
+- **Fluid responsive design** — CSS `clamp()` for typography and spacing
 - **Chain-driven config** — single `lib/chain.ts` module controls all chain-specific values
+- **Email verification** — 6-digit code flow mandatory before onboarding
+- **OTP input** — 6-digit code input with auto-advance and paste support
 
 ---
 
@@ -217,22 +271,18 @@ Next.js 16 app with:
 ### Azure Container Apps (indexer)
 
 ```bash
+# Build and push
 cd indexer
-az containerapp up \
-  --source . \
-  --env-vars DATABASE_URL=... CONTRACT_ADDRESS=... RPC_URL=... \
-  --resource-group opentip \
-  --environment opentip-env
+docker build -t opentipregistry.azurecr.io/opentip-indexer:latest .
+az acr login --name opentipregistry
+docker push opentipregistry.azurecr.io/opentip-indexer:latest
+
+# Update the container app
+az containerapp update --name opentip-indexer --resource-group opentip --image opentipregistry.azurecr.io/opentip-indexer:latest
+
+# Set env vars (if needed)
+az containerapp update --name opentip-indexer --resource-group opentip --set-env-vars "RPC_URL=https://..." "GETLOGS_RANGE=10"
 ```
-
-### Mainnet launch checklist
-
-- [ ] Deploy contract on Base mainnet
-- [ ] Set `NEXT_PUBLIC_CHAIN=base`
-- [ ] Set `NEXT_PUBLIC_BASE_CONTRACT` to mainnet address
-- [ ] Rotate all secrets if repo was public
-- [ ] Replace in-memory rate limiters with Upstash Redis
-- [ ] Set `NEXTAUTH_URL=https://opentip.tech`
 
 ---
 
@@ -254,5 +304,6 @@ MIT
 - **GitHub:** [github.com/opentiphq](https://github.com/opentiphq)
 - **X / Twitter:** [@opentip_tech](https://x.com/opentip_tech)
 - **Email:** [support@opentip.tech](mailto:support@opentip.tech)
-- **Contract (mainnet):** [Basescan](https://basescan.org/address/0xA45Be472a64eE6Daa093c6a975Cd8908C615d594)
+- **Contract V2 (mainnet):** [Basescan](https://basescan.org/address/0xAf1b70F5BdDFfD64c5D7B971bA670e1ff65cB1bC)
+- **Contract V1 (deprecated):** [Basescan](https://basescan.org/address/0xA45Be472a64eE6Daa093c6a975Cd8908C615d594)
 - **Contract (testnet):** [Basescan](https://sepolia.basescan.org/address/0xed13db8234d437771e115419bf7498ddef90dc8d)

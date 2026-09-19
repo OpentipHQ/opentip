@@ -5,7 +5,7 @@ import { Button } from "@/components/motion/button";
 import { useEffect, useState } from "react";
 import { Plus, Minus } from "lucide-react";
 import DemoVideo from "@/components/DemoVideo";
-import { getTokenSymbol, getTokenDecimals } from "@/lib/chain";
+import { getTokenDecimals } from "@/lib/chain";
 import { fmtUsd } from "@/lib/prices";
 
 export default function Home() {
@@ -38,7 +38,7 @@ export default function Home() {
               Support the humans<br />behind the <span className="underline decoration-accent decoration-2 underline-offset-4">code</span>
             </h1>
             <p className="text-zinc-700 max-w-lg text-lg leading-relaxed">
-              Every repo you <code className="font-mono text-sm bg-accent/10 text-accent px-1.5 py-0.5 rounded-sm">git clone</code> was built by someone who probably wasn&apos;t paid for it. Opentip makes it easy to change that &mdash; send a tip in ETH or USDC, straight to their wallet.
+              Every repo you <code className="font-mono text-sm bg-accent/10 text-accent px-1.5 py-0.5 rounded-sm">git clone</code> was built by someone who probably wasn&apos;t paid for it. Opentip makes it easy to change that &mdash; send a tip in ETH, USDC, or OAR, straight to their wallet.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link href="/repos"><Button size="lg" className="px-8">Find a repo</Button></Link>
@@ -112,10 +112,10 @@ export default function Home() {
               <p className="text-sm text-zinc-600 leading-relaxed">
                 Take any GitHub repo link. Swap <code className="font-mono text-xs">github.com</code> for <code className="font-mono text-xs">opentip.tech</code>. That&apos;s the whole trick.
               </p>
-              <div className="flex items-center gap-3 text-sm font-mono text-zinc-500 overflow-x-auto">
-                <a href="https://github.com/optimusexe/Opentip" target="_blank" rel="noopener noreferrer" className="whitespace-nowrap underline underline-offset-4 hover:text-accent transition-colors">github.com/optimusexe/Opentip</a>
-                <span className="text-zinc-400 flex-shrink-0">&rarr;</span>
-                <a href="/optimusexe/Opentip" className="whitespace-nowrap underline underline-offset-4 hover:text-accent transition-colors">opentip.tech/optimusexe/Opentip</a>
+              <div className="flex flex-col items-start gap-2 text-sm font-mono text-zinc-500">
+                <a href="https://github.com/optimusexe/Opentip" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-accent transition-colors">github.com/optimusexe/Opentip</a>
+                <svg className="h-4 w-4 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><polyline points="19 12 12 19 5 12" /></svg>
+                <a href="/optimusexe/Opentip" className="underline underline-offset-4 hover:text-accent transition-colors">opentip.tech/optimusexe/Opentip</a>
               </div>
             </div>
             <div className="space-y-4 border-t rule pt-6">
@@ -150,9 +150,9 @@ export default function Home() {
               </p>
             </div>
             <div className="space-y-2 border-t rule pt-4">
-              <h3 className="font-semibold text-sm">Volatility is someone else&apos;s problem, not the developer&apos;s.</h3>
+              <h3 className="font-semibold text-sm">Tip in whatever you hold.</h3>
               <p className="text-sm text-zinc-600 leading-relaxed">
-                If you tip in ETH, it&apos;s converted to USDC before it ever reaches the contract. A developer who did great work today shouldn&apos;t watch their tip lose 8% of its value by the weekend.
+                ETH, USDC, or OAR &mdash; send whichever token you want.
               </p>
             </div>
             <div className="space-y-2 border-t rule pt-4">
@@ -224,7 +224,7 @@ export default function Home() {
           <div className="md:col-span-8">
             {[
               { q: "Do I need an account to tip someone?", a: "No. Just a wallet. Tip a repo the same way you'd send anyone money — connect, send, gone." },
-              { q: "What if I tip in ETH — does the developer get ETH?", a: "Yes. Tips stay in the token you send. ETH tips are held as ETH in the contract, USDC as USDC, and so on. The developer claims all their pending tokens whenever they want." },
+              { q: "What if I tip in ETH — does the developer get ETH?", a: "Yes. Tips stay in the token you send. ETH tips are held as ETH in the contract, USDC as USDC, OAR as OAR, and so on. The developer claims all their pending tokens whenever they want." },
               { q: "What chain does this run on?", a: "Base. It's cheap and fast enough that a $1 tip doesn't get eaten alive by gas fees." },
               { q: "Can anyone claim any repo's tips?", a: "No. Only whoever verifies ownership through GitHub can register a repo and set the wallet that claims its funds." },
               { q: "Has the contract been audited?", a: "Not yet — this is early. The code is open and verified on Basescan, so you don't have to take our word for it, but we're not going to pretend a formal audit has happened when it hasn't." },

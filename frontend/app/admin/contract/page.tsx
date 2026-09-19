@@ -71,8 +71,6 @@ export default function AdminContract() {
   };
 
   const selectedTokenConfig = TOKEN_OPTIONS.find(t => t.address === withdrawToken) || TOKEN_OPTIONS[1];
-  const currentBalance = treasuryBalances[withdrawToken.toLowerCase()] || "0";
-  const formattedBalance = Number(currentBalance) / Math.pow(10, selectedTokenConfig.decimals);
   const formattedStrayEth = Number(strayEth) / 1e18;
   const deadlineDate = migrationDeadline > 0 ? new Date(migrationDeadline * 1000) : null;
 

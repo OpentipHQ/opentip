@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
-import { createPublicClient, http, formatUnits, parseAbiItem } from "viem";
-import { base, baseSepolia } from "viem/chains";
+import { formatUnits, parseAbiItem } from "viem";
 import { CHAIN_ID, CONTRACT_ADDRESS, getTokenDecimals } from "@/lib/chain";
 import { prisma } from "@/lib/prisma";
 import { getTokenPrices } from "@/lib/prices";
 import ProfileClient from "./ProfileClient";
 
 async function fetchContributions(login: string) {
+  if (!/^[a-zA-Z0-9-]+$/.test(login)) return [];
   try {
     const res = await fetch(
       `https://github-contributions-api.jogruber.de/v4/${login}`,
@@ -20,61 +20,13 @@ async function fetchContributions(login: string) {
   }
 }
 
-async function getTotalClaimedUsd(walletAddresses: string[]): Promise<number> {
-  if (!CONTRACT_ADDRESS || walletAddresses.length === 0) return 0;
-
-  const chain = CHAIN_ID === 8453 ? base : baseSepolia;
-  const client = createPublicClient({ chain, transport: http() });
-
-  const claimedEvent = parseAbiItem(
-    'event Claimed(string repoId, address indexed payoutAddress, address indexed token, uint256 amount, uint256 timestamp)'
-  );
-
-  const prices = await getTokenPrices();
-  let totalClaimedUsd = 0;
-
-  const startBlock = CHAIN_ID === 8453 ? 0n : 46939256n;
-  const latestBlock = await client.getBlockNumber();
-  const CHUNK = 9999n;
-
-  for (const addr of walletAddresses) {
-    try {
-      let from = startBlock;
-      while (from <= latestBlock) {
-        const to = from + CHUNK > latestBlock ? latestBlock : from + CHUNK;
-        const logs = await client.getLogs({
-          address: CONTRACT_ADDRESS,
-          event: claimedEvent,
-          args: { payoutAddress: addr as `0x${string}` },
-          fromBlock: from,
-          toBlock: to,
-        });
-
-        for (const log of logs) {
-          const token = log.args.token?.toLowerCase() ?? "";
-          const amount = log.args.amount ?? 0n;
-          const decimals = getTokenDecimals(token);
-          const humanAmount = Number(formatUnits(amount, decimals));
-          const price = prices[token] ?? 0;
-          totalClaimedUsd += humanAmount * price;
-        }
-
-        from = to + 1n;
-      }
-    } catch (e) {
-      console.error(`Failed to fetch Claimed events for ${addr}:`, e);
-    }
-  }
-
-  return totalClaimedUsd;
-}
-
 export default async function DevProfilePage({
   params,
 }: {
   params: Promise<{ login: string }>;
 }) {
   const { login } = await params;
+  if (!/^[a-zA-Z0-9-]+$/.test(login)) notFound();
 
   const user = await prisma.user.findUnique({
     where: { login },
@@ -135,7 +87,7 @@ export default async function DevProfilePage({
 
   const prices = await getTokenPrices();
 
-  const tipMap = new Map<string, { total: string; count: number }>();
+  const tipMap = new Map<string, { total: number; count: number }>();
   const tippedPerToken: Record<string, number> = {};
   let totalTippedUsd = 0;
   for (const t of tips) {
@@ -160,7 +112,6 @@ export default async function DevProfilePage({
   }));
 
   const totalTips = enrichedRepos.reduce((sum, r) => sum + r.tip_count, 0);
-  const totalClaimedUsd = await getTotalClaimedUsd(walletAddresses);
 
   const contributions = await fetchContributions(login);
 
@@ -182,7 +133,6 @@ export default async function DevProfilePage({
     repos: enrichedRepos,
     stats: {
       total_tipped_usd: totalTippedUsd,
-      total_claimed_usd: totalClaimedUsd,
       total_tips: totalTips,
       repo_count: enrichedRepos.length,
     },

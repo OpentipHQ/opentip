@@ -71,7 +71,7 @@ export default function DashboardWallets() {
       });
       const data = await res.json();
       if (data.ok) {
-        setWallets((prev) => prev.filter((w) => w.address !== walletAddress));
+        setWallets((prev) => prev.filter((w) => w.address !== walletAddress.toLowerCase()));
       } else {
         setMessage(data.error || "Failed to unlink");
       }

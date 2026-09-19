@@ -77,6 +77,8 @@ contract OpentipV2 is Ownable2Step, Pausable, ReentrancyGuard, EIP712 {
     event AdminPayoutReassigned(string repoId, address indexed oldAddress, address indexed newAddress, address indexed admin);
     event TokenAdded(address indexed token, uint8 decimals);
     event TokenRemoved(address indexed token);
+    event StrayEthSwept(address indexed to, uint256 amount, uint256 timestamp);
+    event MigrationDeadlineUpdated(uint256 oldDeadline, uint256 newDeadline, uint256 timestamp);
 
     // -------------------------------------------------------------------------
     // Modifiers
@@ -126,6 +128,7 @@ contract OpentipV2 is Ownable2Step, Pausable, ReentrancyGuard, EIP712 {
         tokenList.push(token);
 
         if (!wasEverAccepted[token]) {
+            require(everAcceptedTokens.length < MAX_TOKENS, "too many ever-accepted tokens");
             everAcceptedTokens.push(token);
             wasEverAccepted[token] = true;
         }
@@ -196,6 +199,7 @@ contract OpentipV2 is Ownable2Step, Pausable, ReentrancyGuard, EIP712 {
         require(repoIdBytes.length > 0, "empty repoId");
         require(repoIdBytes.length <= MAX_REPO_ID_LENGTH, "repoId too long");
         require(_isValidRepoId(repoId), "bad repoId format");
+        require(!_containsUppercase(repoId), "repoId must be lowercase");
         require(payoutAddress != address(0), "payout zero");
         require(!_isRegistered[repoId], "already registered");
 
@@ -362,11 +366,14 @@ contract OpentipV2 is Ownable2Step, Pausable, ReentrancyGuard, EIP712 {
         strayEth = 0;
         (bool ok, ) = payable(to).call{value: amount}("");
         require(ok, "ETH transfer failed");
+        emit StrayEthSwept(to, amount, block.timestamp);
     }
 
     /// @notice Set the deadline for adminMigrateRepo. Pass 0 to re-enable open-ended migration.
     function setMigrationDeadline(uint256 deadline) external onlyOwner {
+        uint256 old = migrationDeadline;
         migrationDeadline = deadline;
+        emit MigrationDeadlineUpdated(old, deadline, block.timestamp);
     }
 
     // -------------------------------------------------------------------------

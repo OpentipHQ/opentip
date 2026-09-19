@@ -7,6 +7,15 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ a
     const { address: rawAddress } = await params;
     const address = rawAddress.toLowerCase();
 
+    if (address === admin.address.toLowerCase()) {
+      throw new Error("cannot remove yourself");
+    }
+
+    const ownerAddress = process.env.NEXT_PUBLIC_OWNER_ADDRESS?.toLowerCase();
+    if (ownerAddress && address === ownerAddress) {
+      throw new Error("cannot remove the owner");
+    }
+
     const existing = await prisma.admin.findUnique({ where: { address } });
     if (!existing) {
       throw new Error("admin not found");

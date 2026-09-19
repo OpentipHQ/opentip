@@ -55,6 +55,8 @@ model User {
   passwordHash    String?
   resetToken      String?
   resetTokenExpiry DateTime?
+  emailVerifyToken  String?
+  emailVerifyExpiry DateTime?
   pfp             String?  @db.Text
   header          String?  @db.Text
   image           String?

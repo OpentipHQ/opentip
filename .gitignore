@@ -14,3 +14,7 @@ lib/
 *.log
 
 .vercel
+
+# Subdirectory env files
+contracts/.env
+indexer/.env

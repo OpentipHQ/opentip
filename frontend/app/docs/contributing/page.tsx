@@ -180,7 +180,7 @@ cp .env.example .env`}</CodeBlock>
               </tr>
               <tr className="border-b rule">
                 <td className="py-3 pr-4 font-mono text-xs text-accent">RPC_URL</td>
-                <td className="py-3 text-zinc-600">Base RPC endpoint</td>
+                <td className="py-3 text-zinc-600">Alchemy RPC endpoint (e.g. <code>https://base-mainnet.g.alchemy.com/v2/YOUR_KEY</code>)</td>
               </tr>
               <tr className="border-b rule">
                 <td className="py-3 pr-4 font-mono text-xs text-accent">START_BLOCK</td>

@@ -556,4 +556,67 @@ contract OpentipV2Test is Test {
         }
         assertEq(count, 1);
     }
+
+    // ==================== adminMigrateRepo uppercase reverts ====================
+
+    function test_AdminMigrateRepoUppercaseReverts() public {
+        vm.prank(owner);
+        vm.expectRevert(bytes("repoId must be lowercase"));
+        v2.adminMigrateRepo("Legacy/Repo", alice);
+    }
+
+    // ==================== everAcceptedTokens cap ====================
+
+    function test_AddTokenCapsEverAcceptedTokens() public {
+        // setUp already has 2 tokens in both tokenList and everAcceptedTokens
+        // Remove both to make room in tokenList
+        vm.prank(owner); v2.removeToken(address(usdc));
+        vm.prank(owner); v2.removeToken(address(oar));
+
+        // Add 18 new unique tokens → tokenList grows to 18, everAcceptedTokens grows to 20
+        for (uint256 i = 0; i < 18; i++) {
+            MockToken t = new MockToken(string(abi.encodePacked("T", bytes1(uint8(65 + i)))), "T", 18);
+            vm.prank(owner); v2.addToken(address(t), 18);
+        }
+        assertEq(v2.getEverAcceptedTokens().length, 20);
+        assertEq(v2.getTokenCount(), 18);
+
+        // Remove all from tokenList to make room
+        for (uint256 i = 0; i < 18; i++) {
+            address[] memory tokens = v2.getTokenList();
+            vm.prank(owner); v2.removeToken(tokens[0]);
+        }
+        assertEq(v2.getTokenCount(), 0);
+
+        // 21st unique token should revert on everAcceptedTokens cap
+        MockToken overflow = new MockToken("Overflow", "OFW", 18);
+        vm.prank(owner);
+        vm.expectRevert(bytes("too many ever-accepted tokens"));
+        v2.addToken(address(overflow), 18);
+    }
+
+    // ==================== sweepStrayEth emits event ====================
+
+    function test_SweepStrayEthEmitsEvent() public {
+        vm.deal(tipper, 1 ether);
+        vm.prank(tipper);
+        (bool ok,) = address(v2).call{value: 1 ether}("");
+        assertTrue(ok);
+
+        vm.expectEmit(true, false, false, true);
+        emit OpentipV2.StrayEthSwept(owner, 1 ether, block.timestamp);
+        vm.prank(owner); v2.sweepStrayEth(owner);
+    }
+
+    // ==================== setMigrationDeadline emits event ====================
+
+    function test_SetMigrationDeadlineEmitsEvent() public {
+        vm.expectEmit(false, false, false, true);
+        emit OpentipV2.MigrationDeadlineUpdated(0, 1000, block.timestamp);
+        vm.prank(owner); v2.setMigrationDeadline(1000);
+
+        vm.expectEmit(false, false, false, true);
+        emit OpentipV2.MigrationDeadlineUpdated(1000, 0, block.timestamp);
+        vm.prank(owner); v2.setMigrationDeadline(0);
+    }
 }

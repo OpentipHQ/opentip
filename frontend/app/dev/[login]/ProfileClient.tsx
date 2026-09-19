@@ -47,7 +47,6 @@ interface ProfileData {
   }[];
   stats: {
     total_tipped_usd: number;
-    total_claimed_usd: number;
     total_tips: number;
     repo_count: number;
   };
@@ -172,10 +171,6 @@ export default function ProfileClient({ data, contributions }: { data: ProfileDa
           <div className="text-center">
             <div className="stats text-2xl font-medium">{fmtUsd(data.stats.total_tipped_usd)}</div>
             <div className="text-xs text-zinc-500 mt-1">total tipped</div>
-          </div>
-          <div className="text-center">
-            <div className="stats text-2xl font-medium">{fmtUsd(data.stats.total_claimed_usd)}</div>
-            <div className="text-xs text-zinc-500 mt-1">tips claimed</div>
           </div>
           <div className="text-center">
             <div className="stats text-2xl font-medium">{data.stats.repo_count}</div>

@@ -6,8 +6,9 @@ import { useToast } from "@/app/providers";
 import { opentipV2Abi } from "@/lib/contract";
 import { VIEM_CHAIN, CONTRACT_ADDRESS } from "@/lib/chain";
 import { createPublicClient, http } from "viem";
+import { RPC_URL } from "@/lib/chain";
 
-const client = createPublicClient({ chain: VIEM_CHAIN, transport: http() });
+const client = createPublicClient({ chain: VIEM_CHAIN, transport: http(RPC_URL || undefined) });
 
 export default function AdminRegistrar() {
   const { showToast, dismissToast } = useToast();

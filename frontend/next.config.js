@@ -19,6 +19,8 @@ const nextConfig = {
     },
   },
   webpack: (config, { webpack }) => {
+    if (!config.externals) config.externals = [];
+    if (!Array.isArray(config.externals)) config.externals = [config.externals];
     config.externals.push("pino-pretty", "lokijs", "encoding");
     config.plugins.push(
       new webpack.IgnorePlugin({ resourceRegExp: /@x402\/evm\/upto\/client/ }),

@@ -47,33 +47,3 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ summary, cached: false });
 }
-
-export async function POST(req: NextRequest) {
-  const repoId = req.nextUrl.searchParams.get("repoId");
-  if (!repoId) return NextResponse.json({ error: "repoId required" }, { status: 400 });
-
-  const [owner, repoName] = repoId.split("/");
-  if (!owner || !repoName) return NextResponse.json({ error: "invalid repoId format" }, { status: 400 });
-
-  const summary = await generateRepoSummary(owner, repoName);
-
-  try {
-    const exists = await prisma.repo.findUnique({
-      where: { repo_id: repoId.toLowerCase() },
-      select: { repo_id: true },
-    });
-    if (exists) {
-      await prisma.repo.update({
-        where: { repo_id: repoId.toLowerCase() },
-        data: {
-          summary: JSON.stringify(summary),
-          summary_generated_at: new Date(),
-        },
-      });
-    }
-  } catch (e) {
-    console.error("Failed to store summary:", e);
-  }
-
-  return NextResponse.json({ summary, cached: false });
-}

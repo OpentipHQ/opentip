@@ -1,5 +1,5 @@
-import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { signTypedData } from "viem/accounts";
 import { randomBytes } from "crypto";
@@ -16,6 +16,10 @@ export async function POST(req: NextRequest) {
     if (!repoId || !repoId.includes("/")) {
       return NextResponse.json({ error: "repoId required as owner/repo" }, { status: 400 });
     }
+    const [owner, repo] = repoId.split("/");
+    if (!owner || !repo || !/^[a-zA-Z0-9._-]+$/.test(owner) || !/^[a-zA-Z0-9._-]+$/.test(repo)) {
+      return NextResponse.json({ error: "invalid repoId format" }, { status: 400 });
+    }
     if (!payoutAddress || payoutAddress === "0x0000000000000000000000000000000000000000") {
       return NextResponse.json({ error: "payoutAddress required" }, { status: 400 });
     }
@@ -23,8 +27,6 @@ export async function POST(req: NextRequest) {
     const session: any = await getServerSession(authOptions);
     const login = session?.user?.login;
     if (!login) return NextResponse.json({ error: "not authenticated" }, { status: 401 });
-
-    const [owner, repo] = repoId.split("/");
 
     // Verify ownership via GitHub API
     const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {

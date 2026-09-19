@@ -3,7 +3,7 @@ import { handleAdminRequest } from "@/lib/admin-api";
 import { prisma } from "@/lib/prisma";
 import { createPublicClient, http } from "viem";
 import { opentipV2Abi } from "@/lib/contract";
-import { VIEM_CHAIN, CONTRACT_ADDRESS, TOKEN_CONFIG, ETH_ADDRESS, type TokenAddress } from "@/lib/chain";
+import { VIEM_CHAIN, CONTRACT_ADDRESS, TOKEN_CONFIG, ETH_ADDRESS } from "@/lib/chain";
 
 export async function GET(req: NextRequest) {
   return handleAdminRequest(req, "read", async () => {
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
     let migrationDeadline = 0;
     if (CONTRACT_ADDRESS) {
       try {
-        const client = createPublicClient({ chain: VIEM_CHAIN, transport: http() });
+        const client = createPublicClient({ chain: VIEM_CHAIN, transport: http(process.env.RPC_URL || undefined) });
         const tokenAddrs = [ETH_ADDRESS, ...Object.keys(TOKEN_CONFIG).filter(a => a !== ETH_ADDRESS)] as `0x${string}`[];
         for (const addr of tokenAddrs) {
           const bal = await client.readContract({

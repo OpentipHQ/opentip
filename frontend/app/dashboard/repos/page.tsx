@@ -171,7 +171,7 @@ export default function DashboardRepos() {
 
   useEffect(() => {
     if (status !== "authenticated") return;
-    fetch("/api/registered-repos").then(r => r.json()).then(j => Array.isArray(j) ? setRegisteredRepos(j) : setRegisteredRepos([])).finally(() => setLoadingRegistered(false));
+    fetch("/api/registered-repos").then(r => r.json()).then(j => Array.isArray(j) ? setRegisteredRepos(j) : setRegisteredRepos([])).catch(() => setRegisteredRepos([])).finally(() => setLoadingRegistered(false));
     fetch("/api/prices").then(r => r.json()).then(setPrices).catch(() => {});
   }, [status]);
 

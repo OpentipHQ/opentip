@@ -33,7 +33,7 @@ export async function GET(_req: NextRequest) {
   }
 
   return NextResponse.json(
-    repos.map((r: { repo_id: string; payout_address: string; registered_at: Date }) => {
+    repos.map((r: { repo_id: string; payout_address: string; registered_at: Date; icon: string | null }) => {
       const agg = tipMap.get(r.repo_id);
       return {
         repo_id: r.repo_id,

@@ -414,7 +414,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
             <div className="flex-1 min-w-0 max-w-[200px]">
               <Input value={amount} onChange={(v)=>{ setAmount(v); setAmountError(validateAmount(v, currentToken)); }} error={amountError} leftIcon={isETH ? <Wallet /> : <Coins />} placeholder="Amount" className="gap-0" />
             </div>
-            <select value={selectedToken} onChange={e=>{ setSelectedToken(e.target.value); setAmountError(undefined); }} className="h-9 bg-transparent border rule rounded-sm px-3 text-sm text-zinc-900">
+            <select value={selectedToken} onChange={e=>{ if (e.target.value === OAR_ADDRESS) { showToast({ title: "OAR tipping coming soon", status: "info" }); return; } setSelectedToken(e.target.value); setAmountError(undefined); }} className="h-9 bg-transparent border rule rounded-sm px-3 text-sm text-zinc-900">
               <option value={USDC_ADDRESS}>USDC</option>
               <option value={ETH_ADDRESS}>ETH</option>
               <option value={OAR_ADDRESS}>OAR</option>

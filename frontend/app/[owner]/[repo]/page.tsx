@@ -60,7 +60,7 @@ export default async function RepoPage({ params }: { params: Promise<{ owner: st
   let developer: { login: string; pfp: string | null; image: string | null } | null = null;
   let summary = null;
   let links: Link[] = [];
-  let repoRecord: { icon: string | null } | null = null;
+  let repoRecord: { payout_address: string; hidden: boolean; icon: string | null } | null = null;
 
   try {
       repoRecord = await prisma.repo.findUnique({

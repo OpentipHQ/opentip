@@ -41,6 +41,7 @@ export async function GET(_req: NextRequest) {
         registered_at: r.registered_at,
         total_tipped: agg?.total ?? "0",
         tip_count: (agg?.count ?? 0).toString(),
+        icon: r.icon,
       };
     })
   );

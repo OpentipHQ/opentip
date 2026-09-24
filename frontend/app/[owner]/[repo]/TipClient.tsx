@@ -6,7 +6,7 @@ import { useAppKit } from "@reown/appkit/react";
 import { signIn, useSession } from "next-auth/react";
 import { parseUnits, formatUnits, parseEther, encodeFunctionData } from "viem";
 import { opentipV2Abi, erc20Abi } from "@/lib/contract";
-import { CHAIN_ID, CONTRACT_ADDRESS, USDC_ADDRESS, OAR_ADDRESS, ETH_ADDRESS, getTokenDecimals } from "@/lib/chain";
+import { CHAIN_ID, CONTRACT_ADDRESS, USDC_ADDRESS, OAR_ADDRESS, ETH_ADDRESS, getTokenDecimals, capitalize } from "@/lib/chain";
 import { fmtUsd } from "@/lib/prices";
 import { useToast } from "@/app/providers";
 import { Input } from "@/components/motion/input";
@@ -408,7 +408,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
       ) : (
         /* Registered — tip form */
         <section className="py-10 border-b rule space-y-6">
-          <h2 className="serif text-2xl font-semibold">Tip {repoIdLower}</h2>
+          <h2 className="serif text-2xl font-semibold">Tip {capitalize(repoIdLower.split("/")[1])}</h2>
 
           <div className="flex flex-wrap gap-3 items-end">
             <div className="flex-1 min-w-0 max-w-[200px]">

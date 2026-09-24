@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { fetchRepoMeta } from "@/lib/github";
 import { prisma } from "@/lib/prisma";
 import { generateRepoSummary } from "@/lib/ai";
+import { capitalize } from "@/lib/chain";
 import RepoTabs from "./RepoTabs";
+import LinkIcons from "@/components/LinkIcons";
 
 type Link = { title: string; url: string };
 
@@ -58,12 +60,13 @@ export default async function RepoPage({ params }: { params: Promise<{ owner: st
   let developer: { login: string; pfp: string | null; image: string | null } | null = null;
   let summary = null;
   let links: Link[] = [];
+  let repoRecord: { icon: string | null } | null = null;
 
   try {
-    const repoRecord = await prisma.repo.findUnique({
-      where: { repo_id: repoId.toLowerCase() },
-      select: { payout_address: true, hidden: true },
-    });
+      repoRecord = await prisma.repo.findUnique({
+        where: { repo_id: repoId.toLowerCase() },
+        select: { payout_address: true, hidden: true, icon: true },
+      });
     if (!repoRecord || repoRecord.hidden) notFound();
     if (repoRecord) {
       const wallet = await prisma.userWallet.findUnique({
@@ -94,10 +97,14 @@ export default async function RepoPage({ params }: { params: Promise<{ owner: st
         <div className="flex flex-wrap gap-5 items-start">
           {meta ? (
             <>
-              <Image src={meta.owner.avatar_url} alt={owner} width={56} height={56} className="rounded-sm" />
-              <div className="space-y-1">
+              {repoRecord?.icon ? (
+                <Image src={repoRecord.icon} alt={repo} width={96} height={96} className="rounded-full border-2 border-zinc-400" />
+              ) : (
+                <Image src={meta.owner.avatar_url} alt={owner} width={96} height={96} className="rounded-full border-2 border-zinc-400" />
+              )}
+              <div className="space-y-2">
                 <h1 className="serif fluid-heading font-semibold tracking-tight flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <span>{meta.full_name}</span>
+                  <span>{capitalize(repo)}</span>
                   {developer && (
                     <a href={`/dev/${developer.login}`} className="inline-flex items-center gap-1.5 group">
                       <span className="text-xs text-zinc-500 group-hover:text-accent transition-colors">
@@ -115,12 +122,19 @@ export default async function RepoPage({ params }: { params: Promise<{ owner: st
                 </h1>
                 {meta.description && <p className="text-zinc-600 text-sm leading-relaxed">{meta.description}</p>}
                 <p className="text-xs text-zinc-500">★ {meta.stargazers_count}</p>
+                <LinkIcons links={links} />
               </div>
             </>
           ) : (
-            <div className="space-y-1">
-              <h1 className="serif fluid-heading font-semibold tracking-tight">{repoId}</h1>
-              <p className="text-zinc-500 text-sm">Could not fetch GitHub metadata.</p>
+            <div className="flex flex-wrap gap-5 items-start">
+              {repoRecord?.icon && (
+                <Image src={repoRecord.icon} alt={repo} width={96} height={96} className="rounded-full border-2 border-zinc-400" />
+              )}
+              <div className="space-y-1">
+                <h1 className="serif fluid-heading font-semibold tracking-tight">{capitalize(repoId.split("/")[1])}</h1>
+                <p className="text-zinc-500 text-sm">Could not fetch GitHub metadata.</p>
+                <LinkIcons links={links} />
+              </div>
             </div>
           )}
         </div>

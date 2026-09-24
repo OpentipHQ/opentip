@@ -42,6 +42,7 @@ model Repo {
   registered_at  DateTime
   updated_at     DateTime @updatedAt
   hidden         Boolean  @default(false)
+  icon           String?
 }
 
 model User {

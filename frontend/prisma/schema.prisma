@@ -45,6 +45,7 @@ model Repo {
   summary_generated_at DateTime?
   links                String?   @db.Text
   hidden               Boolean   @default(false)
+  icon                 String?
 }
 
 model User {

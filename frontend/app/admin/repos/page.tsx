@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/motion/button";
 import { Loader } from "@/components/motion/loader";
 import { useToast } from "@/app/providers";
+import { capitalize } from "@/lib/chain";
 
 function truncate(addr: string): string {
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
@@ -106,7 +107,7 @@ export default function AdminRepos() {
           <tbody>
             {filtered.map((repo) => (
               <tr key={repo.repoId} className={`border-b rule last:border-0 ${repo.hidden ? "opacity-50" : ""}`}>
-                <td className="px-4 py-2 font-mono text-xs">{repo.repoId}</td>
+                <td className="px-4 py-2 font-mono text-xs">{capitalize(repo.repoId.split("/")[1])}</td>
                 <td className="px-4 py-2 font-mono text-xs">{truncate(repo.payoutAddress)}</td>
                 <td className="px-4 py-2 text-right stats text-xs">{repo.tipCount}</td>
                 <td className="px-4 py-2 text-center">

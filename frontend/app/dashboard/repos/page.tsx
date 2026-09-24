@@ -2,12 +2,13 @@
 import { useSession } from "next-auth/react";
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { formatUnits } from "viem";
 import { Button } from "@/components/motion/button";
 import { Loader } from "@/components/motion/loader";
 import { useAccount, useReadContracts } from "wagmi";
 import { opentipV2Abi } from "@/lib/contract";
-import { CONTRACT_ADDRESS, CHAIN_ID, USDC_ADDRESS, ETH_ADDRESS, OAR_ADDRESS, getTokenDecimals } from "@/lib/chain";
+import { CONTRACT_ADDRESS, CHAIN_ID, USDC_ADDRESS, ETH_ADDRESS, OAR_ADDRESS, getTokenDecimals, capitalize } from "@/lib/chain";
 import { fmtUsd } from "@/lib/prices";
 
 type LinkItem = { title: string; url: string };
@@ -141,6 +142,7 @@ export default function DashboardRepos() {
   const [loadingRegistered, setLoadingRegistered] = useState(true);
   const [expandedRepo, setExpandedRepo] = useState<string | null>(null);
   const [prices, setPrices] = useState<Record<string, number>>({});
+  const [uploadingIcon, setUploadingIcon] = useState<string | null>(null);
 
   const tokens = [USDC_ADDRESS, ETH_ADDRESS, OAR_ADDRESS];
   const onChainContracts = contract && registeredRepos.length > 0 ? registeredRepos.flatMap((r: any) =>
@@ -175,6 +177,21 @@ export default function DashboardRepos() {
     fetch("/api/prices").then(r => r.json()).then(setPrices).catch(() => {});
   }, [status]);
 
+  const handleIconUpload = async (repoId: string, file: File) => {
+    setUploadingIcon(repoId);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("repoId", repoId);
+      const res = await fetch("/api/upload/repo-icon", { method: "POST", body: formData });
+      const data = await res.json();
+      if (data.ok) {
+        setRegisteredRepos(prev => prev.map(r => r.repo_id === repoId ? { ...r, icon: data.url } : r));
+      }
+    } catch {}
+    setUploadingIcon(null);
+  };
+
   if (status === "loading") return <div className="py-20 flex justify-center"><Loader variant="spinner" size={24} /></div>;
 
   return (
@@ -205,13 +222,34 @@ export default function DashboardRepos() {
 
             return (
               <li key={r.repo_id} className="py-4">
-<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
-                  <div>
-                    <Link href={`/${r.repo_id}`} className="font-mono text-sm underline underline-offset-4 hover:text-accent">{r.repo_id}</Link>
-                    <div className="flex gap-4 mt-1">
-                      <span className="stats text-xs text-zinc-500">pending: {fmtUsd(pendingUsd)}</span>
-                      <span className="stats text-xs text-zinc-500">total: {fmtUsd(totalUsd)}</span>
-                      <span className="stats text-xs text-zinc-500">{r.tip_count} tips</span>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                  <div className="flex items-center gap-3">
+                    <label className="relative cursor-pointer flex-shrink-0">
+                      {r.icon ? (
+                        <Image src={r.icon} alt={capitalize(r.repo_id.split("/")[1])} width={40} height={40} className="rounded-sm" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-sm bg-zinc-200 flex items-center justify-center text-zinc-400 text-xs">
+                          {uploadingIcon === r.repo_id ? <Loader variant="spinner" size={16} /> : "icon"}
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleIconUpload(r.repo_id, file);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                    <div>
+                      <Link href={`/${r.repo_id}`} className="font-mono text-sm underline underline-offset-4 hover:text-accent">{capitalize(r.repo_id.split("/")[1])}</Link>
+                      <div className="flex gap-4 mt-1">
+                        <span className="stats text-xs text-zinc-500">pending: {fmtUsd(pendingUsd)}</span>
+                        <span className="stats text-xs text-zinc-500">total: {fmtUsd(totalUsd)}</span>
+                        <span className="stats text-xs text-zinc-500">{r.tip_count} tips</span>
+                      </div>
                     </div>
                   </div>
                   <div className="flex gap-2">

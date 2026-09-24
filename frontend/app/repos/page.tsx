@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Button } from "@/components/motion/button";
 import { Loader } from "@/components/motion/loader";
 import { Search } from "lucide-react";
+import { capitalize } from "@/lib/chain";
 
 const PAGE_SIZE = 20;
 
@@ -119,13 +120,15 @@ export default function ReposDirectory() {
                     className="border rule rounded-sm p-5 hover:border-zinc-400 transition-colors group"
                   >
                     <div className="flex items-start gap-4">
-                      {meta ? (
+                      {r.icon ? (
+                        <Image src={r.icon} alt={capitalize(r.repo_id.split("/")[1])} width={40} height={40} className="rounded-sm flex-shrink-0" />
+                      ) : meta ? (
                         <Image src={meta.owner.avatar_url} alt={owner} width={40} height={40} className="rounded-sm flex-shrink-0" />
                       ) : (
                         <div className="w-10 h-10 rounded-sm bg-zinc-200 flex-shrink-0" />
                       )}
                       <div className="flex-1 min-w-0">
-                        <div className="font-mono text-sm font-medium group-hover:text-accent transition-colors truncate">{r.repo_id}</div>
+                        <div className="font-mono text-sm font-medium group-hover:text-accent transition-colors truncate">{capitalize(r.repo_id.split("/")[1])}</div>
                         {meta?.description && (
                           <p className="text-xs text-zinc-500 mt-1 line-clamp-2 leading-relaxed">{meta.description}</p>
                         )}

@@ -2,6 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { fmtUsd } from "@/lib/prices";
+import { capitalize } from "@/lib/chain";
 
 function renderBioWithLinks(bio: string) {
   const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[^\s]*)/g;
@@ -192,7 +193,7 @@ export default function ProfileClient({ data, contributions }: { data: ProfileDa
               <li key={r.repo_id} className="py-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Link href={`/${r.repo_id}`} className="font-mono text-sm underline underline-offset-4 hover:text-accent">{r.repo_id}</Link>
+                    <Link href={`/${r.repo_id}`} className="font-mono text-sm underline underline-offset-4 hover:text-accent">{capitalize(r.repo_id.split("/")[1])}</Link>
                     <div className="flex gap-4 mt-1">
                       <span className="stats text-xs text-zinc-500">{r.tip_count} tips</span>
                     </div>

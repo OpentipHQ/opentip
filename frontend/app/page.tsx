@@ -5,6 +5,7 @@ import { Button } from "@/components/motion/button";
 import { useEffect, useState } from "react";
 import { Plus, Minus } from "lucide-react";
 import DemoVideo from "@/components/DemoVideo";
+import InstallModal from "@/components/InstallModal";
 import { getTokenDecimals } from "@/lib/chain";
 import { fmtUsd } from "@/lib/prices";
 
@@ -29,6 +30,8 @@ export default function Home() {
 
   return (
     <div className="space-y-0">
+
+      <InstallModal />
 
       {/* Hero */}
       <section className="py-32 md:py-52 border-b rule">

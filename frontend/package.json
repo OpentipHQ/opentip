@@ -29,6 +29,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "resend": "^6.28.0",
+    "splash-kit": "^1.0.0",
     "tailwind-merge": "^2.6.0",
     "viem": "^2.26.0",
     "wagmi": "^2.15.0",

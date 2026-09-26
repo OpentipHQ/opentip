@@ -14,6 +14,10 @@ const nextConfig = {
       // CDP fetches /.well-known/jwks.json server-side — dot-folders can 404/redirect
       // on some hosts, so rewrite to a plain /api route that always returns 200 JSON.
       { source: "/.well-known/jwks.json", destination: "/api/jwks" },
+      // CDP SDK path constraint: its auth-exemption regexes are start-anchored
+      // (^(\/platform)?\/v2\/...), so SDK traffic must live under /platform.
+      // Rewritten internally to the single proxy implementation below.
+      { source: "/platform/:path*", destination: "/api/cdp/:path*" },
     ];
   },
   turbopack: {

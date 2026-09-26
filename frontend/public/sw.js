@@ -16,7 +16,7 @@ self.addEventListener("activate", (e) => {
 });
 
 self.addEventListener("fetch", (e) => {
-  if (e.request.url.includes("/api/")) return;
+  if (e.request.url.includes("/api/") || e.request.url.includes("/platform/")) return;
   e.respondWith(
     caches.match(e.request).then((r) => r || fetch(e.request))
   );

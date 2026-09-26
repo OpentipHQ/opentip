@@ -160,11 +160,14 @@ export async function GET(req: NextRequest) {
       take: limit,
     });
     for (const w of logged) {
-      if (w.tx_hash) seen.add(w.tx_hash.toLowerCase());
+      const hash = (w.tx_hash || w.user_op_hash || "") as string;
+      const hashLower = hash.toLowerCase();
+      if (hashLower && seen.has(hashLower)) continue;
+      seen.add(hashLower);
       const isUserOpOnly = !w.tx_hash && !!w.user_op_hash;
       const isOut = w.kind !== "claim";
       items.push({
-        hash: (w.tx_hash || w.user_op_hash || "") as string,
+        hash: hashLower,
         timestamp: w.createdAt.toISOString(),
         direction: isOut ? "out" : "in",
         kind: (w.kind === "tip" || w.kind === "claim" || w.kind === "register") ? w.kind as HistItem["kind"] : "transfer",

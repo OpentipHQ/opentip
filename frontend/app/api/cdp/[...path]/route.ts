@@ -10,6 +10,11 @@ export const dynamic = "force-dynamic";
 // get Failed to fetch with no VPN. Our server (Vercel, allowed region) forwards
 // the calls, so blocked users work without VPN. Auth model unchanged: end-user
 // session tokens only, no secrets involved. Wallet calls are infrequent (KBs).
+//
+// Served under /platform/* via a Next rewrite (see next.config.js): the CDP SDK
+// exempts bootstrap calls from session auth with start-anchored path regexes
+// (^(\/platform)?\/v2\/...), so the browser-visible path MUST start with
+// /platform. Do not point the SDK basePath at /api/cdp/* — auth dies locally.
 const UPSTREAM = "https://api.cdp.coinbase.com/platform";
 const MAX_BODY_BYTES = 1024 * 1024; // 1 MB
 
@@ -81,21 +86,22 @@ async function proxy(req: NextRequest, ctx: { params: Promise<{ path: string[] }
     upstream = await fetch(url, { method: req.method, headers, body, signal: ctrl.signal });
   } catch (e: any) {
     clearTimeout(timer);
-    console.error("CDP proxy upstream failed:", e?.message);
     return NextResponse.json({ error: "CDP unreachable from server" }, { status: 502 });
   }
   clearTimeout(timer);
 
   // 7. Stream the upstream response back. Never pass through upstream cookies,
   // and map upstream failures to a generic 502 to avoid leaking CDP internals.
+  // Strip content-encoding/content-length so Next.js/Vercel re-enciphers
+  // fresh — the upstream sends gzip but Vercel also compresses NextResponse,
+  // causing double-compression and net::ERR_CONTENT_DECODING_FAILED in the browser.
   if (upstream.status >= 500) {
-    console.error("CDP proxy upstream status:", upstream.status);
     return NextResponse.json({ error: "CDP request failed" }, { status: 502 });
   }
   const resHeaders = new Headers();
   upstream.headers.forEach((v, k) => {
     const lk = k.toLowerCase();
-    if (!HOP_HEADERS.has(lk) && lk !== "set-cookie") resHeaders.set(k, v);
+    if (!HOP_HEADERS.has(lk) && lk !== "set-cookie" && lk !== "content-encoding" && lk !== "content-length") resHeaders.set(k, v);
   });
   return new NextResponse(upstream.body, { status: upstream.status, headers: resHeaders });
 }

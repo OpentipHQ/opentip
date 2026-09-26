@@ -7,6 +7,7 @@ import { ChevronDown } from "lucide-react";
 const SECTIONS = [
   { href: "/docs", label: "Overview", exact: true },
   { href: "/docs/getting-started", label: "Getting Started" },
+  { href: "/docs/smart-wallet", label: "Smart Wallet" },
   { href: "/docs/for-developers", label: "For Developers" },
   { href: "/docs/smart-contract", label: "Smart Contract" },
   { href: "/docs/architecture", label: "Architecture" },

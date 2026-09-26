@@ -156,8 +156,33 @@ cp .env.example .env`}</CodeBlock>
                 <td className="py-3 pr-4">Optional</td>
                 <td className="py-3 text-zinc-600">GitHub token (higher API rate limits)</td>
               </tr>
+              <tr className="border-b rule">
+                <td className="py-3 pr-4 font-mono text-xs text-accent">NEXT_PUBLIC_CDP_PROJECT_ID</td>
+                <td className="py-3 pr-4">Yes</td>
+                <td className="py-3 text-zinc-600">CDP project ID (Opentip Smart Wallet)</td>
+              </tr>
+              <tr className="border-b rule">
+                <td className="py-3 pr-4 font-mono text-xs text-accent">JWT_PRIVATE_KEY / JWT_KID</td>
+                <td className="py-3 pr-4">Yes</td>
+                <td className="py-3 text-zinc-600">RS256 keypair for CDP custom auth (served at /.well-known/jwks.json)</td>
+              </tr>
+              <tr className="border-b rule">
+                <td className="py-3 pr-4 font-mono text-xs text-accent">CDP_JWT_ISSUER / CDP_JWT_AUDIENCE</td>
+                <td className="py-3 pr-4">Yes</td>
+                <td className="py-3 text-zinc-600">JWT issuer and audience for Smart Wallet auth</td>
+              </tr>
+              <tr className="border-b rule">
+                <td className="py-3 pr-4 font-mono text-xs text-accent">ALCHEMY_RPC_URL</td>
+                <td className="py-3 pr-4">Optional</td>
+                <td className="py-3 text-zinc-600">Alchemy RPC URL, server-only (wallet history deposits + token legs; free tier covers ~125k opens/mo; falls back to tips-only without it)</td>
+              </tr>
             </tbody>
           </table>
+        </div>
+        <div className="p-4 border rule rounded-sm bg-accent/5">
+          <p className="text-sm text-zinc-700">
+            <strong>Admin note — Smart Wallet setup:</strong> the JWKS endpoint must return 200 JSON (never a redirect) or wallet creation fails to parse it. When testing locally, expose dev with a public tunnel and set that URL in the CDP portal&apos;s Custom auth tab; the portal cannot reach localhost. Keep the same private key across environments so signatures validate.
+          </p>
         </div>
 
         <h3 className="text-sm font-medium text-zinc-500 uppercase tracking-wider mt-6">Indexer variables</h3>

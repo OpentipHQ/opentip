@@ -34,7 +34,20 @@ export default function AdminOverview() {
   useEffect(() => {
     fetch("/api/admin/stats")
       .then((r) => r.json())
-      .then(setStats)
+      .then((j) => {
+        // Never let a stale/partial response wipe balances we already have
+        // (overlapping fetches under StrictMode + flaky RPC did exactly that).
+        setStats((prev) => {
+          if (
+            prev &&
+            Object.keys(prev.treasuryBalances || {}).length > 0 &&
+            Object.keys(j?.treasuryBalances || {}).length === 0
+          ) {
+            return { ...j, treasuryBalances: prev.treasuryBalances };
+          }
+          return j;
+        });
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
     fetch("/api/prices").then((r) => r.json()).then(setPrices).catch(() => {});

@@ -33,30 +33,36 @@ export async function GET(req: NextRequest) {
       GROUP BY token
     `;
 
-    // Per-token treasury balances + contract state from contract
+    // Per-token treasury balances + contract state from contract.
+    // Each read is independent: one flaky RPC call must not wipe the rest.
+    // (Sequential reads under a single try/catch returned partial/empty
+    // balances on any hiccup — the overview section flashed then vanished.)
     let treasuryBalances: Record<string, string> = {};
     let strayEth = "0";
     let migrationDeadline = 0;
     if (CONTRACT_ADDRESS) {
-      try {
-        const client = createPublicClient({ chain: VIEM_CHAIN, transport: http(process.env.RPC_URL || undefined) });
-        const tokenAddrs = [ETH_ADDRESS, ...Object.keys(TOKEN_CONFIG).filter(a => a !== ETH_ADDRESS)] as `0x${string}`[];
-        for (const addr of tokenAddrs) {
-          const bal = await client.readContract({
-            address: CONTRACT_ADDRESS,
+      const client = createPublicClient({ chain: VIEM_CHAIN, transport: http(process.env.RPC_URL || undefined) });
+      const contract = CONTRACT_ADDRESS as `0x${string}`;
+      const tokenAddrs = [ETH_ADDRESS, ...Object.keys(TOKEN_CONFIG).filter(a => a !== ETH_ADDRESS)] as `0x${string}`[];
+      const results = await Promise.allSettled([
+        ...tokenAddrs.map((addr) =>
+          client.readContract({
+            address: contract,
             abi: opentipV2Abi,
             functionName: "treasuryBalances",
             args: [addr],
-          });
-          treasuryBalances[addr.toLowerCase()] = bal.toString();
-        }
-        const [stray, deadline] = await Promise.all([
-          client.readContract({ address: CONTRACT_ADDRESS, abi: opentipV2Abi, functionName: "strayEth" }),
-          client.readContract({ address: CONTRACT_ADDRESS, abi: opentipV2Abi, functionName: "migrationDeadline" }),
-        ]);
-        strayEth = stray.toString();
-        migrationDeadline = Number(deadline);
-      } catch {}
+          }).then((bal) => ({ addr, bal: bal.toString() }))
+        ),
+        client.readContract({ address: contract, abi: opentipV2Abi, functionName: "strayEth" }).then((v) => ({ stray: v.toString() })),
+        client.readContract({ address: contract, abi: opentipV2Abi, functionName: "migrationDeadline" }).then((v) => ({ deadline: Number(v) })),
+      ]);
+      for (const r of results) {
+        if (r.status !== "fulfilled") continue;
+        const v: any = r.value;
+        if (v.addr) treasuryBalances[v.addr.toLowerCase()] = v.bal;
+        else if (v.stray !== undefined) strayEth = v.stray;
+        else if (v.deadline !== undefined) migrationDeadline = v.deadline;
+      }
     }
 
     return {

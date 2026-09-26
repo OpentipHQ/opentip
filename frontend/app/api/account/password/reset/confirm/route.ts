@@ -2,20 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createHash } from "crypto";
 import bcrypt from "bcryptjs";
+import { rateLimit, rateLimitKey } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  try { rateLimit(rateLimitKey(req, "reset-confirm"), "critical"); } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 429, headers: { "Retry-After": String(e.retryAfter) } });
+  }
+
   const { token, newPassword } = await req.json();
 
-  if (!token || typeof token !== "string") {
-    return NextResponse.json({ error: "token required" }, { status: 400 });
+  if (!token || typeof token !== "string" || !/^[0-9a-f]{64}$/.test(token)) {
+    return NextResponse.json({ error: "invalid token" }, { status: 400 });
   }
 
   if (!newPassword || typeof newPassword !== "string") {
     return NextResponse.json({ error: "new password required" }, { status: 400 });
   }
 
-  if (newPassword.length < 8) {
-    return NextResponse.json({ error: "password must be at least 8 characters" }, { status: 400 });
+  if (newPassword.length < 8 || newPassword.length > 128) {
+    return NextResponse.json({ error: "password must be 8-128 characters" }, { status: 400 });
   }
 
   const tokenHash = createHash("sha256").update(token).digest("hex");

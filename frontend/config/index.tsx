@@ -1,6 +1,7 @@
 import { cookieStorage, createStorage } from "@wagmi/core";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { base, baseSepolia } from "@reown/appkit/networks";
+import { DATA_SUFFIX } from "@/lib/builderCode";
 
 export const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || process.env.NEXT_PUBLIC_PROJECT_ID || "";
 
@@ -49,4 +50,8 @@ export const wagmiAdapter = new WagmiAdapter({
   networks,
 });
 
+// wagmi adapter doesn't support viem dataSuffix directly (needs viem >=2.45), so we append
+// DATA_SUFFIX manually in write calls. See lib/builderCode.ts.
+// CDP Embedded passes DATA_SUFFIX via sendUserOperation({ dataSuffix }).
 export const config = wagmiAdapter.wagmiConfig;
+export { DATA_SUFFIX };

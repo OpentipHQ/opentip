@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { href: "/activity", label: "Activity" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/wallet", label: "Wallet" },
   { href: "/docs", label: "Docs" },
 ];
 

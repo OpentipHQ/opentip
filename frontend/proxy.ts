@@ -24,5 +24,6 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/(.*)"],
+  // Only run on admin paths — never on JWKS / auth / static, so CDP fetches can't get a 302
+  matcher: ["/admin/:path*", "/api/admin/:path*"],
 };

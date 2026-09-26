@@ -3,7 +3,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { GithubIcon } from "@/components/GithubIcon";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader } from "@/components/motion/loader";
 
 const NAV_ITEMS = [
@@ -56,6 +56,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+
+  useEffect(() => {
+    if (status === "unauthenticated") router.replace("/signin?callbackUrl=/dashboard");
+  }, [status]);
+
   if (status === "loading") {
     return (
       <div className="py-20 flex justify-center">
@@ -65,7 +70,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   if (status === "unauthenticated") {
-    router.push("/signin");
     return (
       <div className="py-20 flex justify-center">
         <Loader variant="spinner" size={24} />

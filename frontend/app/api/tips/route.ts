@@ -4,11 +4,14 @@ import { getTokenSymbol, getTokenDecimals } from "@/lib/chain";
 
 export async function GET(req: NextRequest) {
   const repoId = req.nextUrl.searchParams.get("repoId")?.toLowerCase() || null;
+  const tipperAddress = req.nextUrl.searchParams.get("tipper_address")?.toLowerCase() || null;
   const limit = Math.min(100, Math.max(1, parseInt(req.nextUrl.searchParams.get("limit") || "50", 10)));
   const page = Math.max(1, parseInt(req.nextUrl.searchParams.get("page") || "1", 10));
   const offset = (page - 1) * limit;
 
-  const where = repoId ? { repo_id: repoId } : {};
+  const where: any = {};
+  if (repoId) where.repo_id = repoId;
+  if (tipperAddress) where.tipper_address = tipperAddress;
 
   const tips = await prisma.tip.findMany({
     where,

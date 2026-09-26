@@ -195,15 +195,10 @@ Both flows:
       <section className="border-t rule pt-10 space-y-6">
         <h2 className="serif text-2xl font-semibold">Wallet connection</h2>
         <p className="text-sm text-zinc-700 leading-relaxed">
-          Opentip uses Reown AppKit (formerly WalletConnect Web3Modal) for wallet connection. This provides a unified modal that supports:
+          Opentip has two wallet paths. The primary path is the <strong>Opentip Smart Wallet</strong> — a CDP Embedded smart wallet created with an email code, giving the same address on every device with no extension or seed phrase. The secondary path is <strong>external wallets</strong> via Reown AppKit, which supports injected wallets (MetaMask, Rabby, etc.) and the WalletConnect protocol for mobile wallets.
         </p>
-        <ul className="text-sm text-zinc-700 space-y-2 list-disc pl-5">
-          <li>Injected wallets (MetaMask, Rabby, Coinbase Wallet, etc.)</li>
-          <li>WalletConnect protocol (mobile wallets)</li>
-          <li>Coinbase Smart Wallet</li>
-        </ul>
         <p className="text-sm text-zinc-700 leading-relaxed">
-          The wagmi library handles all EVM interactions — reading contract state, sending transactions, and signing messages. The config uses cookie-based storage for SSR support.
+          The wagmi library handles EVM reads and external-wallet transactions, while CDP hooks sign for the Smart Wallet. The wagmi config uses cookie-based storage for SSR support. See <a href="/docs/smart-wallet" className="text-accent underline underline-offset-4">Smart Wallet</a> for the user-facing guide.
         </p>
       </section>
 

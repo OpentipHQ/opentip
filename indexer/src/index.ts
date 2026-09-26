@@ -115,8 +115,28 @@ async function tick() {
       );
     } else if (eventName === "PayoutAddressUpdated") {
       await withDbRetry(() => prisma.repo.update({ where: { repo_id: args.repoId }, data: { payout_address: args.newAddress.toLowerCase() } }).catch(() => null as any));
+    } else if (eventName === "Claimed") {
+      // Store claims so wallet history shows them even without an explorer key.
+      // Deterministic id = tx_hash + logIndex to make replays idempotent.
+      const id = `${log.transactionHash}_${log.logIndex ?? 0}`;
+      await withDbRetry(() =>
+        prisma.claim.upsert({
+          where: { id },
+          create: {
+            id,
+            repo_id: args.repoId,
+            payout_address: args.payoutAddress.toLowerCase(),
+            token: args.token.toLowerCase(),
+            amount: args.amount.toString(),
+            timestamp: new Date(Number(args.timestamp) * 1000),
+            tx_hash: log.transactionHash!,
+            block_number: log.blockNumber!,
+          },
+          update: {},
+        })
+      );
     }
-    // Claimed / TreasuryWithdrawn / TokenAdded / TokenRemoved only need checkpoint
+    // TreasuryWithdrawn / TokenAdded / TokenRemoved only need checkpoint
   }
 
   await withDbRetry(() =>

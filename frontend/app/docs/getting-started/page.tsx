@@ -16,7 +16,7 @@ export default function GettingStartedPage() {
       <section className="border-t rule pt-10 space-y-6">
         <h2 className="serif text-2xl font-semibold">Prerequisites</h2>
         <ul className="text-sm text-zinc-700 space-y-2 list-disc pl-5">
-          <li>A crypto wallet (MetaMask, Rainbow, Coinbase Wallet, etc.)</li>
+          <li>A crypto wallet — an <a href="/docs/smart-wallet" className="text-accent underline underline-offset-4">Opentip Smart Wallet</a> (recommended, no extension needed) or an external wallet (MetaMask, Rainbow, etc.)</li>
           <li>ETH on Base for gas fees (tips are free to send — gas is minimal on Base L2)</li>
           <li>USDC, ETH, or OAR on Base for tipping</li>
         </ul>
@@ -44,7 +44,10 @@ export default function GettingStartedPage() {
       <section className="border-t rule pt-10 space-y-6">
         <h2 className="serif text-2xl font-semibold">Step 2 — Connect your wallet</h2>
         <p className="text-sm text-zinc-700 leading-relaxed">
-          On the repo page, click <strong>Connect wallet</strong>. This opens the Reown AppKit modal where you can choose your wallet provider — injected wallets (MetaMask, Rabby, etc.), WalletConnect, or Coinbase Wallet.
+          On the repo page, click <strong>Connect wallet</strong>. This opens the wallet modal where you can choose your provider — injected wallets (MetaMask, Rabby, etc.) or WalletConnect for mobile wallets.
+        </p>
+        <p className="text-sm text-zinc-700 leading-relaxed">
+          Signed in? Your <a href="/docs/smart-wallet" className="text-accent underline underline-offset-4">Opentip Smart Wallet</a> is already available — same address on every device, no extension needed.
         </p>
         <p className="text-sm text-zinc-700 leading-relaxed">
           You do not need an Opentip account to tip. Just connect a wallet and you are ready to go.

@@ -71,6 +71,10 @@ export default function DocsPage() {
             <h3 className="font-medium">Getting Started</h3>
             <p className="text-sm text-zinc-600 mt-1">How to tip a repository — connect a wallet, choose an amount, and send.</p>
           </Link>
+          <Link href="/docs/smart-wallet" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
+            <h3 className="font-medium">Smart Wallet</h3>
+            <p className="text-sm text-zinc-600 mt-1">Your Opentip Smart Wallet — one address on every device.</p>
+          </Link>
           <Link href="/docs/for-developers" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
             <h3 className="font-medium">For Developers</h3>
             <p className="text-sm text-zinc-600 mt-1">Register your repo, set up a payout address, and claim tips.</p>

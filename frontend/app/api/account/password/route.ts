@@ -38,8 +38,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "new password required" }, { status: 400 });
   }
 
-  if (newPassword.length < 8) {
-    return NextResponse.json({ error: "password must be at least 8 characters" }, { status: 400 });
+  if (newPassword.length < 8 || newPassword.length > 128) {
+    return NextResponse.json({ error: "password must be 8-128 characters" }, { status: 400 });
   }
 
   const user = await prisma.user.findUnique({
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (user.passwordHash) {
-    if (!currentPassword || typeof currentPassword !== "string") {
+    if (!currentPassword || typeof currentPassword !== "string" || currentPassword.length > 128) {
       return NextResponse.json({ error: "current password required" }, { status: 400 });
     }
 

@@ -2,6 +2,7 @@
 import { SessionProvider } from "next-auth/react";
 import { createContext, useContext } from "react";
 import ContextProvider from "@/context";
+import CdpProvider from "@/components/cdp/CdpProvider";
 import { AnimatedToastStack, useAnimatedToastStack, type ToastInput } from "@/components/motion/animated-toast-stack";
 
 type ToastCtx = { showToast: (i: ToastInput) => string; updateToast: (id: string, p: Partial<ToastInput>) => void; dismissToast: (id: string) => void };
@@ -22,12 +23,14 @@ function ToastProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function Providers({ children, cookies }: { children: React.ReactNode; cookies: string | null }) {
+export default function Providers({ children, cookies, session }: { children: React.ReactNode; cookies: string | null; session: any }) {
   return (
-    <SessionProvider>
-      <ContextProvider cookies={cookies}>
-        <ToastProvider>{children}</ToastProvider>
-      </ContextProvider>
+    <SessionProvider session={session} refetchOnWindowFocus refetchInterval={5 * 60} basePath="/api/auth">
+      <CdpProvider>
+        <ContextProvider cookies={cookies}>
+          <ToastProvider>{children}</ToastProvider>
+        </ContextProvider>
+      </CdpProvider>
     </SessionProvider>
   );
 }

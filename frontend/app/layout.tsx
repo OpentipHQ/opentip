@@ -1,8 +1,9 @@
 import "./globals.css";
 import { headers } from "next/headers";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import Providers from "./providers";
 import HeaderShell from "@/components/HeaderShell";
-import ConditionalFooter from "@/components/ConditionalFooter";
 import PwaSplash from "@/components/PwaSplash";
 import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
 
@@ -18,6 +19,9 @@ export const metadata = {
   },
   description: "The open-source tip jar. Send crypto to the developers who build the tools you use.",
   icons: { icon: "/Opentip.png" },
+  other: {
+    "base:app_id": "6ab5fa7b81234bc7e80b13bf",
+  },
   openGraph: {
     title: "Opentip | Tip any GitHub repo in crypto",
     description: "The open-source tip jar. Send crypto to the developers who build the tools you use.",
@@ -35,11 +39,12 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const headersObj = await headers();
+  const [session, headersObj] = await Promise.all([getServerSession(authOptions), headers()]);
   const cookies = headersObj.get("cookie");
   return (
     <html lang="en" className={`${fraunces.variable} ${inter.variable} ${plexMono.variable}`}>
       <head>
+        <meta name="base:app_id" content="6ab5fa7b81234bc7e80b13bf" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" sizes="192x192" />
         <meta name="theme-color" content="#1f21b6" />
@@ -70,14 +75,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="min-h-screen bg-[#c1c0b6] text-zinc-900 antialiased">
         <PwaSplash />
-        <Providers cookies={cookies}>
+        <Providers cookies={cookies} session={session}>
           <div className="flex flex-col min-h-screen">
             <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-accent focus:text-white focus:px-4 focus:py-2 focus:rounded">
               Skip to content
             </a>
             <HeaderShell />
             <main id="main-content" className="w-full fluid-page flex-1">{children}</main>
-            <ConditionalFooter />
           </div>
         </Providers>
       </body>

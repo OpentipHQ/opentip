@@ -18,7 +18,7 @@ export default function ForDevelopersPage() {
         <ul className="text-sm text-zinc-700 space-y-2 list-disc pl-5">
           <li>A GitHub account with owner or write access to the repository</li>
           <li>An Opentip account (sign in with GitHub or email)</li>
-          <li>A linked wallet (any EVM wallet on Base)</li>
+          <li>A linked wallet — an <a href="/docs/smart-wallet" className="text-accent underline underline-offset-4">Opentip Smart Wallet</a> (recommended) or any external EVM wallet on Base</li>
         </ul>
       </section>
 
@@ -32,10 +32,10 @@ export default function ForDevelopersPage() {
       <section className="border-t rule pt-10 space-y-6">
         <h2 className="serif text-2xl font-semibold">Step 2 — Link a wallet</h2>
         <p className="text-sm text-zinc-700 leading-relaxed">
-          During onboarding (or from <a href="/dashboard/wallets" className="text-accent underline underline-offset-4">Dashboard → Wallets</a>), connect the wallet you want to use as your payout address. You will need to sign a message to prove ownership.
+          During onboarding (or from <a href="/dashboard/wallets" className="text-accent underline underline-offset-4">Dashboard → Wallets</a>), create an <a href="/docs/smart-wallet" className="text-accent underline underline-offset-4">Opentip Smart Wallet</a> or connect an external wallet to use as your payout address. External wallets require signing a message to prove ownership.
         </p>
         <p className="text-sm text-zinc-700 leading-relaxed">
-          This wallet will receive all tips for repos you register. You can link multiple wallets and use different ones for different repos.
+          This wallet will receive all tips for repos you register. New repo registrations default to your Smart Wallet. You can link multiple wallets and use different ones for different repos.
         </p>
       </section>
 
@@ -157,7 +157,7 @@ export default function ForDevelopersPage() {
           </div>
           <div className="p-4 border rule rounded-sm">
             <h3 className="font-medium text-sm">Wallets</h3>
-            <p className="text-sm text-zinc-600 mt-1">Link and unlink wallets. Connect via any supported wallet provider.</p>
+            <p className="text-sm text-zinc-600 mt-1">Create your Opentip Smart Wallet or link external wallets. Set which one is primary.</p>
           </div>
           <div className="p-4 border rule rounded-sm">
             <h3 className="font-medium text-sm">Account</h3>

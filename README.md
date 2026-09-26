@@ -44,7 +44,7 @@ Opentip takes a **5% fee** on each tip to keep the platform running. **95% goes 
 | Validation | Zod |
 | Auth | NextAuth.js v4, GitHub OAuth, JWT |
 | Database | PostgreSQL (Azure), Prisma ORM |
-| Wallet | Reown AppKit (WalletConnect), wagmi, viem |
+| Wallet | Opentip Smart Wallet (CDP Embedded, email OTP, same address everywhere) + Reown AppKit for external wallets, wagmi, viem |
 | Indexer | Standalone Node.js, polls Base for events (Azure Container Apps) |
 | RPC | Alchemy (recommended), Base public RPC |
 | AI summaries | Groq API |

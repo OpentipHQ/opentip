@@ -87,8 +87,13 @@ export default function ResourcesPage() {
           </a>
           <a href="https://reown.com" target="_blank" rel="noopener noreferrer" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
             <h3 className="font-medium text-sm">Reown (WalletConnect)</h3>
-            <p className="text-sm text-zinc-600 mt-1">Wallet connection modal used by Opentip.</p>
+            <p className="text-sm text-zinc-600 mt-1">Wallet connection modal for external wallets.</p>
             <p className="text-sm text-accent mt-1">reown.com →</p>
+          </a>
+          <a href="https://www.coinbase.com/developer-platform" target="_blank" rel="noopener noreferrer" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
+            <h3 className="font-medium text-sm">Coinbase Developer Platform</h3>
+            <p className="text-sm text-zinc-600 mt-1">Embedded wallets powering the Opentip Smart Wallet.</p>
+            <p className="text-sm text-accent mt-1">coinbase.com/developer-platform →</p>
           </a>
           <a href="https://openzeppelin.com" target="_blank" rel="noopener noreferrer" className="block p-4 border rule rounded-sm hover:bg-zinc-900/5 transition-colors">
             <h3 className="font-medium text-sm">OpenZeppelin</h3>

@@ -92,8 +92,14 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const response = NextResponse.redirect(new URL("/dashboard/account?linked=github", req.url));
+    const rawNext = req.cookies.get("github_link_next")?.value;
+    const target =
+      rawNext && rawNext.startsWith("/") && !rawNext.startsWith("//")
+        ? rawNext
+        : "/dashboard/account?linked=github";
+    const response = NextResponse.redirect(new URL(target, req.url));
     response.cookies.delete("github_link_state");
+    response.cookies.delete("github_link_next");
     return response;
   } catch (error) {
     console.error("GitHub link callback error:", error);

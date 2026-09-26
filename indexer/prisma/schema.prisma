@@ -24,6 +24,22 @@ model Tip {
   @@index([timestamp])
 }
 
+model Claim {
+  id             String   @id @default(cuid())
+  repo_id        String
+  payout_address String   @db.VarChar(42)
+  token          String   @db.VarChar(42)
+  amount         Decimal  @db.Decimal(78, 0)
+  timestamp      DateTime
+  tx_hash        String
+  block_number   BigInt
+
+  @@index([repo_id])
+  @@index([payout_address])
+  @@index([token])
+  @@index([timestamp])
+}
+
 model DisplayName {
   tipper_address String @id @db.VarChar(42)
   display_name   String @db.VarChar(64)
@@ -94,11 +110,14 @@ model VerificationToken {
 }
 
 model UserWallet {
-  id        String   @id @default(cuid())
-  userId    String
-  address   String   @unique @db.VarChar(42)
-  signature String?  @db.Text
-  linkedAt  DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                 String   @id @default(cuid())
+  userId             String
+  address            String   @unique @db.VarChar(42)
+  signature          String?  @db.Text
+  linkedAt           DateTime @default(now())
+  walletType         String   @default("eoa") @db.VarChar(16)
+  isPrimary          Boolean  @default(false)
+  subAccountAddress  String?  @db.VarChar(42)
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@index([userId])
 }

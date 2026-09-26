@@ -12,7 +12,18 @@ export async function POST(req: NextRequest) {
 
   const { email, password, name } = await req.json();
   if (!email || !password) return NextResponse.json({ error: "email and password required" }, { status: 400 });
-  if (password.length < 8) return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
+  if (typeof email !== "string" || typeof password !== "string") {
+    return NextResponse.json({ error: "email and password required" }, { status: 400 });
+  }
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return NextResponse.json({ error: "invalid email" }, { status: 400 });
+  }
+  if (password.length < 8 || password.length > 128) {
+    return NextResponse.json({ error: "Password must be 8-128 characters" }, { status: 400 });
+  }
+  if (name !== undefined && name !== null && (typeof name !== "string" || name.length > 100)) {
+    return NextResponse.json({ error: "invalid name" }, { status: 400 });
+  }
   const lower = email.toLowerCase();
   const existing = await prisma.user.findUnique({ where: { email: lower } });
   if (existing) return NextResponse.json({ error: "Email already registered" }, { status: 400 });

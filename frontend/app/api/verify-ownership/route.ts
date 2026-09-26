@@ -6,22 +6,35 @@ import { randomBytes } from "crypto";
 import { CONTRACT_ADDRESS, CHAIN_ID } from "@/lib/chain";
 import { prisma } from "@/lib/prisma";
 import { generateRepoSummary } from "@/lib/ai";
+import { rateLimit, rateLimitKey } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  try { rateLimit(rateLimitKey(req, "verify-ownership"), "critical"); } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 429, headers: { "Retry-After": String(e.retryAfter) } });
+  }
+
   try {
     const body = await req.json();
     const { repoId: repoIdRaw, payoutAddress } = body;
+    if (!repoIdRaw || typeof repoIdRaw !== "string") {
+      return NextResponse.json({ error: "repoId required as owner/repo" }, { status: 400 });
+    }
     const repoId = repoIdRaw.toLowerCase();
 
-    if (!repoId || !repoId.includes("/")) {
+    if (!repoId.includes("/")) {
       return NextResponse.json({ error: "repoId required as owner/repo" }, { status: 400 });
     }
     const [owner, repo] = repoId.split("/");
     if (!owner || !repo || !/^[a-zA-Z0-9._-]+$/.test(owner) || !/^[a-zA-Z0-9._-]+$/.test(repo)) {
       return NextResponse.json({ error: "invalid repoId format" }, { status: 400 });
     }
-    if (!payoutAddress || payoutAddress === "0x0000000000000000000000000000000000000000") {
-      return NextResponse.json({ error: "payoutAddress required" }, { status: 400 });
+    if (
+      !payoutAddress ||
+      typeof payoutAddress !== "string" ||
+      !/^0x[0-9a-fA-F]{40}$/.test(payoutAddress) ||
+      payoutAddress === "0x0000000000000000000000000000000000000000"
+    ) {
+      return NextResponse.json({ error: "valid payoutAddress required" }, { status: 400 });
     }
 
     const session: any = await getServerSession(authOptions);
@@ -130,7 +143,7 @@ export async function POST(req: NextRequest) {
       signer: account.address,
     });
   } catch (e: any) {
-    console.error("verify-ownership error:", e.message);
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    console.error("verify-ownership error:", e?.message);
+    return NextResponse.json({ error: "internal error" }, { status: 500 });
   }
 }

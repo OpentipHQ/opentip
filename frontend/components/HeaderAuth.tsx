@@ -72,6 +72,20 @@ export default function HeaderAuth() {
                 Dashboard
               </Link>
               <Link
+                href="/wallet"
+                className="block px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-900/5 transition-colors"
+                onClick={() => setOpen(false)}
+              >
+                Wallet
+              </Link>
+              <Link
+                href="/wallet/security"
+                className="block px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-900/5 transition-colors"
+                onClick={() => setOpen(false)}
+              >
+                Security
+              </Link>
+              <Link
                 href="/dashboard/account"
                 className="block px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-900/5 transition-colors"
                 onClick={() => setOpen(false)}

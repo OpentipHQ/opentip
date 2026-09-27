@@ -3,12 +3,33 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { rateLimit, rateLimitKey } from "@/lib/rate-limit";
+import { USDC_ADDRESS, OAR_ADDRESS } from "@/lib/chain";
 
 export const dynamic = "force-dynamic";
 
 const KINDS = new Set(["send", "tip", "claim", "register"]);
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 const HASH_RE = /^0x[0-9a-fA-F]{64}$/;
+
+const NOTIFY_KINDS: Record<string, { type: string; title: string }> = {
+  send: { type: "send_out", title: "Sent" },
+  tip: { type: "tip_sent", title: "Tip submitted" },
+  claim: { type: "claim_submitted", title: "Claim submitted" },
+  register: { type: "repo_registered", title: "Repo registered" },
+};
+
+async function fireNotification(userId: string, kind: string, body: string): Promise<void> {
+  const info = NOTIFY_KINDS[kind];
+  if (!info) return;
+  try {
+    await prisma.notification.create({ data: { userId, type: info.type, title: info.title, body, status: "pending" } });
+    await fetch("/api/notifications/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, type: info.type, title: info.title, body }),
+    }).catch(() => {});
+  } catch {}
+}
 
 async function ownWallet(userId: string, wallet: string) {
   const w = await prisma.userWallet.findFirst({
@@ -80,6 +101,17 @@ export async function POST(req: NextRequest) {
           create: { ...data, tx_hash: (txHash as string).toLowerCase() },
           update: {},
         });
+    if (txHash && !userOpHash) {
+      const sym = data.token === USDC_ADDRESS ? "USDC" : data.token === OAR_ADDRESS ? "OAR" : "ETH";
+      await fireNotification(userId, kind, `${data.amount || "0"} ${sym} sent to ${data.to_address}`);
+    } else {
+      const sym = data.token === USDC_ADDRESS ? "USDC" : data.token === OAR_ADDRESS ? "OAR" : "ETH";
+      const body = kind === "send" ? `Sent ${data.amount || "0"} ${sym} to ${data.to_address}`
+                   : kind === "tip" ? `Your tip of ${data.amount || "0"} ${sym} to ${data.repo_id} was submitted`
+                   : kind === "claim" ? `Your claim for ${data.amount || "0"} ${sym} on ${data.repo_id} was submitted`
+                   : `Your repo ${data.repo_id} is now registered`;
+      await fireNotification(userId, kind, body);
+    }
     return NextResponse.json({ ok: true, id: row.id });
   } catch (e) {
     console.error("wallet tx log failed", e);
@@ -116,6 +148,7 @@ export async function PATCH(req: NextRequest) {
       where: { user_op_hash: userOpHash.toLowerCase() },
       data: { tx_hash: txHash.toLowerCase(), status: "confirmed" },
     });
+    await fireNotification(userId, row.kind, `Your ${row.kind} of ${row.amount || "0"} ${row.token === USDC_ADDRESS ? "USDC" : row.token === OAR_ADDRESS ? "OAR" : "ETH"} is confirmed`);
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("wallet tx confirm failed", e);

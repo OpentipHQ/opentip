@@ -3,7 +3,10 @@ import { createPublicClient, http, parseAbi } from "viem";
 import { base, baseSepolia } from "viem/chains";
 import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient({ log: ["warn", "error"] });
+const prisma = new PrismaClient({ log: ["warn", "error"] }) as PrismaClient & {
+  notification?: typeof PrismaClient.prototype.notification;
+  notificationSubscription?: typeof PrismaClient.prototype.notificationSubscription;
+};
 
 const abi = parseAbi([
   "event RepoRegistered(string repoId, address indexed payoutAddress, uint256 timestamp)",
@@ -73,6 +76,28 @@ async function withDbRetry<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
   throw new Error("unreachable");
 }
 
+async function findUserIdByAddress(address: string): Promise<string | null> {
+  const wallet = await prisma.userWallet.findUnique({
+    where: { address: address.toLowerCase() },
+    select: { userId: true },
+  });
+  return wallet?.userId ?? null;
+}
+
+async function notifyUser(userId: string, type: string, title: string, body: string, txHash?: string): Promise<void> {
+  try {
+    await prisma.notification.create({
+      data: { userId, type, title, body, txHash: txHash ?? null, status: "pending" },
+    });
+    const endpoint = process.env.NOTIFICATION_API_URL || "https://opentip.tech/api/notifications/send";
+    await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, type, title, body: body, txHash }),
+    }).catch(() => {});
+  } catch { /* non-critical */ }
+}
+
 async function tick() {
   const fromBlock = await withDbRetry(() => getFromBlock());
   const toBlock = await client.getBlockNumber();
@@ -105,6 +130,19 @@ async function tick() {
           update: {},
         })
       );
+      const repo = await withDbRetry(() => prisma.repo.findUnique({ where: { repo_id: args.repoId }, select: { payout_address: true } }));
+      if (repo) {
+        const ownerId = await findUserIdByAddress(repo.payout_address);
+        if (ownerId) {
+          await notifyUser(
+            ownerId,
+            "tip_received",
+            "New tip received",
+            `You received a tip on your repo ${args.repoId}`,
+            log.transactionHash!,
+          );
+        }
+      }
     } else if (eventName === "RepoRegistered") {
       await withDbRetry(() =>
         prisma.repo.upsert({
@@ -135,6 +173,16 @@ async function tick() {
           update: {},
         })
       );
+      const claimerId = await findUserIdByAddress(args.payoutAddress.toLowerCase());
+      if (claimerId) {
+        await notifyUser(
+          claimerId,
+          "claim_available",
+          "Tip claim ready",
+          `You can now claim tips from ${args.repoId}`,
+          log.transactionHash!,
+        );
+      }
     }
     // TreasuryWithdrawn / TokenAdded / TokenRemoved only need checkpoint
   }

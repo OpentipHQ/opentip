@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import HeaderAuth from "@/components/HeaderAuth";
+import NotificationBell from "@/components/NotificationBell";
 
 const NAV_LINKS = [
   { href: "/repos", label: "Repos" },
@@ -44,7 +45,10 @@ export default function HeaderShell() {
               </Link>
             ))}
           </div>
-          <HeaderAuth />
+          <div className="flex items-center gap-4">
+            <NotificationBell />
+            <HeaderAuth />
+          </div>
         </nav>
       </header>
       {mobileOpen && (

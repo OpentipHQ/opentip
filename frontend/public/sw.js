@@ -21,3 +21,38 @@ self.addEventListener("fetch", (e) => {
     caches.match(e.request).then((r) => r || fetch(e.request))
   );
 });
+
+self.addEventListener("push", (e) => {
+  const data = e.data ? e.data.json() : {};
+  const title = data.title || "Opentip";
+  const body = data.body || "You have a new notification";
+  const icon = "/icons/icon-192.png";
+  const badge = "/icons/icon-192.png";
+  const tag = data.tag || "opentip-notification";
+  const url = data.url || "/";
+
+  e.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon,
+      badge,
+      tag,
+      data: { url },
+      requireInteraction: false,
+      renotify: true,
+      silent: false,
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  const url = e.notification.data?.url || "/";
+  e.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      const existing = clientList.find((c) => c.url === url && "focus" in c);
+      if (existing) return existing.focus();
+      return clients.openWindow(url);
+    })
+  );
+});

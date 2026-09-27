@@ -11,7 +11,7 @@ export default function NotificationBell() {
 
   useEffect(() => {
     if (!userId) return;
-    fetch(`/api/notifications/history`)
+    fetch("/api/notifications/history")
       .then((r) => r.json())
       .then((j) => {
         const unread = j.notifications?.filter((n: any) => !n.read).length ?? 0;
@@ -23,7 +23,7 @@ export default function NotificationBell() {
   if (!userId) return null;
 
   return (
-    <Link href="/dashboard/notifications" className="relative p-1 hover:opacity-80 transition-opacity" aria-label="Notifications">
+    <Link href="/notifications" className="relative p-1 hover:opacity-80 transition-opacity" aria-label="Notifications">
       <Bell className="w-5 h-5 text-zinc-700" />
       {count > 0 && (
         <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">

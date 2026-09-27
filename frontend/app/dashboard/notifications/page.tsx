@@ -18,25 +18,16 @@ export default function NotificationsPage() {
   const { data: session, status } = useSession();
   const userId = (session?.user as any)?.id;
   const [types, setTypes] = useState<string[]>([]);
-  const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [installMode, setInstallMode] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission>("default");
 
   useEffect(() => {
-    if (status === "loading") return;
-    if (!userId) return;
-
+    if (status === "loading" || !userId) return;
     fetch("/api/notifications/settings")
       .then((r) => r.json())
       .then((j) => setTypes(j.types ?? []))
       .catch(() => {});
-
-    fetch("/api/notifications/history")
-      .then((r) => r.json())
-      .then((j) => setNotifications(j.notifications ?? []))
-      .catch(() => {});
-
     setLoading(false);
   }, [status, userId]);
 
@@ -58,25 +49,22 @@ export default function NotificationsPage() {
   async function subscribe() {
     if (!("serviceWorker" in navigator)) return alert("Service workers not supported");
     const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  if (!vapidKey) return alert("VAPID key not configured");
-  const base64UrlToArrayBuffer = (base64Url: string) => {
-    const padded = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const raw = atob(padded);
-    const buf = new Uint8Array(raw.length);
-    for (let i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i);
-    return buf.buffer;
-  };
-  const reg = await navigator.serviceWorker.ready;
-  const sub = await reg.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: base64UrlToArrayBuffer(vapidKey),
-  });
+    if (!vapidKey) return alert("VAPID key not configured");
+    const base64UrlToArrayBuffer = (base64Url: string) => {
+      const padded = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const raw = atob(padded);
+      const buf = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i);
+      return buf.buffer;
+    };
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: base64UrlToArrayBuffer(vapidKey),
+    });
     const toBase64Url = (buf: ArrayBuffer) =>
       btoa(String.fromCharCode(...new Uint8Array(buf)))
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=/g, "");
-
+        .replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
     await fetch("/api/notifications/subscribe", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -103,7 +91,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-10 space-y-8">
-      <h1 className="serif text-3xl font-semibold tracking-tight">Notifications</h1>
+      <h1 className="serif text-3xl font-semibold tracking-tight">Notification Settings</h1>
 
       <section className="space-y-4">
         <h2 className="text-xl font-semibold">Push Notifications</h2>
@@ -146,21 +134,9 @@ export default function NotificationsPage() {
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Recent Notifications</h2>
-          <Button size="sm" variant="outline" onClick={sendTest}>Test</Button>
+          <h2 className="text-xl font-semibold">Test</h2>
+          <Button size="sm" variant="outline" onClick={sendTest}>Send Test</Button>
         </div>
-        {notifications.length === 0 && (
-          <p className="text-sm text-zinc-500">No notifications yet.</p>
-        )}
-        <ul className="space-y-2">
-          {notifications.map((n) => (
-            <li key={n.id} className={`border rule rounded-sm p-3 text-sm ${n.read ? "opacity-60" : ""}`}>
-              <div className="font-medium">{n.title}</div>
-              <div className="text-xs text-zinc-500">{n.body}</div>
-              <div className="text-xs text-zinc-400 mt-1">{new Date(n.createdAt).toLocaleString()}</div>
-            </li>
-          ))}
-        </ul>
       </section>
     </div>
   );

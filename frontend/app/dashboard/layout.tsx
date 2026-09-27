@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/github-repos", label: "GitHub repos", icon: GithubIcon },
   { href: "/dashboard/wallets", label: "Wallets", icon: WalletIcon },
   { href: "/dashboard/notifications", label: "Notifications", icon: NotificationIcon },
+  { href: "/notifications", label: "Recent", icon: NotificationIcon },
   { href: "/dashboard/account", label: "Account", icon: GearIcon },
 ];
 

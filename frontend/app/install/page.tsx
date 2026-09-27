@@ -7,7 +7,7 @@ export default function InstallPage() {
   const [installed, setInstalled] = useState(false);
 
   useEffect(() => {
-    if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone) {
+    if (window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone) {
       setInstalled(true);
       return;
     }

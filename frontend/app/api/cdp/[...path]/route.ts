@@ -96,7 +96,9 @@ async function proxy(req: NextRequest, ctx: { params: Promise<{ path: string[] }
   // fresh — the upstream sends gzip but Vercel also compresses NextResponse,
   // causing double-compression and net::ERR_CONTENT_DECODING_FAILED in the browser.
   if (upstream.status >= 500) {
-    return NextResponse.json({ error: "CDP request failed" }, { status: 502 });
+    const upstreamBody = await upstream.text().catch(() => "");
+    console.error(`[CDP proxy] upstream ${upstream.status} ${url}`, upstreamBody.slice(0, 500));
+    return NextResponse.json({ error: "CDP request failed", upstreamStatus: upstream.status, upstreamBody: upstreamBody.slice(0, 500) }, { status: 502 });
   }
   const resHeaders = new Headers();
   upstream.headers.forEach((v, k) => {

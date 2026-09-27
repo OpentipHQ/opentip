@@ -33,7 +33,7 @@ export default function WalletClient() {
   const [sendReview, setSendReview] = useState(false);
   const [sendHash, setSendHash] = useState<string | null>(null);
   const [sendError, setSendError] = useState<string | undefined>(undefined);
-  const { send: cdpSend, txData: cdpTxData } = useOpentipSend();
+  const { send: cdpSend, txData: cdpTxData, smartAddress } = useOpentipSend();
   const [pendingUserOp, setPendingUserOp] = useState<string | null>(null);
   const patchedOps = useRef<Set<string>>(new Set());
 
@@ -129,6 +129,11 @@ export default function WalletClient() {
     if (err) { showToast({ status: "error", title: err }); return; }
     if (activeIsSmart) {
       setSendState("sending"); setSendError(undefined);
+      if (!smartAddress) {
+        setSendError("Smart wallet not ready — please wait for creation to complete");
+        setSendState("error");
+        return;
+      }
       try {
         const units = parseUnits(sendAmount, sendTokenDecimals);
         const calls = sendToken === ETH_ADDRESS

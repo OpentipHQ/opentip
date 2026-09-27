@@ -18,7 +18,24 @@ export default function CdpCreateWalletButton({ onCreated }: { onCreated?: (addr
     setCreating(true);
     try {
       // 1. Authenticate Opentip user (sub=user.id) with CDP — get-or-create end user
-      const result: any = await authenticateWithJWT();
+      let result: any = null;
+      let lastErr: any = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          result = await authenticateWithJWT();
+          lastErr = null;
+          break;
+        } catch (e: any) {
+          lastErr = e;
+          const msg = e?.message || "";
+          if (msg.includes("Bad gateway") || msg.includes("502") || msg.includes("Failed to fetch")) {
+            await new Promise((r) => setTimeout(r, 2000));
+            continue;
+          }
+          throw e;
+        }
+      }
+      if (!result && lastErr) throw lastErr;
       let addr: string | null =
         result?.user?.evmSmartAccountObjects?.[0]?.address ||
         result?.user?.evmSmartAccounts?.[0] ||
@@ -46,13 +63,31 @@ export default function CdpCreateWalletButton({ onCreated }: { onCreated?: (addr
 
       if (!addr) throw new Error("CDP returned no address — check portal Custom auth JWKS + allowlist http://localhost:3000");
 
-      const res = await fetch("/api/wallet/link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: addr, signature: "0x", nonce: "cdp", walletType: "smart", isPrimary: true }),
-      });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error || "Failed to save");
+      // Link wallet with retry for transient 502s
+      let linkRes: any = null;
+      let linkErr: any = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const res = await fetch("/api/wallet/link", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ address: addr, signature: "0x", nonce: "cdp", walletType: "smart", isPrimary: true }),
+          });
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.error || "Failed to save");
+          linkRes = data;
+          break;
+        } catch (e: any) {
+          linkErr = e;
+          const msg = e?.message || "";
+          if (msg.includes("Bad gateway") || msg.includes("502") || msg.includes("Failed to fetch")) {
+            await new Promise((r) => setTimeout(r, 2000));
+            continue;
+          }
+          throw e;
+        }
+      }
+      if (!linkRes && linkErr) throw linkErr;
       showToast({ status: "success", title: "Smart wallet created", description: truncate(addr) });
       onCreated?.(addr);
     } catch (e: any) {
@@ -70,6 +105,12 @@ export default function CdpCreateWalletButton({ onCreated }: { onCreated?: (addr
       }
       if (low.includes("jwks") || low.includes("parse jwks") || low.includes("jwt") || low.includes("custom auth") || low.includes("unauthorized") || low.includes("issuer") || low.includes("audience")) {
         hint += " — CDP fetches https://opentip.tech/.well-known/jwks.json (not localhost). Deploy JWKS to prod + set same JWT_PRIVATE_KEY in Vercel. Check both URLs return {keys:[...]} with matching kid.";
+      }
+      if (low.includes("upstreambody") || low.includes("upstreamstatus")) {
+        try {
+          const parsed = JSON.parse(msg);
+          hint = `CDP upstream ${parsed.upstreamStatus}: ${parsed.upstreamBody}`;
+        } catch {}
       }
       showToast({ status: "error", title: "Could not create wallet", description: hint });
     }

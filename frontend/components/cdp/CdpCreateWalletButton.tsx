@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useAuthenticateWithJWT, useCurrentUser, useEvmAddress, useCreateEvmSmartAccount } from "@coinbase/cdp-hooks";
+import { useAuthenticateWithJWT, useCurrentUser, useEvmAddress, useCreateEvmSmartAccount, useGetAccessToken } from "@coinbase/cdp-hooks";
 import { Button } from "@/components/motion/button";
 import { useToast } from "@/app/providers";
 
@@ -10,6 +10,7 @@ export default function CdpCreateWalletButton({ onCreated }: { onCreated?: (addr
   const { authenticateWithJWT } = useAuthenticateWithJWT();
   const { currentUser } = useCurrentUser();
   const { evmAddress } = useEvmAddress();
+  const { getAccessToken } = useGetAccessToken();
   const smartHook: any = useCreateEvmSmartAccount();
   const { showToast } = useToast();
   const [creating, setCreating] = useState(false);
@@ -63,7 +64,15 @@ export default function CdpCreateWalletButton({ onCreated }: { onCreated?: (addr
 
       if (!addr) throw new Error("CDP returned no address — check portal Custom auth JWKS + allowlist http://localhost:3000");
 
-      // Link wallet with retry for transient 502s
+      // CDP access token for server-side ownership proof. The server
+      // validates it with CDP directly, so no app-id/CDP-id mapping is
+      // assumed anywhere.
+      let cdpAccessToken: string | null = null;
+      try {
+        cdpAccessToken = await getAccessToken();
+      } catch {}
+
+      // Link wallet with retry for transient 502s (and one re-auth on 401)
       let linkRes: any = null;
       let linkErr: any = null;
       for (let attempt = 0; attempt < 3; attempt++) {
@@ -71,10 +80,21 @@ export default function CdpCreateWalletButton({ onCreated }: { onCreated?: (addr
           const res = await fetch("/api/wallet/link", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ address: addr, signature: "0x", nonce: "cdp", walletType: "smart", isPrimary: true }),
+            body: JSON.stringify({ address: addr, signature: "0x", nonce: "cdp", walletType: "smart", isPrimary: true, cdpAccessToken }),
           });
-          const data = await res.json();
-          if (!data.ok) throw new Error(data.error || "Failed to save");
+          const data = await res.json().catch(() => ({}));
+          if (!data.ok) {
+            if (res.status === 401 && attempt === 0) {
+              // Token may have expired between authenticate and link —
+              // re-authenticate once and retry with a fresh token.
+              try {
+                await authenticateWithJWT();
+                cdpAccessToken = await getAccessToken();
+              } catch {}
+              continue;
+            }
+            throw new Error(data.error || "Failed to save");
+          }
           linkRes = data;
           break;
         } catch (e: any) {

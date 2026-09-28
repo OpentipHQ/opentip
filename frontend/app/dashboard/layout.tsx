@@ -66,11 +66,35 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [onboardingCheck, setOnboardingCheck] = useState<"pending" | "done">("pending");
 
 
   useEffect(() => {
     if (status === "unauthenticated") router.replace("/signin?callbackUrl=/dashboard");
   }, [status]);
+
+  // Fresh accounts (e.g. GitHub signups) land here before onboarding —
+  // bounce them into the funnel instead of a dead-end dashboard.
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    let cancelled = false;
+    fetch("/api/account/status")
+      .then((r) => r.json())
+      .then((j) => {
+        if (cancelled) return;
+        if (!j?.onboardingComplete) {
+          router.replace(`/onboarding?next=${encodeURIComponent(pathname)}`);
+        } else {
+          setOnboardingCheck("done");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setOnboardingCheck("done");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [status, pathname, router]);
 
   if (status === "loading") {
     return (
@@ -81,6 +105,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   if (status === "unauthenticated") {
+    return (
+      <div className="py-20 flex justify-center">
+        <Loader variant="spinner" size={24} />
+      </div>
+    );
+  }
+
+  // Hold the dashboard behind a spinner while the onboarding check runs —
+  // avoids flashing dashboard content right before the bounce.
+  if (onboardingCheck !== "done") {
     return (
       <div className="py-20 flex justify-center">
         <Loader variant="spinner" size={24} />

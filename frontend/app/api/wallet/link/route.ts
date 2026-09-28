@@ -10,12 +10,15 @@ import { rateLimit, rateLimitKey } from "@/lib/rate-limit";
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 const MAX_SIG_LEN = 1024;
 
-// Server-side proof that a smart-wallet address belongs to the caller's CDP
-// end-user account (CDP keys the end user by our JWT sub = app userId).
+// Server-side proof that an address belongs to the caller's CDP end-user
+// account. The client sends its CDP access token and we validate it with
+// CDP directly (validateAccessToken), which resolves the token to its end
+// user authoritatively — no mapping between app ids and CDP ids is assumed
+// anywhere (CDP end-user ids are CDP-generated and differ from ours).
 // verifyMessage can't prove TEE-custodied ownership, so we ask CDP directly
 // with our secret API key instead of trusting the client's walletType claim.
 // Fails closed: any CDP error rejects the link.
-async function assertCdpOwnership(appUserId: string, addressLower: string): Promise<"smart" | "eoa"> {
+async function assertCdpOwnership(appUserId: string, addressLower: string, accessToken?: string | null): Promise<"smart" | "eoa"> {
   let cdp: any;
   try {
     cdp = new CdpClient();
@@ -23,12 +26,23 @@ async function assertCdpOwnership(appUserId: string, addressLower: string): Prom
     throw { status: 503, error: "wallet verification unavailable — try again" };
   }
   let endUser: any;
-  try {
-    endUser = await cdp.endUser.getEndUser({ userId: appUserId });
-  } catch (e: any) {
-    const code = e?.status || e?.statusCode || e?.response?.status;
-    if (code === 404) throw { status: 400, error: "complete embedded wallet creation first" };
-    throw { status: 502, error: "wallet verification unavailable — try again" };
+  if (accessToken) {
+    try {
+      endUser = await cdp.endUser.validateAccessToken({ accessToken });
+    } catch (e: any) {
+      const code = e?.status || e?.statusCode || e?.response?.status;
+      if (code === 401) throw { status: 401, error: "CDP session expired — try again" };
+      throw { status: 502, error: "wallet verification unavailable — try again" };
+    }
+  } else {
+    // Legacy fallback: only works if CDP keyed the end user by app id.
+    try {
+      endUser = await cdp.endUser.getEndUser({ userId: appUserId });
+    } catch (e: any) {
+      const code = e?.status || e?.statusCode || e?.response?.status;
+      if (code === 404) throw { status: 503, error: "wallet verification unavailable — try again" };
+      throw { status: 502, error: "wallet verification unavailable — try again" };
+    }
   }
   const smarts = new Set<string>([
     ...((endUser?.evmSmartAccountObjects || []).map((a: any) => String(a?.address || "").toLowerCase())),
@@ -59,7 +73,7 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "invalid JSON body" }, { status: 400 });
   }
-  const { address, signature, nonce, walletType, isPrimary, subAccountAddress } = body || {};
+  const { address, signature, nonce, walletType, isPrimary, subAccountAddress, cdpAccessToken } = body || {};
   if (typeof address !== "string" || typeof signature !== "string" || !address || !signature) {
     return NextResponse.json({ error: "address and signature required" }, { status: 400 });
   }
@@ -84,7 +98,7 @@ export async function POST(req: NextRequest) {
     verified = true;
     if (walletType === "smart" && type !== "smart") {
       try {
-        type = await assertCdpOwnership(userId, lower);
+        type = await assertCdpOwnership(userId, lower, typeof cdpAccessToken === "string" ? cdpAccessToken : null);
       } catch (e: any) {
         if (e?.status) return NextResponse.json({ error: e.error || "verification failed" }, { status: e.status });
         throw e;
@@ -92,7 +106,7 @@ export async function POST(req: NextRequest) {
     }
   } else if (walletType === "smart") {
     try {
-      type = await assertCdpOwnership(userId, lower);
+      type = await assertCdpOwnership(userId, lower, typeof cdpAccessToken === "string" ? cdpAccessToken : null);
       verified = true;
     } catch (e: any) {
       if (e?.status) return NextResponse.json({ error: e.error || "verification failed" }, { status: e.status });

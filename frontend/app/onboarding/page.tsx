@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useSession, signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/app/providers";
 import { Button } from "@/components/motion/button";
 import { Loader } from "@/components/motion/loader";
@@ -69,6 +69,9 @@ const STAGES = ["Account", "GitHub", "Wallet", "Done"];
 export default function OnboardingPage() {
   const { status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const rawNext = searchParams.get("next") || "/dashboard/github-repos";
+  const next = rawNext.startsWith("/") && !rawNext.includes("://") ? rawNext : "/dashboard/github-repos";
   const { showToast } = useToast();
   const [step, setStep] = useState<Step>("account");
   const [checking, setChecking] = useState(true);
@@ -77,7 +80,8 @@ export default function OnboardingPage() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [retryNonce, setRetryNonce] = useState(0);
 
-  // Entry routing: account → github (email users) → creating/created → welcome
+  // Entry routing: complete users go straight to `next`; otherwise
+  // account → github (email users) → creating/created → welcome
   useEffect(() => {
     if (status === "unauthenticated") { setStep("account"); setChecking(false); return; }
     if (status !== "authenticated") return;
@@ -87,6 +91,11 @@ export default function OnboardingPage() {
           fetch("/api/account/status").then((r) => r.json()).catch(() => ({})),
           fetch("/api/wallet/link").then((r) => r.json()).catch(() => []),
         ]);
+        if ((st as any)?.onboardingComplete) {
+          setChecking(false);
+          router.replace(next);
+          return;
+        }
         const wallets = Array.isArray(wl) ? wl : [];
         const smart = wallets.find((w: any) => w.walletType === "smart")?.address || null;
         if (!st?.hasGithub) {
@@ -103,7 +112,16 @@ export default function OnboardingPage() {
         setChecking(false);
       }
     })();
-  }, [status]);
+  }, [status, router, next]);
+
+  // Reaching the last step marks onboarding complete — fire once so users
+  // who close the tab at welcome don't get bounced back here.
+  const welcomedRef = useRef(false);
+  useEffect(() => {
+    if (step !== "welcome" || welcomedRef.current) return;
+    welcomedRef.current = true;
+    fetch("/api/account/onboarding-complete", { method: "POST" }).catch(() => {});
+  }, [step]);
 
   const connectGithub = async () => {
     setConnectingGithub(true);
@@ -111,7 +129,7 @@ export default function OnboardingPage() {
       const res = await fetch("/api/account/github/link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ next: "/onboarding" }),
+        body: JSON.stringify({ next: `/onboarding?next=${encodeURIComponent(next)}` }),
       });
       const j = await res.json();
       if (!res.ok || !j.url) throw new Error(j.error || "Failed to start GitHub connect");
@@ -222,7 +240,7 @@ export default function OnboardingPage() {
           <h2 className="serif text-xl font-semibold">Welcome to Opentip</h2>
           <p className="text-sm text-zinc-600">You are all set — account linked, wallet ready.</p>
           <div>
-            <Button onClick={() => router.push("/dashboard/github-repos")}>Register repo now</Button>
+            <Button onClick={() => router.push(next)}>{next === "/dashboard/github-repos" ? "Register repo now" : "Continue"}</Button>
           </div>
         </section>
       )}

@@ -10,6 +10,7 @@ export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/users")
@@ -18,6 +19,29 @@ export default function AdminUsers() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  async function deleteUser(user: any) {
+    const label = user.login || user.email || user.id;
+    if (!window.confirm(`Delete user ${label}? Their wallets, sessions and settings are removed. On-chain tip history is preserved.`)) return;
+    setDeleting(user.id);
+    try {
+      const r = await fetch("/api/admin/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      const j = await r.json();
+      if (!j.ok) {
+        alert(j.error || "Delete failed");
+        return;
+      }
+      setUsers((prev) => prev.filter((u) => u.id !== user.id));
+    } catch {
+      alert("Delete failed");
+    } finally {
+      setDeleting(null);
+    }
+  }
 
   const filtered = users.filter((u) => {
     const q = search.toLowerCase();
@@ -50,6 +74,7 @@ export default function AdminUsers() {
               <th className="text-left px-4 py-2 font-medium text-zinc-600">Wallet(s)</th>
               <th className="text-right px-4 py-2 font-medium text-zinc-600">Tips sent</th>
               <th className="text-right px-4 py-2 font-medium text-zinc-600">Joined</th>
+              <th className="text-right px-4 py-2 font-medium text-zinc-600">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -69,6 +94,15 @@ export default function AdminUsers() {
                 </td>
                 <td className="px-4 py-2 text-right stats text-xs">{user.tipsReceived}</td>
                 <td className="px-4 py-2 text-right text-xs text-zinc-500">{new Date(user.createdAt).toLocaleDateString()}</td>
+                <td className="px-4 py-2 text-right">
+                  <button
+                    onClick={() => deleteUser(user)}
+                    disabled={deleting === user.id}
+                    className="text-xs text-red-600 hover:underline disabled:opacity-50"
+                  >
+                    {deleting === user.id ? "Deleting..." : "Delete"}
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

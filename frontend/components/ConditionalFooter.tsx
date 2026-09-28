@@ -1,9 +1,7 @@
 "use client";
-import { usePathname } from "next/navigation";
 import Footer from "@/components/Footer";
 
 export default function ConditionalFooter() {
-  const pathname = usePathname();
-  if (pathname.startsWith("/verify-email")) return null;
+  // Footer self-governs visibility (landing + legal pages only).
   return <Footer />;
 }

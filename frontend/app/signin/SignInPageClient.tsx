@@ -21,7 +21,12 @@ export default function SignInPageClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string|undefined>(undefined);
 
-  const onGithub = () => signIn("github", { callbackUrl: "/dashboard" });
+  const onGithub = () => {
+    const callbackUrl = safeCallbackUrl.startsWith("/onboarding")
+      ? safeCallbackUrl
+      : `/onboarding?next=${encodeURIComponent(safeCallbackUrl)}`;
+    signIn("github", { callbackUrl });
+  };
   const onEmail = async () => {
     setError(undefined);
     if (mode==="signup" && password.length < 8) { setError("Password must be at least 8 characters"); return; }

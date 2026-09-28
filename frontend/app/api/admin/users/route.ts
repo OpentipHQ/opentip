@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { handleAdminRequest } from "@/lib/admin-api";
+import { handleAdminRequest, auditLog } from "@/lib/admin-api";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
@@ -48,5 +48,27 @@ export async function GET(req: NextRequest) {
     );
 
     return usersWithStats;
+  });
+}
+
+export async function DELETE(req: NextRequest) {
+  return handleAdminRequest(req, "critical", async (admin) => {
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return { ok: false, error: "invalid JSON body" };
+    }
+    const { userId } = body || {};
+    if (!userId || typeof userId !== "string") return { ok: false, error: "userId required" };
+    if (userId === admin.userId) return { ok: false, error: "cannot delete your own account" };
+    const target = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, login: true, email: true } });
+    if (!target) return { ok: false, error: "user not found" };
+    // Cascades to accounts, sessions, wallets, profile, policy,
+    // notifications and subscriptions. Tips/claims/repos reference raw
+    // addresses, so on-chain history is preserved.
+    await prisma.user.delete({ where: { id: userId } });
+    await auditLog(admin.address, "delete-user", { userId, login: target.login, email: target.email });
+    return { ok: true };
   });
 }

@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Providers from "./providers";
 import HeaderShell from "@/components/HeaderShell";
+import ConditionalFooter from "@/components/ConditionalFooter";
 import PwaSplash from "@/components/PwaSplash";
 import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
 
@@ -82,6 +83,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </a>
             <HeaderShell />
             <main id="main-content" className="w-full fluid-page flex-1">{children}</main>
+            <ConditionalFooter />
           </div>
         </Providers>
       </body>

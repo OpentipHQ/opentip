@@ -3,27 +3,19 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 
-const HIDDEN_PREFIXES = [
-  "/dashboard",
-  "/admin",
-  "/docs",
-  "/signin",
-  "/onboarding",
-  "/forgot-password",
-  "/reset-password",
-  "/activity",
-  "/repos",
-  "/leaderboard",
-  "/dev",
+const VISIBLE_PATHS = [
+  "/",
+  "/legal/privacy",
+  "/legal/terms",
 ];
 
-export default function Footer() {
+export default function Footer({ force = false }: { force?: boolean }) {
   const pathname = usePathname();
 
-  if (HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null;
-
-  const segments = pathname.split("/").filter(Boolean);
-  if (segments.length === 2) return null;
+  // Allowlist: footer only renders on landing, legal pages, and the 404
+  // page (which renders <Footer force /> directly — see app/not-found.tsx,
+  // since a 404 pathname never matches the allowlist).
+  if (!force && !VISIBLE_PATHS.includes(pathname)) return null;
 
   return (
     <footer className="w-full bg-accent text-white">

@@ -102,6 +102,7 @@ model User {
   image           String?
   githubId        String?   @unique
   login           String?   @unique
+  onboardingComplete Boolean @default(false)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   accounts      Account[]

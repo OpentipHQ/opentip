@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   const clientId = process.env.GITHUB_ID;
   const redirectUri = `${process.env.NEXTAUTH_URL || "https://opentip.tech"}/api/account/github/callback`;
 
-  // Optional return path (e.g. onboarding passes { next: "/onboarding" }).
+  // Optional return path (e.g. onboarding passes { next: "/onboarding?next=..." }).
   // Strictly internal paths only — never external URLs.
   let next: string | null = null;
   try {

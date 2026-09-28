@@ -21,6 +21,7 @@ export async function GET() {
       login: true,
       pfp: true,
       header: true,
+      onboardingComplete: true,
       accounts: {
         select: { provider: true },
       },
@@ -44,5 +45,6 @@ export async function GET() {
     githubLogin: hasGithub ? user.login : null,
     pfp: user.pfp,
     header: user.header,
+    onboardingComplete: !!user.onboardingComplete,
   });
 }

@@ -16,7 +16,7 @@ import { Copy, ExternalLink } from "lucide-react";
 
 function truncate(a: string) { return a.slice(0, 6) + "..." + a.slice(-4); }
 
-export default function WalletClient() {
+export default function WalletClient({ initialLinked }: { initialLinked?: any[] }) {
   const { address, isConnected } = useAccount();
   const { open } = useAppKit();
   const { showToast } = useToast();
@@ -28,12 +28,13 @@ export default function WalletClient() {
   const [sendAmount, setSendAmount] = useState("");
   const [sendToken, setSendToken] = useState<string>(ETH_ADDRESS);
   const [history, setHistory] = useState<any[]>([]);
-  const [linked, setLinked] = useState<any[]>([]);
+  const [linked, setLinked] = useState<any[]>(initialLinked ?? []);
+  const [linkedLoading, setLinkedLoading] = useState(() => !(initialLinked && initialLinked.length > 0));
   const [sendState, setSendState] = useState<"idle"|"sending"|"success"|"error">("idle");
   const [sendReview, setSendReview] = useState(false);
   const [sendHash, setSendHash] = useState<string | null>(null);
   const [sendError, setSendError] = useState<string | undefined>(undefined);
-  const { send: cdpSend, txData: cdpTxData, smartAddress } = useOpentipSend();
+  const { send: cdpSend, txData: cdpTxData, ensureSignedIn } = useOpentipSend();
   const [pendingUserOp, setPendingUserOp] = useState<string | null>(null);
   const patchedOps = useRef<Set<string>>(new Set());
 
@@ -52,7 +53,7 @@ export default function WalletClient() {
 
   useEffect(() => {
     fetch("/api/prices").then(r => r.json()).then(setPrices).catch(() => {});
-    fetch("/api/wallet/link").then(r=>r.json()).then(j=>Array.isArray(j)?setLinked(j):setLinked([])).catch(()=>{});
+    fetch("/api/wallet/link").then(r=>r.json()).then(j=>Array.isArray(j)?setLinked(j):setLinked([])).catch(()=>{}).finally(()=>setLinkedLoading(false));
   }, []);
 
   const smartWallet = linked.find((w:any)=>w.walletType==="smart")?.address as `0x${string}` | undefined;
@@ -93,6 +94,18 @@ export default function WalletClient() {
   const displayAddress = walletAddress;
   const activeIsSmart = !!smartWallet && !!walletAddress && walletAddress.toLowerCase() === smartWallet.toLowerCase();
 
+  // Warm the CDP session when the page opens so the first Send just
+  // works — silent, no UI. send() also connects on click if needed,
+  // so this is purely a head start.
+  const warmedRef = useRef(false);
+  useEffect(() => {
+    if (!activeIsSmart || warmedRef.current) return;
+    warmedRef.current = true;
+    ensureSignedIn().catch(() => {
+      warmedRef.current = false;
+    });
+  }, [activeIsSmart, ensureSignedIn]);
+
   const copy = async (v: string) => { await navigator.clipboard.writeText(v); showToast({ status: "success", title: "Copied" }); };
 
   const sendTokenDecimals = sendToken === USDC_ADDRESS ? 6 : 18;
@@ -129,11 +142,6 @@ export default function WalletClient() {
     if (err) { showToast({ status: "error", title: err }); return; }
     if (activeIsSmart) {
       setSendState("sending"); setSendError(undefined);
-      if (!smartAddress) {
-        setSendError("Smart wallet not ready — please wait for creation to complete");
-        setSendState("error");
-        return;
-      }
       try {
         const units = parseUnits(sendAmount, sendTokenDecimals);
         const calls = sendToken === ETH_ADDRESS
@@ -194,7 +202,21 @@ export default function WalletClient() {
     }
   }, [sendState, activeIsSmart, ethSendReceipt.isSuccess, ethSendReceipt.isError, ercSendReceipt.isSuccess, ercSendReceipt.isError]);
 
+  // Never show the Create CTA while the wallet list is still loading —
+  // a hasty click there would strand funds in a second, unrecoverable
+  // wallet. The empty state renders only after zero wallets is confirmed.
   if (!walletAddress) {
+    if (linkedLoading) {
+      return (
+        <div className="max-w-3xl mx-auto px-6 md:px-10 py-8 space-y-6">
+          <h1 className="serif text-2xl font-semibold">Wallet</h1>
+          <div className="border rule rounded-sm p-6 space-y-3 animate-pulse" aria-label="Loading wallet">
+            <div className="h-4 bg-zinc-900/10 rounded-sm w-2/3" />
+            <div className="h-9 bg-zinc-900/10 rounded-sm" />
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="max-w-3xl mx-auto px-6 md:px-10 py-8 space-y-6">
         <h1 className="serif text-2xl font-semibold">Wallet</h1>

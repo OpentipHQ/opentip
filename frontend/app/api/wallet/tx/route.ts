@@ -3,7 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { rateLimit, rateLimitKey } from "@/lib/rate-limit";
-import { USDC_ADDRESS, OAR_ADDRESS } from "@/lib/chain";
+import { formatAmountWithSymbol, truncateAddress } from "@/lib/formatAmount";
+import { pushToUser } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -13,22 +14,41 @@ const HASH_RE = /^0x[0-9a-fA-F]{64}$/;
 
 const NOTIFY_KINDS: Record<string, { type: string; title: string }> = {
   send: { type: "send_out", title: "Sent" },
-  tip: { type: "tip_sent", title: "Tip submitted" },
-  claim: { type: "claim_submitted", title: "Claim submitted" },
+  tip: { type: "tip_sent", title: "Tip sent" },
+  claim: { type: "claim_submitted", title: "Claim confirmed" },
   register: { type: "repo_registered", title: "Repo registered" },
 };
 
-async function fireNotification(userId: string, kind: string, body: string): Promise<void> {
-  const info = NOTIFY_KINDS[kind];
-  if (!info) return;
-  try {
-    await prisma.notification.create({ data: { userId, type: info.type, title: info.title, body, status: "pending" } });
-    await fetch("/api/notifications/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, type: info.type, title: info.title, body }),
-    }).catch(() => {});
-  } catch {}
+type TxFields = {
+  token: string | null;
+  amount: string | null;
+  repo_id: string | null;
+  to_address: string | null;
+};
+
+// One notification per action, showing the final status. Amounts are
+// formatted from base units; zero/unknown amounts are omitted, never "0".
+function buildFinalBody(
+  kind: string,
+  f: TxFields,
+): string {
+  const amt = formatAmountWithSymbol(f.amount, f.token);
+  switch (kind) {
+    case "send":
+      return amt
+        ? `Sent ${amt} to ${truncateAddress(f.to_address)}`
+        : `Sent funds to ${truncateAddress(f.to_address)}`;
+    case "tip":
+      return amt
+        ? `You tipped ${amt} to ${f.repo_id}`
+        : `Your tip to ${f.repo_id} is confirmed`;
+    case "claim":
+      return amt
+        ? `You claimed ${amt} on ${f.repo_id}`
+        : `Your claim on ${f.repo_id} is confirmed`;
+    default:
+      return `Your repo ${f.repo_id} is now registered`;
+  }
 }
 
 async function ownWallet(userId: string, wallet: string) {
@@ -101,16 +121,27 @@ export async function POST(req: NextRequest) {
           create: { ...data, tx_hash: (txHash as string).toLowerCase() },
           update: {},
         });
+    // Single notification per action, final status only. Smart-wallet
+    // submits create a silent pending row; the push goes out on confirm
+    // (PATCH). EOA submits arrive already confirmed — push immediately.
+    const info = NOTIFY_KINDS[kind];
+    const refKey = (userOpHash ?? (txHash as string)).toLowerCase();
+    const txHashLower = txHash ? (txHash as string).toLowerCase() : null;
+    const finalBody = buildFinalBody(kind, {
+      token: data.token,
+      amount: data.amount,
+      repo_id: data.repo_id,
+      to_address: data.to_address,
+    });
+    const existing = await prisma.notification.findFirst({ where: { userId, ref: refKey } });
+    const notif = existing ?? (await prisma.notification.create({
+      data: { userId, type: info.type, title: info.title, body: finalBody, status: "pending", txHash: txHashLower, ref: refKey },
+    }));
     if (txHash && !userOpHash) {
-      const sym = data.token === USDC_ADDRESS ? "USDC" : data.token === OAR_ADDRESS ? "OAR" : "ETH";
-      await fireNotification(userId, kind, `${data.amount || "0"} ${sym} sent to ${data.to_address}`);
-    } else {
-      const sym = data.token === USDC_ADDRESS ? "USDC" : data.token === OAR_ADDRESS ? "OAR" : "ETH";
-      const body = kind === "send" ? `Sent ${data.amount || "0"} ${sym} to ${data.to_address}`
-                   : kind === "tip" ? `Your tip of ${data.amount || "0"} ${sym} to ${data.repo_id} was submitted`
-                   : kind === "claim" ? `Your claim for ${data.amount || "0"} ${sym} on ${data.repo_id} was submitted`
-                   : `Your repo ${data.repo_id} is now registered`;
-      await fireNotification(userId, kind, body);
+      const sent = await pushToUser(userId, { title: info.title, body: finalBody });
+      if (sent) {
+        await prisma.notification.update({ where: { id: notif.id }, data: { status: "sent" } });
+      }
     }
     return NextResponse.json({ ok: true, id: row.id });
   } catch (e) {
@@ -148,7 +179,27 @@ export async function PATCH(req: NextRequest) {
       where: { user_op_hash: userOpHash.toLowerCase() },
       data: { tx_hash: txHash.toLowerCase(), status: "confirmed" },
     });
-    await fireNotification(userId, row.kind, `Your ${row.kind} of ${row.amount || "0"} ${row.token === USDC_ADDRESS ? "USDC" : row.token === OAR_ADDRESS ? "OAR" : "ETH"} is confirmed`);
+    // Confirm the pending notification in place and send the single push.
+    const info = NOTIFY_KINDS[row.kind] ?? { type: row.kind, title: "Transaction confirmed" };
+    const finalBody = buildFinalBody(row.kind, {
+      token: row.token,
+      amount: row.amount,
+      repo_id: row.repo_id,
+      to_address: row.to_address,
+    });
+    const refKey = userOpHash.toLowerCase();
+    const existing = await prisma.notification.findFirst({ where: { userId, ref: refKey } });
+    if (existing) {
+      await prisma.notification.update({
+        where: { id: existing.id },
+        data: { title: info.title, body: finalBody, status: "confirmed", txHash: txHash.toLowerCase() },
+      });
+    } else {
+      await prisma.notification.create({
+        data: { userId, type: info.type, title: info.title, body: finalBody, status: "confirmed", txHash: txHash.toLowerCase(), ref: refKey },
+      });
+    }
+    await pushToUser(userId, { title: info.title, body: finalBody });
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("wallet tx confirm failed", e);

@@ -2,6 +2,7 @@ import "dotenv/config";
 import { createPublicClient, http, parseAbi } from "viem";
 import { base, baseSepolia } from "viem/chains";
 import { PrismaClient } from "@prisma/client";
+import { formatTokenAmount } from "./formatAmount";
 
 const prisma = new PrismaClient({ log: ["warn", "error"] }) as PrismaClient & {
   notification?: typeof PrismaClient.prototype.notification;
@@ -86,6 +87,11 @@ async function findUserIdByAddress(address: string): Promise<string | null> {
 
 async function notifyUser(userId: string, type: string, title: string, body: string, txHash?: string): Promise<void> {
   try {
+    // Idempotency: retries/replays must not duplicate rows.
+    if (txHash) {
+      const dup = await prisma.notification.findFirst({ where: { userId, type, txHash } });
+      if (dup) return;
+    }
     await prisma.notification.create({
       data: { userId, type, title, body, txHash: txHash ?? null, status: "pending" },
     });
@@ -134,11 +140,14 @@ async function tick() {
       if (repo) {
         const ownerId = await findUserIdByAddress(repo.payout_address);
         if (ownerId) {
+          const tipAmt = formatTokenAmount(args.amount.toString(), tokenAddress);
           await notifyUser(
             ownerId,
             "tip_received",
             "New tip received",
-            `You received a tip on your repo ${args.repoId}`,
+            tipAmt
+              ? `You received a tip of ${tipAmt} on your repo ${args.repoId}`
+              : `You received a tip on your repo ${args.repoId}`,
             log.transactionHash!,
           );
         }
@@ -175,11 +184,14 @@ async function tick() {
       );
       const claimerId = await findUserIdByAddress(args.payoutAddress.toLowerCase());
       if (claimerId) {
+        const claimAmt = formatTokenAmount(args.amount.toString(), args.token);
         await notifyUser(
           claimerId,
           "claim_available",
           "Tip claim ready",
-          `You can now claim tips from ${args.repoId}`,
+          claimAmt
+            ? `You can now claim ${claimAmt} from ${args.repoId}`
+            : `You can now claim tips from ${args.repoId}`,
           log.transactionHash!,
         );
       }

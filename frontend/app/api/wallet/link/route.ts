@@ -115,6 +115,18 @@ export async function POST(req: NextRequest) {
   } else {
     type = "eoa";
   }
+
+  // One smart wallet per user — linking a second would strand funds with
+  // no recovery path. Flag flips on the already-linked address still pass.
+  if (type === "smart") {
+    const otherSmart = await prisma.userWallet.findFirst({
+      where: { userId, walletType: "smart", address: { not: lower } },
+      select: { address: true },
+    });
+    if (otherSmart) {
+      return NextResponse.json({ error: "smart wallet already exists for this account" }, { status: 400 });
+    }
+  }
   const wantsPrimary = !!isPrimary;
 
   if (!verified) {

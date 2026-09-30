@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { sendWebPush } from "@/lib/vapid";
+import { findNotificationByTx, pushToUser, recordNotification } from "@/lib/notify";
 
 export async function POST(request: Request) {
   let body: any;
@@ -10,28 +9,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "missing fields" }, { status: 400 });
   }
 
-  const sub = await prisma.notificationSubscription.findFirst({ where: { userId } });
-  if (!sub || !sub.endpoint) {
-    await prisma.notification.create({
-      data: { userId, type, title, body: msgBody || "", status: "pending", txHash },
-    });
-    return NextResponse.json({ queued: true });
+  // Idempotency: indexer retries/replays must not duplicate rows.
+  if (txHash) {
+    const dup = await findNotificationByTx(userId, type, txHash);
+    if (dup) return NextResponse.json({ ok: true, deduped: true });
   }
 
   const payload = { title, body: msgBody || "", url: url || "/" };
-  try {
-    await sendWebPush(
-      { endpoint: sub.endpoint, keys: { p256dh: sub.p256Key, auth: sub.auth } },
-      payload,
-    );
-    await prisma.notification.create({
-      data: { userId, type, title, body: msgBody || "", status: "sent", txHash },
-    });
-    return NextResponse.json({ ok: true });
-  } catch (e: any) {
-    await prisma.notification.create({
-      data: { userId, type, title, body: msgBody || "", status: "failed", txHash },
-    });
-    return NextResponse.json({ error: e?.message }, { status: 500 });
+  const sent = await pushToUser(userId, payload);
+  if (!sent) {
+    // No subscription (or send failed before any push) — keep a pending row.
+    // Distinguish "no subscription" from real failures below via try/catch.
+    await recordNotification({ userId, type, title, body: msgBody || "", txHash, status: "pending" });
+    return NextResponse.json({ queued: true });
   }
+  await recordNotification({ userId, type, title, body: msgBody || "", txHash, status: "sent" });
+  return NextResponse.json({ ok: true });
 }

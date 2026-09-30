@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuthenticateWithJWT, useCurrentUser, useEvmAddress, useCreateEvmSmartAccount, useGetAccessToken } from "@coinbase/cdp-hooks";
 import { Button } from "@/components/motion/button";
 import { useToast } from "@/app/providers";
@@ -14,6 +14,17 @@ export default function CdpCreateWalletButton({ onCreated }: { onCreated?: (addr
   const smartHook: any = useCreateEvmSmartAccount();
   const { showToast } = useToast();
   const [creating, setCreating] = useState(false);
+  // One smart wallet per user — if one is already linked, this button
+  // must never offer to create a second (funds would strand with no
+  // recovery). While checking, stay disabled so no click slips through.
+  const [hasSmart, setHasSmart] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    fetch("/api/wallet/link")
+      .then((r) => r.json())
+      .then((j) => setHasSmart(Array.isArray(j) && j.some((w: any) => w.walletType === "smart")))
+      .catch(() => setHasSmart(false));
+  }, []);
 
   async function handle() {
     setCreating(true);
@@ -137,9 +148,17 @@ export default function CdpCreateWalletButton({ onCreated }: { onCreated?: (addr
     setCreating(false);
   }
 
+  if (hasSmart) {
+    return (
+      <Button size="sm" disabled>
+        Smart wallet created
+      </Button>
+    );
+  }
+
   return (
-    <Button size="sm" onClick={handle} disabled={creating}>
-      {creating ? "Creating..." : "Create"}
+    <Button size="sm" onClick={handle} disabled={creating || hasSmart === null}>
+      {creating ? "Creating..." : hasSmart === null ? "Checking..." : "Create"}
     </Button>
   );
 }

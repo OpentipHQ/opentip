@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { rateLimit, rateLimitKey } from "@/lib/rate-limit";
 import { formatAmountWithSymbol, truncateAddress } from "@/lib/formatAmount";
 import { pushToUser } from "@/lib/notify";
+import { createPublicClient, http } from "viem";
+import { RPC_URL, VIEM_CHAIN, ETH_ADDRESS } from "@/lib/chain";
 
 export const dynamic = "force-dynamic";
 
@@ -200,6 +202,45 @@ export async function PATCH(req: NextRequest) {
       });
     }
     await pushToUser(userId, { title: info.title, body: finalBody });
+    // Reconcile the sponsorship ledger: match this confirmation to the
+    // user's most recent pending SponsoredTx (proxy rows can't carry the
+    // userOpHash — it doesn't exist yet at sponsor time) and backfill
+    // actuals from the receipt. Best-effort; never fails the confirm.
+    try {
+      const sponsorRow = await prisma.sponsoredTx.findFirst({
+        where: { userId, status: "pending", createdAt: { gte: new Date(Date.now() - 15 * 60 * 1000) } },
+        orderBy: { createdAt: "desc" },
+      });
+      if (sponsorRow) {
+        let gasWei: string | null = null;
+        let gasUsd: number | null = null;
+        try {
+          const client = createPublicClient({ chain: VIEM_CHAIN, transport: http(RPC_URL || undefined) });
+          const receipt = await client.getTransactionReceipt({ hash: txHash as `0x${string}` });
+          const price = (receipt as { effectiveGasPrice?: bigint }).effectiveGasPrice ?? 0n;
+          gasWei = (receipt.gasUsed * price).toString();
+          const host = req.headers.get("host");
+          const proto = req.headers.get("x-forwarded-proto") ?? "http";
+          if (host && gasWei !== "0") {
+            const pr = await fetch(`${proto}://${host}/api/prices`).then((r) => r.json()).catch(() => null);
+            const ethPrice = Number(pr?.[ETH_ADDRESS.toLowerCase()] ?? 0);
+            if (ethPrice > 0) {
+              const { formatUnits } = await import("viem");
+              gasUsd = Number(formatUnits(BigInt(gasWei), 18)) * ethPrice;
+            }
+          }
+        } catch {}
+        await prisma.sponsoredTx.update({
+          where: { id: sponsorRow.id },
+          data: {
+            txHash: txHash.toLowerCase(),
+            status: "confirmed",
+            ...(gasWei ? { gasWei } : {}),
+            ...(gasUsd !== null && isFinite(gasUsd) ? { gasUsd } : {}),
+          },
+        });
+      }
+    } catch {}
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("wallet tx confirm failed", e);

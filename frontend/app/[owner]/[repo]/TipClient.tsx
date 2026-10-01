@@ -10,6 +10,8 @@ import { CHAIN_ID, CONTRACT_ADDRESS, USDC_ADDRESS, OAR_ADDRESS, ETH_ADDRESS, get
 import { DATA_SUFFIX } from "@/lib/builderCode";
 import { useOpentipSend, type OpentipCall } from "@/lib/cdpSend";
 import { logWalletTx, confirmWalletTx } from "@/lib/walletTx";
+import { estimateGasUsd } from "@/lib/gasEstimate";
+import TxReviewModal from "@/components/TxReviewModal";
 import { fmtUsd } from "@/lib/prices";
 import { useToast } from "@/app/providers";
 import { Input } from "@/components/motion/input";
@@ -80,6 +82,10 @@ export default function TipClient({ repoId }: { repoId: string }) {
   const [tipsLoading, setTipsLoading] = useState(true);
   const [amountError, setAmountError] = useState<string | undefined>(undefined);
   const [tipFlow, setTipFlow] = useState<"idle"|"approving"|"sending"|"success"|"error">("idle");
+  const [showTipReview, setShowTipReview] = useState(false);
+  const [reviewSponsored, setReviewSponsored] = useState<boolean | null>(null);
+  const [gasEstimating, setGasEstimating] = useState(false);
+  const [gasEstimate, setGasEstimate] = useState<string | null>(null);
   const [claimState, setClaimState] = useState<"idle"|"loading"|"success"|"error">("idle");
   const [registerState, setRegisterState] = useState<"idle"|"loading"|"success"|"error">("idle");
   const [ownership, setOwnership] = useState<{ owns?: boolean; via?: string; loading?: boolean; signature?: string; expiry?: string; nonce?: string }>({});
@@ -106,6 +112,36 @@ export default function TipClient({ repoId }: { repoId: string }) {
     (wallets as any[]).find((w) => w.walletType === "smart")?.address ||
     null;
   const useSmart = !!session && !!smartAddr && cdpConfigured;
+
+  // Gas info for the tip review modal. Smart path resolves sponsorship;
+  // EOA tips are always user-paid.
+  useEffect(() => {
+    if (!showTipReview) return;
+    let cancelled = false;
+    setReviewSponsored(null);
+    setGasEstimate(null);
+    setGasEstimating(true);
+    (async () => {
+      let sponsored: boolean | null = null;
+      if (useSmart) {
+        try {
+          const r = await fetch("/api/paymaster/status");
+          const j = await r.json();
+          if (typeof j?.sponsored === "boolean") sponsored = j.sponsored;
+        } catch {}
+      } else {
+        sponsored = false;
+      }
+      if (cancelled) return;
+      setReviewSponsored(sponsored);
+      if (sponsored === false) {
+        const est = await estimateGasUsd("tip", prices[ETH_ADDRESS.toLowerCase()] || 0);
+        if (!cancelled) setGasEstimate(est);
+      }
+      if (!cancelled) setGasEstimating(false);
+    })();
+    return () => { cancelled = true; };
+  }, [showTipReview, useSmart]);
 
   // Allowance for the smart wallet (batched approve+tip needs it only when insufficient)
   const { data: smartAllowance } = useReadContract({
@@ -272,6 +308,14 @@ export default function TipClient({ repoId }: { repoId: string }) {
     if (registerState==="loading" && registerReceipt.isError) { setRegisterState("error"); showToast({ status:"error", title:"Register failed" }); setTimeout(()=>setRegisterState("idle"),2000); }
   }, [registerReceipt.isSuccess, registerReceipt.isError]);
 
+  const openTipReview = () => {
+    const err = validateAmount(amount, currentToken, prices);
+    setAmountError(err);
+    if (err) { showToast({ status:"error", title: err }); return; }
+    if (!contract) { showToast({ status:"error", title:"Contract not configured" }); return; }
+    setShowTipReview(true);
+  };
+
   const onTipClick = async () => {
     const err = validateAmount(amount, currentToken, prices);
     setAmountError(err);
@@ -298,13 +342,13 @@ export default function TipClient({ repoId }: { repoId: string }) {
                 { to: contract, data: tipData },
               ];
         }
-        const { userOperationHash } = await cdpSend(calls);
+        const { userOperationHash, sponsored } = await cdpSend(calls);
         if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
         if (userOperationHash && smartAddr) {
           setPendingUserOp(userOperationHash);
           logWalletTx({ walletAddress: smartAddr, kind: "tip", repoId: repoIdLower, token: selectedToken, amount: baseUnits.toString(), toAddress: contract, userOpHash: userOperationHash });
         }
-        showToast({ status:"success", title:"Tip sent", description:`${amount} ${currentToken.symbol} → ${repoIdLower}${userOperationHash ? ` (${userOperationHash.slice(0,10)}…)` : ""}` });
+        showToast({ status:"success", title:"Tip sent", description:`${amount} ${currentToken.symbol} → ${repoIdLower}${sponsored === false ? " (you paid gas — daily sponsorship used up)" : ""}${userOperationHash ? ` (${userOperationHash.slice(0,10)}…)` : ""}` });
         setTipFlow("success"); setTimeout(()=>setTipFlow("idle"), 1600);
         fetch(`/api/tips?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setTips).catch(()=>{});
         fetch(`/api/leaderboard?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setLeaderboard).catch(()=>{});
@@ -590,7 +634,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
           </div>
 
           <div className="flex gap-3 items-center flex-wrap">
-            <StatefulButton state={tipFlow==="approving"||tipFlow==="sending"?"loading": tipFlow==="success"?"success": tipFlow==="error"?"error":"idle"} onClick={onTipClick} disabled={tipFlow==="approving"||tipFlow==="sending"}>
+            <StatefulButton state={tipFlow==="approving"||tipFlow==="sending"?"loading": tipFlow==="success"?"success": tipFlow==="error"?"error":"idle"} onClick={openTipReview} disabled={tipFlow==="approving"||tipFlow==="sending"}>
               {tipButtonText}
             </StatefulButton>
             {((address && payout && (address.toLowerCase() === (payout as string).toLowerCase())) || (useSmart && smartAddr && payout && (payout as string).toLowerCase() === smartAddr.toLowerCase())) && hasPendingClaim && (
@@ -601,6 +645,19 @@ export default function TipClient({ repoId }: { repoId: string }) {
           </div>
 
           <Button variant="ghost" size="sm" onClick={copyLink}><Copy className="h-3.5 w-3.5" /> Copy tip link</Button>
+          <TxReviewModal
+            open={showTipReview}
+            onClose={() => setShowTipReview(false)}
+            title="Review tip"
+            rows={[
+              { label: "To repo", value: repoIdLower },
+              { label: "Amount", value: `${amount} ${currentToken.symbol}${(() => { const u = (Number(amount) || 0) * (prices[selectedToken.toLowerCase()] || 0); return u > 0 ? ` (≈ $${u.toFixed(2)})` : ""; })()}` },
+            ]}
+            gas={{ sponsored: reviewSponsored, estimating: gasEstimating, estimate: gasEstimate }}
+            onConfirm={() => { setShowTipReview(false); onTipClick(); }}
+            confirming={tipFlow === "approving" || tipFlow === "sending"}
+            confirmLabel="Confirm tip"
+          />
         </section>
       )}
 

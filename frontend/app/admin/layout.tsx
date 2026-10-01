@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/admin/registrar", label: "Registrar", icon: RegistrarIcon, role: "owner" },
   { href: "/admin/repos", label: "Repos", icon: ReposIcon, role: "viewer" },
   { href: "/admin/users", label: "Users", icon: UsersIcon, role: "viewer" },
+  { href: "/admin/sponsorship", label: "Sponsorship", icon: SponsorIcon, role: "viewer" },
   { href: "/admin/activity", label: "Activity", icon: ActivityIcon, role: "viewer" },
   { href: "/admin/admins", label: "Admins", icon: AdminsIcon, role: "owner" },
   { href: "/admin/tokens", label: "Tokens", icon: TokensIcon, role: "owner" },
@@ -70,6 +71,16 @@ function ActivityIcon({ className }: { className?: string }) {
   return (
     <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+    </svg>
+  );
+}
+
+function SponsorIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 19a9 9 0 1 1 14 0" />
+      <line x1="12" y1="13" x2="16" y2="9" />
+      <circle cx="12" cy="13" r="1" />
     </svg>
   );
 }

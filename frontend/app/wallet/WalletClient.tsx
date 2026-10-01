@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAccount, useBalance, useReadContract, useSendTransaction, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import { formatUnits, parseUnits, encodeFunctionData, isAddress } from "viem";
@@ -7,12 +7,14 @@ import { erc20Abi } from "@/lib/contract";
 import { CHAIN_ID, USDC_ADDRESS, OAR_ADDRESS, ETH_ADDRESS, getTokenDecimals } from "@/lib/chain";
 import { useOpentipSend } from "@/lib/cdpSend";
 import { logWalletTx, confirmWalletTx } from "@/lib/walletTx";
+import { estimateGasUsd } from "@/lib/gasEstimate";
+import { TxReviewRows } from "@/components/TxReviewModal";
 import { Button } from "@/components/motion/button";
 import { Input } from "@/components/motion/input";
 import Modal from "@/components/motion/modal";
 import { useToast } from "@/app/providers";
 import CdpCreateWalletButton from "@/components/cdp/CdpCreateWalletButton";
-import { Copy, ExternalLink } from "lucide-react";
+import { Copy, ExternalLink, Fuel } from "lucide-react";
 
 function truncate(a: string) { return a.slice(0, 6) + "..." + a.slice(-4); }
 
@@ -35,6 +37,24 @@ export default function WalletClient({ initialLinked }: { initialLinked?: any[] 
   const [sendHash, setSendHash] = useState<string | null>(null);
   const [sendError, setSendError] = useState<string | undefined>(undefined);
   const { send: cdpSend, txData: cdpTxData, ensureSignedIn } = useOpentipSend();
+  // Sponsorship state (paymaster). `sponsor` feeds the gas meter;
+  // review-modal fields are set fresh each time it opens.
+  const [sponsor, setSponsor] = useState<{ sponsored: boolean; usedToday: number; cap: number } | null>(null);
+  const [reviewSponsored, setReviewSponsored] = useState<boolean | null>(null);
+  const [gasEstimating, setGasEstimating] = useState(false);
+  const [gasEstimate, setGasEstimate] = useState<string | null>(null);
+
+  const refreshSponsor = useCallback(async (): Promise<boolean | null> => {
+    try {
+      const r = await fetch("/api/paymaster/status");
+      const j = await r.json();
+      if (typeof j?.sponsored === "boolean") {
+        setSponsor({ sponsored: j.sponsored, usedToday: j.usedToday ?? 0, cap: j.cap ?? 10 });
+        return j.sponsored as boolean;
+      }
+    } catch {}
+    return null;
+  }, []);
   const [pendingUserOp, setPendingUserOp] = useState<string | null>(null);
   const patchedOps = useRef<Set<string>>(new Set());
 
@@ -54,7 +74,8 @@ export default function WalletClient({ initialLinked }: { initialLinked?: any[] 
   useEffect(() => {
     fetch("/api/prices").then(r => r.json()).then(setPrices).catch(() => {});
     fetch("/api/wallet/link").then(r=>r.json()).then(j=>Array.isArray(j)?setLinked(j):setLinked([])).catch(()=>{}).finally(()=>setLinkedLoading(false));
-  }, []);
+    refreshSponsor();
+  }, [refreshSponsor]);
 
   const smartWallet = linked.find((w:any)=>w.walletType==="smart")?.address as `0x${string}` | undefined;
   const primaryWallet = linked.find((w:any)=>w.isPrimary)?.address as `0x${string}` | undefined;
@@ -106,6 +127,37 @@ export default function WalletClient({ initialLinked }: { initialLinked?: any[] 
     });
   }, [activeIsSmart, ensureSignedIn]);
 
+  // Gas info for the review modal: resolve sponsorship, then estimate
+  // only when the user would actually pay. EOA sends are always user-paid.
+  useEffect(() => {
+    if (!sendReview) return;
+    let cancelled = false;
+    setReviewSponsored(null);
+    setGasEstimate(null);
+    setGasEstimating(true);
+    (async () => {
+      let sponsored: boolean | null = null;
+      if (activeIsSmart) {
+        sponsored = await refreshSponsor();
+      } else {
+        sponsored = false;
+      }
+      if (cancelled) return;
+      setReviewSponsored(sponsored);
+      if (sponsored === false) {
+        const est = await estimateGasUsd("send", ethPrice);
+        if (!cancelled) setGasEstimate(est);
+      }
+      if (!cancelled) setGasEstimating(false);
+    })();
+    return () => { cancelled = true; };
+  }, [sendReview, activeIsSmart, refreshSponsor, ethPrice]);
+
+  // Re-tick the gas meter after a successful send.
+  useEffect(() => {
+    if (sendState === "success") refreshSponsor();
+  }, [sendState, refreshSponsor]);
+
   const copy = async (v: string) => { await navigator.clipboard.writeText(v); showToast({ status: "success", title: "Copied" }); };
 
   const sendTokenDecimals = sendToken === USDC_ADDRESS ? 6 : 18;
@@ -147,14 +199,14 @@ export default function WalletClient({ initialLinked }: { initialLinked?: any[] 
         const calls = sendToken === ETH_ADDRESS
           ? [{ to: sendTo as `0x${string}`, value: units, data: "0x" as `0x${string}` }]
           : [{ to: sendToken as `0x${string}`, data: encodeFunctionData({ abi: erc20Abi, functionName: "transfer", args: [sendTo as `0x${string}`, units] }) }];
-        const { userOperationHash } = await cdpSend(calls);
+        const { userOperationHash, sponsored } = await cdpSend(calls);
         if (userOperationHash && walletAddress) {
           setPendingUserOp(userOperationHash);
           logWalletTx({ walletAddress, kind: "send", token: sendToken, amount: units.toString(), toAddress: sendTo, userOpHash: userOperationHash });
         }
         setSendHash(userOperationHash || null);
         setSendState("success");
-        showToast({ status: "success", title: "Send submitted" });
+        showToast({ status: "success", title: "Send submitted", description: sponsored === false ? "Daily sponsorship used up — you paid gas this time" : undefined });
       } catch (e: any) {
         setSendError(e.message?.slice(0, 160) || "Send failed");
         setSendState("error");
@@ -251,6 +303,16 @@ export default function WalletClient({ initialLinked }: { initialLinked?: any[] 
       <div className="border-b rule pb-6">
         <div className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">Total balance</div>
         <div className="stats text-4xl font-semibold mt-1">${totalUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+        {activeIsSmart && (
+          <div className="flex items-center gap-1.5 mt-2 text-xs text-zinc-500" title="Sponsored transactions used today — resets daily">
+            <Fuel className="h-3.5 w-3.5" />
+            {sponsor ? (
+              <span className="stats">{sponsor.usedToday}/{sponsor.cap} sponsored today</span>
+            ) : (
+              <span className="stats animate-pulse">…/…</span>
+            )}
+          </div>
+        )}
         <div className="flex gap-3 mt-4">
           <Button size="sm" onClick={openSend} className="flex-1">Send</Button>
           <Button size="sm" variant="secondary" onClick={() => setShowDeposit(true)} className="flex-1">Deposit</Button>
@@ -281,24 +343,15 @@ export default function WalletClient({ initialLinked }: { initialLinked?: any[] 
           </div>
         ) : sendReview ? (
           <div className="space-y-3">
-            <div className="divide-y rule border rule rounded-sm">
-              <div className="flex justify-between px-3 py-2">
-                <span className="text-xs text-zinc-500">From</span>
-                <span className="stats text-xs">{truncate(displayAddress!)} {activeIsSmart ? "· SMART" : ""}</span>
-              </div>
-              <div className="flex justify-between px-3 py-2">
-                <span className="text-xs text-zinc-500">To</span>
-                <span className="stats text-xs">{sendTo.slice(0, 6)}...{sendTo.slice(-4)}</span>
-              </div>
-              <div className="flex justify-between px-3 py-2">
-                <span className="text-xs text-zinc-500">Amount</span>
-                <span className="stats text-xs">{sendAmount} {reviewSymbol}{reviewUsd > 0 ? ` (≈ $${reviewUsd.toFixed(2)})` : ""}</span>
-              </div>
-              <div className="flex justify-between px-3 py-2">
-                <span className="text-xs text-zinc-500">Network</span>
-                <span className="stats text-xs">Base</span>
-              </div>
-            </div>
+            <TxReviewRows
+              rows={[
+                { label: "From", value: <>{truncate(displayAddress!)} {activeIsSmart ? "· SMART" : ""}</> },
+                { label: "To", value: <>{sendTo.slice(0, 6)}...{sendTo.slice(-4)}</> },
+                { label: "Amount", value: <>{sendAmount} {reviewSymbol}{reviewUsd > 0 ? ` (≈ $${reviewUsd.toFixed(2)})` : ""}</> },
+                { label: "Network", value: <>Base</> },
+              ]}
+              gas={{ sponsored: reviewSponsored, estimating: gasEstimating, estimate: gasEstimate }}
+            />
             {sendState === "error" && sendError && <p className="text-xs text-red-600">{sendError}</p>}
             <div className="flex gap-2">
               <Button size="sm" variant="secondary" className="flex-1" onClick={() => { setSendReview(false); setSendState("idle"); setSendError(undefined); }} disabled={sendState === "sending"}>Cancel</Button>

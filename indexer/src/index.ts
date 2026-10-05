@@ -3,7 +3,7 @@ import { createPublicClient, http, parseAbi } from "viem";
 import { base, baseSepolia } from "viem/chains";
 import { PrismaClient } from "@prisma/client";
 import { formatTokenAmount } from "./formatAmount.js";
-import { payoutUpdateFromEvent } from "./events.js";
+import { claimedNotification, payoutUpdateFromEvent } from "./events.js";
 
 const prisma = new PrismaClient({ log: ["warn", "error"] }) as PrismaClient & {
   notification?: typeof PrismaClient.prototype.notification;
@@ -196,13 +196,12 @@ async function tick() {
       const claimerId = await findUserIdByAddress(args.payoutAddress.toLowerCase());
       if (claimerId) {
         const claimAmt = formatTokenAmount(args.amount.toString(), args.token);
+        const notice = claimedNotification(args.repoId, claimAmt);
         await notifyUser(
           claimerId,
           "claim_available",
-          "Tip claim ready",
-          claimAmt
-            ? `You can now claim ${claimAmt} from ${args.repoId}`
-            : `You can now claim tips from ${args.repoId}`,
+          notice.title,
+          notice.body,
           log.transactionHash!,
         );
       }

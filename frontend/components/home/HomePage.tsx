@@ -87,7 +87,6 @@ export function HomePage() {
       <main id="main-content">
         <section className="hero" aria-labelledby="hero-title">
           <div className="wrap hero-inner">
-            <p className="eyebrow">On Base · Non-custodial</p>
             <h1 id="hero-title" className="display">
               Funding for open source,
               <br /> from the <em>open market</em>.
@@ -407,7 +406,6 @@ export function HomePage() {
           </div>
           <div className="footer-bottom">
             <p>© 2026 Opentip</p>
-            <p>Non-custodial on Base</p>
           </div>
           <p className="footer-wordmark" aria-hidden="true">
             Opentip

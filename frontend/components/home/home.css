@@ -1309,7 +1309,6 @@ html:has(.home-root) body {
   gap: 0.5rem 1rem;
   margin-top: 2.5rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--line);
   color: #5c574e;
   font-size: 0.82rem;
 }

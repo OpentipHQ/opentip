@@ -79,8 +79,12 @@ export function useOpentipSend() {
       // smart-account check below runs on fresh post-auth state, so a
       // cold CDP context never trips it.
       await ensureSignedIn();
-      // Authoritative policy gate — enforced server-side before signing.
-      // (Smart-Wallet path only; external EOAs sign in their own apps.)
+      // Policy gate the official client runs before CDP signs in the browser.
+      // Pause, the recipient allowlist, and USD caps (unpriced tokens blocked,
+      // not treated as $0) are checked here. The paymaster also refuses to
+      // sponsor while transactions are paused. A modified client can still
+      // ask the browser SDK to sign a user-paid operation; the server does
+      // not hold the signing key. External EOAs sign in their own apps.
       const checkRes = await fetch("/api/wallet/policy/check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

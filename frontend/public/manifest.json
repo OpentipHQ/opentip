@@ -2,7 +2,7 @@
   "name": "Opentip",
   "short_name": "Opentip",
   "id": "/",
-  "description": "Tip any GitHub repo in crypto",
+  "description": "Funding for open source — tip any GitHub repo in crypto",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#c1c0b6",

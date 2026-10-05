@@ -20,17 +20,17 @@ const plexMono = IBM_Plex_Mono({ weight: ["400","500"], subsets: ["latin"], vari
 export const metadata = {
   metadataBase: new URL("https://opentip.tech"),
   title: {
-    default: "Opentip | Tip any GitHub repo in crypto",
+    default: "Opentip | Funding for open source",
     template: "%s | Opentip",
   },
-  description: "The open-source tip jar. Send crypto to the developers who build the tools you use.",
+  description: "Opentip turns any GitHub repo into a funding page. Users, companies, and fans send ETH, USDC, or OAR straight to a smart contract on Base, and maintainers claim it whenever they want.",
   icons: { icon: "/Opentip.png" },
   other: {
     "base:app_id": "6ab5fa7b81234bc7e80b13bf",
   },
   openGraph: {
-    title: "Opentip | Tip any GitHub repo in crypto",
-    description: "The open-source tip jar. Send crypto to the developers who build the tools you use.",
+    title: "Opentip | Funding for open source",
+    description: "Opentip turns any GitHub repo into a funding page. Users, companies, and fans send ETH, USDC, or OAR straight to a smart contract on Base, and maintainers claim it whenever they want.",
     url: "https://opentip.tech",
     siteName: "Opentip",
     type: "website",
@@ -38,8 +38,8 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Opentip | Tip any GitHub repo in crypto",
-    description: "The open-source tip jar. Send crypto to the developers who build the tools you use.",
+    title: "Opentip | Funding for open source",
+    description: "Opentip turns any GitHub repo into a funding page. Users, companies, and fans send ETH, USDC, or OAR straight to a smart contract on Base, and maintainers claim it whenever they want.",
     images: ["/ogimage.png"],
   },
 };

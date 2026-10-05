@@ -25,7 +25,7 @@ export default function Footer({ force = false }: { force?: boolean }) {
               <Image src="/Opentip.png" alt="Opentip" width={28} height={28} />
               <span className="serif text-2xl font-semibold tracking-tight">Opentip</span>
             </div>
-            <p className="text-sm opacity-70 max-w-xs">Open-source tip jar on Base. Send crypto to the developers who built the tools you use every day.</p>
+            <p className="text-sm opacity-70 max-w-xs">Funding for open source. Tip any GitHub repo in crypto.</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-xs">
             <div>

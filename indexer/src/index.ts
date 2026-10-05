@@ -3,6 +3,7 @@ import { createPublicClient, http, parseAbi } from "viem";
 import { base, baseSepolia } from "viem/chains";
 import { PrismaClient } from "@prisma/client";
 import { formatTokenAmount } from "./formatAmount.js";
+import { payoutUpdateFromEvent } from "./events.js";
 
 const prisma = new PrismaClient({ log: ["warn", "error"] }) as PrismaClient & {
   notification?: typeof PrismaClient.prototype.notification;
@@ -12,6 +13,7 @@ const prisma = new PrismaClient({ log: ["warn", "error"] }) as PrismaClient & {
 const abi = parseAbi([
   "event RepoRegistered(string repoId, address indexed payoutAddress, uint256 timestamp)",
   "event PayoutAddressUpdated(string repoId, address oldAddress, address indexed newAddress)",
+  "event AdminPayoutReassigned(string repoId, address indexed oldAddress, address indexed newAddress, address indexed admin)",
   "event TipReceived(address indexed tipper, string repoId, address indexed token, uint256 amount, uint256 feeAmount, uint256 timestamp)",
   "event Claimed(string repoId, address indexed payoutAddress, address indexed token, uint256 amount, uint256 timestamp)",
   "event TreasuryWithdrawn(address indexed to, address indexed token, uint256 amount, uint256 timestamp)",
@@ -164,8 +166,13 @@ async function tick() {
           update: { payout_address: args.payoutAddress.toLowerCase() },
         })
       );
-    } else if (eventName === "PayoutAddressUpdated") {
-      await withDbRetry(() => prisma.repo.update({ where: { repo_id: args.repoId }, data: { payout_address: args.newAddress.toLowerCase() } }).catch(() => null as any));
+    } else if (eventName === "PayoutAddressUpdated" || eventName === "AdminPayoutReassigned") {
+      const payoutUpdate = payoutUpdateFromEvent(eventName, args);
+      if (payoutUpdate) {
+        await withDbRetry(() =>
+          prisma.repo.update({ where: { repo_id: payoutUpdate.repoId }, data: { payout_address: payoutUpdate.payoutAddress } }).catch(() => null as any)
+        );
+      }
     } else if (eventName === "Claimed") {
       // Store claims so wallet history shows them even without an explorer key.
       // Deterministic id = tx_hash + logIndex to make replays idempotent.

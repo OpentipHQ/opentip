@@ -5,6 +5,7 @@ import { opentipV2Abi } from "@/lib/contract";
 import { CONTRACT_ADDRESS } from "@/lib/chain";
 import { validate, reassignPayoutSchema } from "@/lib/validations";
 import { prisma } from "@/lib/prisma";
+import { checkPayoutCanReceiveEth } from "@/lib/payout-eth";
 
 export async function POST(req: NextRequest) {
   return handleAdminRequest(req, "write", async (admin) => {
@@ -17,6 +18,11 @@ export async function POST(req: NextRequest) {
     });
     if (!walletRecord) {
       return { ok: false, error: "Wallet not linked — the developer must link and verify this wallet in their dashboard first" };
+    }
+
+    const payoutCheck = await checkPayoutCanReceiveEth(data.address as `0x${string}`);
+    if (!payoutCheck.ok) {
+      return { ok: false, error: payoutCheck.reason };
     }
 
     const wallet = getOwnerWallet();

@@ -7,6 +7,7 @@ import { CONTRACT_ADDRESS, CHAIN_ID } from "@/lib/chain";
 import { prisma } from "@/lib/prisma";
 import { generateRepoSummary } from "@/lib/ai";
 import { rateLimit, rateLimitKey } from "@/lib/rate-limit";
+import { checkPayoutCanReceiveEth } from "@/lib/payout-eth";
 
 export async function POST(req: NextRequest) {
   try { rateLimit(rateLimitKey(req, "verify-ownership"), "critical"); } catch (e: any) {
@@ -71,6 +72,11 @@ export async function POST(req: NextRequest) {
     }
 
     if (!owns) return NextResponse.json({ error: "not repo owner or collaborator" }, { status: 403 });
+
+    const payoutCheck = await checkPayoutCanReceiveEth(payoutAddress as `0x${string}`);
+    if (!payoutCheck.ok) {
+      return NextResponse.json({ error: payoutCheck.reason }, { status: 400 });
+    }
 
     // Generate nonce and expiry
     const nonce = randomBytes(16).readBigUInt64BE(0);

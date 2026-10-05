@@ -499,6 +499,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
         setOwnership({ owns: true, via: "github", loading: false, signature: j.signature, expiry: j.expiry, nonce: j.nonce });
       } else {
         setOwnership({ owns: false, loading: false });
+        if (j.error) showToast({ status: "error", title: "Can't register", description: String(j.error).slice(0, 180) });
       }
     } catch {
       setOwnership({ owns: false, loading: false });

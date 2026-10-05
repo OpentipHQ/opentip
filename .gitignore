@@ -5,11 +5,11 @@ dist/
 .env
 .env.local
 coverage/
-cache/
+contracts/cache/
 forge-cache/
-out/
-broadcast/
-lib/
+contracts/out/
+contracts/broadcast/
+contracts/lib/
 .DS_Store
 *.log
 

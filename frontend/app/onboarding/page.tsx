@@ -58,7 +58,6 @@ function WalletCreator({ onDone, onError }: { onDone: (addr: string) => void; on
         onError(e.message || "Failed to create wallet");
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return null;

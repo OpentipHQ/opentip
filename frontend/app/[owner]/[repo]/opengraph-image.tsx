@@ -65,7 +65,6 @@ export default async function Image({
     <OgFrame>
       <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 28 }}>
         {icon ? (
-          // eslint-disable-next-line @next/next/no-img-element
           <img src={icon} width={120} height={120} style={{ borderRadius: 12 }} />
         ) : (
           <Monogram letter={repo.slice(0, 1)} />

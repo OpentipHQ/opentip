@@ -13,7 +13,7 @@ import { useOpentipSend, type OpentipCall } from "@/lib/cdpSend";
 import { logWalletTx, confirmWalletTx } from "@/lib/walletTx";
 import { estimateGasUsd } from "@/lib/gasEstimate";
 import TxReviewModal from "@/components/TxReviewModal";
-import { fmtUsd } from "@/lib/prices";
+import { ethTipAmountError, fmtUsd } from "@/lib/prices";
 import { markInstallTipped } from "@/components/installPrompt";
 import { useToast } from "@/app/providers";
 import { Input } from "@/components/motion/input";
@@ -227,7 +227,9 @@ export default function TipClient({ repoId }: { repoId: string }) {
     try {
       parseUnits(v, token.decimals);
     } catch { return "Invalid amount"; }
-    // $1 minimum tip — skipped only when no price data is available
+    if (token.address.toLowerCase() === ETH_ADDRESS.toLowerCase()) {
+      return ethTipAmountError(n, priceMap[token.address.toLowerCase()]);
+    }
     const price = priceMap[token.address.toLowerCase()] ?? 0;
     if (price > 0 && n * price < 1) return "Minimum tip is $1";
     return undefined;

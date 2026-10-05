@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getTokenPrices, usdValue, fmtUsd } from "@/lib/prices";
 import { generateRepoSummary } from "@/lib/ai";
 import { capitalize } from "@/lib/chain";
+import { isHiddenRepo } from "@/lib/repo-visibility";
 import RepoTabs from "./RepoTabs";
 import LinkIcons from "@/components/LinkIcons";
 
@@ -100,8 +101,9 @@ export default async function RepoPage({ params }: { params: Promise<{ owner: st
         where: { repo_id: repoId.toLowerCase() },
         select: { payout_address: true, hidden: true, icon: true },
       });
-    if (!repoRecord || repoRecord.hidden) notFound();
-    if (repoRecord) {
+    // notFound() throws; calling it inside this try would be swallowed and
+    // the hidden repo would render. The check below runs after the catch.
+    if (repoRecord && !isHiddenRepo(repoRecord)) {
       const wallet = await prisma.userWallet.findUnique({
         where: { address: repoRecord.payout_address },
         select: {
@@ -123,6 +125,8 @@ export default async function RepoPage({ params }: { params: Promise<{ owner: st
       links = l;
     }
   } catch {}
+
+  if (isHiddenRepo(repoRecord)) notFound();
 
   return (
     <div className="space-y-0">

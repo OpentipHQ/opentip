@@ -1,32 +1,30 @@
 import { prisma } from "@/lib/prisma";
-import { getTokenPrices, usdValue, fmtUsd } from "@/lib/prices";
+import { getTokenPrices, fmtUsd } from "@/lib/prices";
+import { rankTippersByUsd, type TipAggregateRow } from "@/lib/leaderboard-rank";
 
 async function getLeaderboard() {
   try {
     const [rows, prices] = await Promise.all([
-      prisma.$queryRaw`
+      prisma.$queryRaw<TipAggregateRow[]>`
         SELECT tipper_address, SUM(amount)::text as total, token
         FROM "Tip"
-        GROUP BY tipper_address, token ORDER BY SUM(amount) DESC LIMIT 50
+        GROUP BY tipper_address, token
       `,
       getTokenPrices(),
     ]);
 
-    const addrs = [...new Set((rows as any[]).map((r: any) => r.tipper_address))];
+    const ranked = rankTippersByUsd(rows, prices, 20);
+    const addrs = ranked.map((r) => r.tipper_address);
     const names = addrs.length
       ? await prisma.displayName.findMany({ where: { tipper_address: { in: addrs } } })
       : [];
     const nameMap = new Map(names.map((n) => [n.tipper_address.toLowerCase(), n.display_name]));
 
-    const merged = new Map<string, { display_name: string|null; tipper_address: string; usd: number }>();
-    for (const r of rows as any[]) {
-      const key = r.tipper_address.toLowerCase();
-      if (!merged.has(key)) merged.set(key, { display_name: nameMap.get(key) || null, tipper_address: r.tipper_address, usd: 0 });
-      merged.get(key)!.usd += usdValue(r.total, r.token, prices);
-    }
-    return [...merged.values()]
-      .sort((a, b) => b.usd - a.usd)
-      .slice(0, 20);
+    return ranked.map((r) => ({
+      tipper_address: r.tipper_address,
+      display_name: nameMap.get(r.tipper_address.toLowerCase()) || null,
+      usd: r.usd,
+    }));
   } catch {
     return [];
   }

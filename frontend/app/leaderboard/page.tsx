@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getTokenPrices, fmtUsd } from "@/lib/prices";
+import { getTokenPrices, fmtUsd, usdValue } from "@/lib/prices";
 import { rankTippersByUsd, type TipAggregateRow } from "@/lib/leaderboard-rank";
 
 async function getLeaderboard() {
@@ -13,7 +13,7 @@ async function getLeaderboard() {
       getTokenPrices(),
     ]);
 
-    const ranked = rankTippersByUsd(rows, prices, 20);
+    const ranked = rankTippersByUsd(rows, prices, 20, usdValue);
     const addrs = ranked.map((r) => r.tipper_address);
     const names = addrs.length
       ? await prisma.displayName.findMany({ where: { tipper_address: { in: addrs } } })

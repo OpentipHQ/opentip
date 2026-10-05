@@ -2,7 +2,7 @@ import { decodeFunctionData } from "viem";
 import { prisma } from "@/lib/prisma";
 import { CONTRACT_ADDRESS, USDC_ADDRESS, OAR_ADDRESS, ETH_ADDRESS } from "@/lib/chain";
 import { opentipV2Abi, erc20Abi } from "@/lib/contract";
-import { getTokenPrices } from "@/lib/prices";
+import { getTokenPrices, usdValue } from "@/lib/prices";
 import { addPricedSpend, emptyTally, type UsdTally } from "@/lib/spend-usd";
 
 export interface PolicyState {
@@ -144,7 +144,7 @@ export function destinationsOf(calls: CallInput[]): string[] {
 // never $0, so a spending cap cannot be bypassed by an unknown asset.
 export async function spendsUsd(spends: DerivedSpend[]): Promise<UsdTally> {
   const prices = await getTokenPrices().catch(() => ({} as Record<string, number>));
-  return spends.reduce((tally, s) => addPricedSpend(tally, s.raw, s.token, prices), emptyTally());
+  return spends.reduce((tally, s) => addPricedSpend(tally, s.raw, s.token, prices, usdValue), emptyTally());
 }
 
 // Rolling-24h outbound USD across the user's linked wallets (pending +
@@ -163,7 +163,7 @@ export async function spentTodayTally(userId: string): Promise<UsdTally> {
   const prices = await getTokenPrices().catch(() => ({} as Record<string, number>));
   return rows.reduce((tally, r) => {
     if (!r.token || !r.amount) return tally;
-    return addPricedSpend(tally, String(r.amount), String(r.token), prices);
+    return addPricedSpend(tally, String(r.amount), String(r.token), prices, usdValue);
   }, emptyTally());
 }
 

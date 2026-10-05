@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { classifyProbeFailure, interpretEthReceiveProbe, PAYOUT_ETH_REJECTED } from "./payout-eth.ts";
+import { classifyProbeFailure, interpretEthReceiveProbe, PAYOUT_ETH_REJECTED } from "./payout-eth-probe.ts";
 
 test("treats an empty account as able to receive ETH", () => {
   assert.deepEqual(interpretEthReceiveProbe({ bytecode: undefined, probe: "reverted" }), { ok: true });

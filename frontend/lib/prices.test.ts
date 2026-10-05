@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ethTipAmountError } from "./prices.ts";
+import { ethTipAmountError } from "./eth-tip.ts";
 
 test("blocks ETH tips when the price is missing or zero", () => {
   assert.equal(ethTipAmountError(0.01, 0), "ETH price is unavailable. Try again shortly.");

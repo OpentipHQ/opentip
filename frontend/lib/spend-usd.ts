@@ -1,6 +1,6 @@
-import { usdValue } from "./prices";
-
 export type UsdTally = { usd: number; unpriced: boolean };
+
+export type ToUsd = (raw: string, token: string, prices: Record<string, number>) => number;
 
 export function emptyTally(): UsdTally {
   return { usd: 0, unpriced: false };
@@ -13,6 +13,7 @@ export function addPricedSpend(
   raw: string,
   token: string | null,
   prices: Record<string, number>,
+  toUsd: ToUsd,
 ): UsdTally {
   if (!token) return tally;
   let amount: bigint;
@@ -28,7 +29,7 @@ export function addPricedSpend(
   }
   let usd: number;
   try {
-    usd = usdValue(raw, token, prices);
+    usd = toUsd(raw, token, prices);
   } catch {
     return { usd: tally.usd, unpriced: true };
   }

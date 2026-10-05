@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getTokenSymbol, getTokenDecimals } from "@/lib/chain";
-import { getTokenPrices } from "@/lib/prices";
+import { getTokenPrices, usdValue } from "@/lib/prices";
 import { rowsForTopTippers, type TipAggregateRow } from "@/lib/leaderboard-rank";
 
 export async function GET(req: NextRequest) {
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
         `,
     getTokenPrices(),
   ]);
-  const rows = rowsForTopTippers(grouped, prices, 20);
+  const rows = rowsForTopTippers(grouped, prices, 20, usdValue);
 
   const addrs = rows.map((r) => r.tipper_address);
   const names = addrs.length ? await prisma.displayName.findMany({ where: { tipper_address: { in: addrs } } }) : [];

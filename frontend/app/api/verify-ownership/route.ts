@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { generateRepoSummary } from "@/lib/ai";
 import { rateLimit, rateLimitKey } from "@/lib/rate-limit";
 import { checkPayoutCanReceiveEth } from "@/lib/payout-eth";
+import { githubAuthTokens, permissionAllowsRegister } from "@/lib/github-permission";
 
 export async function POST(req: NextRequest) {
   try { rateLimit(rateLimitKey(req, "verify-ownership"), "critical"); } catch (e: any) {
@@ -56,22 +57,23 @@ export async function POST(req: NextRequest) {
       owns = true;
     }
 
-    // collaborator check
+    // Maintainer / collaborator check. The user's OAuth token is tried
+    // first so org permissions are evaluated as that user. A non-OK response
+    // falls through to the server token; a definitive answer does not.
     if (!owns) {
-      const accessToken = (session as any)?.accessToken;
-      const token = process.env.GITHUB_TOKEN || accessToken;
-      if (token) {
-        const collabRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/collaborators/${login}/permission`, {
+      const tokens = githubAuthTokens((session as any)?.accessToken, process.env.GITHUB_TOKEN);
+      for (const token of tokens) {
+        const collabRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/collaborators/${encodeURIComponent(login)}/permission`, {
           headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github.v3+json" },
         });
-        if (collabRes.ok) {
-          const j: any = await collabRes.json();
-          if (["admin", "write"].includes(j.permission)) owns = true;
-        }
+        if (!collabRes.ok) continue;
+        const j: any = await collabRes.json();
+        owns = permissionAllowsRegister(j.permission);
+        break;
       }
     }
 
-    if (!owns) return NextResponse.json({ error: "not repo owner or collaborator" }, { status: 403 });
+    if (!owns) return NextResponse.json({ error: "not repo owner, maintainer, or collaborator" }, { status: 403 });
 
     const payoutCheck = await checkPayoutCanReceiveEth(payoutAddress as `0x${string}`);
     if (!payoutCheck.ok) {

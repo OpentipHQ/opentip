@@ -2,7 +2,7 @@ import "dotenv/config";
 import { createPublicClient, http, parseAbi } from "viem";
 import { base, baseSepolia } from "viem/chains";
 import { PrismaClient } from "@prisma/client";
-import { formatTokenAmount } from "./formatAmount";
+import { formatTokenAmount } from "./formatAmount.js";
 
 const prisma = new PrismaClient({ log: ["warn", "error"] }) as PrismaClient & {
   notification?: typeof PrismaClient.prototype.notification;

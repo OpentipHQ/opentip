@@ -20,22 +20,16 @@ export function HomeHeader() {
   useEffect(() => {
     if (!open) return;
 
+    const header = document.getElementById("top");
     const menu = document.getElementById(menuId);
-    const main = document.getElementById("main-content");
-    const footer = document.getElementById("site-footer");
     const previouslyFocused = document.activeElement as HTMLElement | null;
-
-    main?.setAttribute("inert", "");
-    footer?.setAttribute("inert", "");
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
     const items = menu ? [...menu.querySelectorAll<HTMLElement>("a, button")] : [];
     items[0]?.focus();
 
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setOpen(false);
+        previouslyFocused?.focus();
         return;
       }
       if (event.key !== "Tab" || items.length === 0) return;
@@ -50,13 +44,15 @@ export function HomeHeader() {
       }
     }
 
+    function onPointerDown(event: PointerEvent) {
+      if (!header?.contains(event.target as Node)) setOpen(false);
+    }
+
     document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointerDown);
     return () => {
       document.removeEventListener("keydown", onKey);
-      main?.removeAttribute("inert");
-      footer?.removeAttribute("inert");
-      document.body.style.overflow = originalOverflow;
-      previouslyFocused?.focus();
+      document.removeEventListener("pointerdown", onPointerDown);
     };
   }, [open, menuId]);
 
@@ -96,9 +92,6 @@ export function HomeHeader() {
               Sign in
             </Link>
           )}
-          <Link href="/onboarding" className="btn-brand header-claim">
-            Claim your repo
-          </Link>
           <button
             type="button"
             className="menu-toggle"
@@ -124,9 +117,6 @@ export function HomeHeader() {
               Sign in
             </Link>
           ) : null}
-          <Link href="/onboarding" className="btn-brand mobile-claim" onClick={() => setOpen(false)}>
-            Claim your repo
-          </Link>
         </nav>
       </div>
     </header>

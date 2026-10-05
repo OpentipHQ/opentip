@@ -102,7 +102,7 @@ export function HomePage() {
             <ul className="trust-line">
               <li>Built on Base</li>
               <li>95% to maintainers</li>
-              <li>No account needed to tip</li>
+              <li>No account needed to fund</li>
               <li>
                 <a href={basescan} target="_blank" rel="noopener noreferrer">
                   Contract verified on Basescan

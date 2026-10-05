@@ -13,6 +13,7 @@ import { logWalletTx, confirmWalletTx } from "@/lib/walletTx";
 import { estimateGasUsd } from "@/lib/gasEstimate";
 import TxReviewModal from "@/components/TxReviewModal";
 import { fmtUsd } from "@/lib/prices";
+import { markInstallTipped } from "@/components/installPrompt";
 import { useToast } from "@/app/providers";
 import { Input } from "@/components/motion/input";
 import { Button, StatefulButton } from "@/components/motion/button";
@@ -240,6 +241,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
         } catch {}
       }
       showToast({ status:"success", title:"Tip sent", description:`${amount} ${currentToken.symbol} → ${repoIdLower}` });
+      markInstallTipped();
       setTipFlow("success"); setTimeout(()=>setTipFlow("idle"), 1600);
       fetch(`/api/tips?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setTips).catch(()=>{});
       fetch(`/api/leaderboard?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setLeaderboard).catch(()=>{});
@@ -261,6 +263,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
         } catch {}
       }
       showToast({ status:"success", title:"Tip sent", description:`${amount} ETH → ${repoIdLower}` });
+      markInstallTipped();
       setTipFlow("success"); setTimeout(()=>setTipFlow("idle"), 1600);
       fetch(`/api/tips?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setTips).catch(()=>{});
       fetch(`/api/leaderboard?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setLeaderboard).catch(()=>{});
@@ -349,6 +352,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
           logWalletTx({ walletAddress: smartAddr, kind: "tip", repoId: repoIdLower, token: selectedToken, amount: baseUnits.toString(), toAddress: contract, userOpHash: userOperationHash });
         }
         showToast({ status:"success", title:"Tip sent", description:`${amount} ${currentToken.symbol} → ${repoIdLower}${sponsored === false ? " (you paid gas — daily sponsorship used up)" : ""}${userOperationHash ? ` (${userOperationHash.slice(0,10)}…)` : ""}` });
+        markInstallTipped();
         setTipFlow("success"); setTimeout(()=>setTipFlow("idle"), 1600);
         fetch(`/api/tips?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setTips).catch(()=>{});
         fetch(`/api/leaderboard?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setLeaderboard).catch(()=>{});

@@ -4,7 +4,6 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 const VISIBLE_PATHS = [
-  "/",
   "/legal/privacy",
   "/legal/terms",
 ];
@@ -12,9 +11,9 @@ const VISIBLE_PATHS = [
 export default function Footer({ force = false }: { force?: boolean }) {
   const pathname = usePathname();
 
-  // Allowlist: footer only renders on landing, legal pages, and the 404
-  // page (which renders <Footer force /> directly — see app/not-found.tsx,
-  // since a 404 pathname never matches the allowlist).
+  // Allowlist: the shared footer renders on legal pages and the 404
+  // page (which renders <Footer force /> directly — see app/not-found.tsx).
+  // The homepage ships its own footer.
   if (!force && !VISIBLE_PATHS.includes(pathname)) return null;
 
   return (

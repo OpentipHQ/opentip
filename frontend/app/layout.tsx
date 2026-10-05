@@ -3,12 +3,17 @@ import { headers } from "next/headers";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Providers from "./providers";
-import HeaderShell from "@/components/HeaderShell";
-import ConditionalFooter from "@/components/ConditionalFooter";
+import SiteShell from "@/components/SiteShell";
 import PwaSplash from "@/components/PwaSplash";
 import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
 
-const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", display: "swap" });
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  axes: ["SOFT", "WONK", "opsz"],
+  variable: "--font-fraunces",
+  display: "swap",
+});
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const plexMono = IBM_Plex_Mono({ weight: ["400","500"], subsets: ["latin"], variable: "--font-plex-mono", display: "swap" });
 
@@ -81,9 +86,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-accent focus:text-white focus:px-4 focus:py-2 focus:rounded">
               Skip to content
             </a>
-            <HeaderShell />
-            <main id="main-content" className="w-full fluid-page flex-1">{children}</main>
-            <ConditionalFooter />
+            <SiteShell>{children}</SiteShell>
           </div>
         </Providers>
       </body>

@@ -4,21 +4,23 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { X } from "lucide-react";
-
-const DISMISS_KEY = "opentip-install-dismissed";
+import { dismissInstallPrompt, recordHomeVisit } from "@/components/installPrompt";
 
 export default function InstallModal() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    if (localStorage.getItem(DISMISS_KEY)) return;
+    const { visits, tipped, dismissed } = recordHomeVisit();
+    if (dismissed) return;
     if (window.innerWidth >= 768) return;
+    // First homepage load stays quiet. Show after a return visit or a tip.
+    const eligible = visits >= 2 || tipped;
 
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setShow(true);
+      if (eligible) setShow(true);
     };
 
     window.addEventListener("beforeinstallprompt", handler);
@@ -30,7 +32,7 @@ export default function InstallModal() {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === "accepted") {
-      localStorage.setItem(DISMISS_KEY, "1");
+      dismissInstallPrompt();
     }
     setShow(false);
     setDeferredPrompt(null);
@@ -38,7 +40,7 @@ export default function InstallModal() {
 
   const handleDismiss = () => {
     setShow(false);
-    localStorage.setItem(DISMISS_KEY, "1");
+    dismissInstallPrompt();
   };
 
   return (

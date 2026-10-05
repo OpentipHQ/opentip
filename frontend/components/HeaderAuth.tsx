@@ -3,10 +3,12 @@ import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
 import { Button } from "@/components/motion/button";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 
 export default function HeaderAuth() {
   const { data: session, status } = useSession();
+  const onHome = usePathname() === "/";
   const [open, setOpen] = useState(false);
   const [adminRole, setAdminRole] = useState<string | null>(null);
   const [pfp, setPfp] = useState<string | null>(null);
@@ -55,7 +57,7 @@ export default function HeaderAuth() {
         </button>
 
         {open && (
-          <div className="absolute right-0 top-full mt-2 w-48 border rule rounded-sm bg-[#c1c0b6] shadow-sm z-50">
+          <div className={`absolute right-0 top-full mt-2 w-48 border rounded-sm shadow-sm z-50 ${onHome ? "bg-[#f4f0e6] border-[rgba(22,22,20,0.14)]" : "rule bg-[#c1c0b6]"}`}>
             <div className="py-1">
               <Link
                 href={`/dev/${login}`}

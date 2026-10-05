@@ -1,3 +1,5 @@
+import { sameOriginNotificationUrl } from "./notification-url.js";
+
 const CACHE = "opentip-v2";
 const SHELL = ["/", "/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png", "/Opentip.png"];
 
@@ -37,7 +39,7 @@ self.addEventListener("push", (e) => {
   const icon = "/icons/icon-192.png";
   const badge = "/icons/icon-192.png";
   const tag = data.tag || "opentip-notification";
-  const url = data.url || "/";
+  const url = sameOriginNotificationUrl(data.url, self.location.origin);
 
   e.waitUntil(
     self.registration.showNotification(title, {
@@ -55,7 +57,7 @@ self.addEventListener("push", (e) => {
 
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
-  const url = e.notification.data?.url || "/";
+  const url = sameOriginNotificationUrl(e.notification.data?.url, self.location.origin);
   e.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
       const existing = clientList.find((c) => c.url === url && "focus" in c);

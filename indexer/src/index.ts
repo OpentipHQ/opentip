@@ -96,9 +96,13 @@ async function notifyUser(userId: string, type: string, title: string, body: str
       data: { userId, type, title, body, txHash: txHash ?? null, status: "pending" },
     });
     const endpoint = process.env.NOTIFICATION_API_URL || "https://opentip.tech/api/notifications/send";
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (process.env.NOTIFICATION_SECRET) {
+      headers["x-notification-secret"] = process.env.NOTIFICATION_SECRET;
+    }
     await fetch(endpoint, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ userId, type, title, body: body, txHash }),
     }).catch(() => {});
   } catch { /* non-critical */ }

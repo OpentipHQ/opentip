@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { getTokenDecimals } from "@/lib/chain";
 import { prisma } from "@/lib/prisma";
-import { getTokenPrices } from "@/lib/prices";
+import { getTokenPrices, usdValue, fmtUsd } from "@/lib/prices";
 import ProfileClient from "./ProfileClient";
 
 async function fetchContributions(login: string) {
@@ -16,6 +17,57 @@ async function fetchContributions(login: string) {
     return data.contributions || [];
   } catch {
     return [];
+  }
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ login: string }>;
+}): Promise<Metadata> {
+  const { login } = await params;
+  if (!/^[a-zA-Z0-9-]+$/.test(login)) return { title: "Developer" };
+  try {
+    const user = await prisma.user.findUnique({
+      where: { login },
+      select: {
+        id: true,
+        wallets: { select: { address: true } },
+        profile: { select: { bio: true } },
+      },
+    });
+    if (!user) return { title: `@${login} | Opentip` };
+    const addresses = user.wallets.map((w) => w.address);
+    let description = user.profile?.bio || `Support @${login} — tip their open-source work in crypto on Opentip.`;
+    if (addresses.length > 0) {
+      const repos = await prisma.repo
+        .findMany({
+          where: { payout_address: { in: addresses }, hidden: false },
+          select: { repo_id: true },
+        })
+        .catch(() => []);
+      if (repos.length > 0) {
+        const [tips, prices] = await Promise.all([
+          prisma.tip
+            .groupBy({
+              by: ["token"],
+              where: { repo_id: { in: repos.map((r) => r.repo_id) } },
+              _sum: { amount: true },
+              _count: true,
+            })
+            .catch(() => []),
+          getTokenPrices().catch(() => ({})),
+        ]);
+        const count = tips.reduce((s, t) => s + (t._count ?? 0), 0);
+        if (count > 0) {
+          const totalUsd = tips.reduce((s, t) => s + usdValue(t._sum.amount?.toString() ?? "0", t.token, prices), 0);
+          description = `@${login} received ${fmtUsd(totalUsd)} across ${count} tip${count === 1 ? "" : "s"} — support their open-source work on Opentip.`;
+        }
+      }
+    }
+    return { title: `@${login}`, description };
+  } catch {
+    return { title: `@${login}` };
   }
 }
 

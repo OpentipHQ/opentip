@@ -1,8 +1,10 @@
 import Image from "next/image";
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { fetchRepoMeta } from "@/lib/github";
 import { prisma } from "@/lib/prisma";
+import { getTokenPrices, usdValue, fmtUsd } from "@/lib/prices";
 import { generateRepoSummary } from "@/lib/ai";
 import { capitalize } from "@/lib/chain";
 import RepoTabs from "./RepoTabs";
@@ -50,6 +52,37 @@ async function getLinks(repoId: string): Promise<Link[]> {
     if (repo?.links) return JSON.parse(repo.links);
   } catch {}
   return [];
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ owner: string; repo: string }>;
+}): Promise<Metadata> {
+  const { owner, repo } = await params;
+  const repoId = `${owner}/${repo}`;
+  try {
+    const [tips, prices] = await Promise.all([
+      prisma.tip
+        .groupBy({
+          by: ["token"],
+          where: { repo_id: repoId.toLowerCase() },
+          _sum: { amount: true },
+          _count: true,
+        })
+        .catch(() => []),
+      getTokenPrices().catch(() => ({})),
+    ]);
+    const totalUsd = tips.reduce((s, t) => s + usdValue(t._sum.amount?.toString() ?? "0", t.token, prices), 0);
+    const count = tips.reduce((s, t) => s + (t._count ?? 0), 0);
+    const description =
+      count > 0
+        ? `${fmtUsd(totalUsd)} tipped across ${count} tip${count === 1 ? "" : "s"} — tip ${repoId} in crypto on Opentip.`
+        : `Tip ${repoId} in crypto on Opentip — be the first, from $1.`;
+    return { title: repoId, description };
+  } catch {
+    return { title: repoId, description: `Tip ${repoId} in crypto on Opentip.` };
+  }
 }
 
 export default async function RepoPage({ params }: { params: Promise<{ owner: string; repo: string }> }) {

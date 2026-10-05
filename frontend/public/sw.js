@@ -1,5 +1,3 @@
-import { sameOriginNotificationUrl } from "./notification-url.js";
-
 const CACHE = "opentip-v2";
 const SHELL = ["/", "/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png", "/Opentip.png"];
 
@@ -31,6 +29,27 @@ self.addEventListener("fetch", (e) => {
     caches.match(e.request).then((r) => r || fetch(e.request))
   );
 });
+
+// Same logic as frontend/lib/notification-url.ts. This classic worker
+// cannot load that module, so keep the two copies in sync.
+function sameOriginNotificationUrl(raw, origin) {
+  let base;
+  try {
+    base = new URL(origin);
+  } catch {
+    return "/";
+  }
+  const fallback = new URL("/", base).href;
+  try {
+    const input = typeof raw === "string" && raw.trim() ? raw : "/";
+    const url = new URL(input, base);
+    if (url.origin !== base.origin) return fallback;
+    if (url.protocol !== "http:" && url.protocol !== "https:") return fallback;
+    return url.href;
+  } catch {
+    return fallback;
+  }
+}
 
 self.addEventListener("push", (e) => {
   const data = e.data ? e.data.json() : {};

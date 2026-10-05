@@ -1,6 +1,8 @@
 // Same-origin target for notification clicks. Anything else opens the app root.
-export function sameOriginNotificationUrl(raw, origin) {
-  let base;
+// public/sw.js is a classic worker and inlines this function.
+// Keep the two copies in sync.
+export function sameOriginNotificationUrl(raw: unknown, origin: string): string {
+  let base: URL;
   try {
     base = new URL(origin);
   } catch {

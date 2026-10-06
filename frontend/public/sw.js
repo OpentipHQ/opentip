@@ -30,6 +30,27 @@ self.addEventListener("fetch", (e) => {
   );
 });
 
+// Same logic as frontend/lib/notification-url.ts. This classic worker
+// cannot load that module, so keep the two copies in sync.
+function sameOriginNotificationUrl(raw, origin) {
+  let base;
+  try {
+    base = new URL(origin);
+  } catch {
+    return "/";
+  }
+  const fallback = new URL("/", base).href;
+  try {
+    const input = typeof raw === "string" && raw.trim() ? raw : "/";
+    const url = new URL(input, base);
+    if (url.origin !== base.origin) return fallback;
+    if (url.protocol !== "http:" && url.protocol !== "https:") return fallback;
+    return url.href;
+  } catch {
+    return fallback;
+  }
+}
+
 self.addEventListener("push", (e) => {
   const data = e.data ? e.data.json() : {};
   const title = data.title || "Opentip";
@@ -37,7 +58,7 @@ self.addEventListener("push", (e) => {
   const icon = "/icons/icon-192.png";
   const badge = "/icons/icon-192.png";
   const tag = data.tag || "opentip-notification";
-  const url = data.url || "/";
+  const url = sameOriginNotificationUrl(data.url, self.location.origin);
 
   e.waitUntil(
     self.registration.showNotification(title, {
@@ -55,7 +76,7 @@ self.addEventListener("push", (e) => {
 
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
-  const url = e.notification.data?.url || "/";
+  const url = sameOriginNotificationUrl(e.notification.data?.url, self.location.origin);
   e.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
       const existing = clientList.find((c) => c.url === url && "focus" in c);

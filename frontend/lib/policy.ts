@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { CONTRACT_ADDRESS, USDC_ADDRESS, OAR_ADDRESS, ETH_ADDRESS } from "@/lib/chain";
 import { opentipV2Abi, erc20Abi } from "@/lib/contract";
 import { getTokenPrices, usdValue } from "@/lib/prices";
+import { addPricedSpend, emptyTally, type UsdTally } from "@/lib/spend-usd";
 
 export interface PolicyState {
   pauseAll: boolean;
@@ -139,42 +140,35 @@ export function destinationsOf(calls: CallInput[]): string[] {
   return [...out];
 }
 
-// USD value of derived spends using live prices. Unknown tokens price at 0.
-export async function spendsUsd(spends: DerivedSpend[]): Promise<number> {
-  const priced = spends.filter((s) => s.token && s.raw !== "0");
-  if (priced.length === 0) return 0;
+// USD value of derived spends. A token with no positive price is unpriced,
+// never $0, so a spending cap cannot be bypassed by an unknown asset.
+export async function spendsUsd(spends: DerivedSpend[]): Promise<UsdTally> {
   const prices = await getTokenPrices().catch(() => ({} as Record<string, number>));
-  return priced.reduce((sum, s) => {
-    try {
-      return sum + usdValue(s.raw, s.token as string, prices);
-    } catch {
-      return sum;
-    }
-  }, 0);
+  return spends.reduce((tally, s) => addPricedSpend(tally, s.raw, s.token, prices, usdValue), emptyTally());
 }
 
 // Rolling-24h outbound USD across the user's linked wallets (pending +
 // confirmed — conservative: a stuck userOp still counts until replaced).
-export async function spentTodayUsd(userId: string): Promise<number> {
+export async function spentTodayTally(userId: string): Promise<UsdTally> {
   const wallets = await prisma.userWallet
     .findMany({ where: { userId }, select: { address: true } })
     .catch(() => []);
   const addrs = wallets.map((w: any) => String(w.address).toLowerCase());
-  if (addrs.length === 0) return 0;
+  if (addrs.length === 0) return emptyTally();
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const rows: any[] = await prisma.walletTx
     .findMany({ where: { wallet: { in: addrs }, kind: { in: ["send", "tip"] }, createdAt: { gt: since } } })
     .catch(() => []);
-  if (rows.length === 0) return 0;
+  if (rows.length === 0) return emptyTally();
   const prices = await getTokenPrices().catch(() => ({} as Record<string, number>));
-  return rows.reduce((sum, r) => {
-    if (!r.token || !r.amount) return sum;
-    try {
-      return sum + usdValue(String(r.amount), String(r.token), prices);
-    } catch {
-      return sum;
-    }
-  }, 0);
+  return rows.reduce((tally, r) => {
+    if (!r.token || !r.amount) return tally;
+    return addPricedSpend(tally, String(r.amount), String(r.token), prices, usdValue);
+  }, emptyTally());
+}
+
+export async function spentTodayUsd(userId: string): Promise<number> {
+  return (await spentTodayTally(userId)).usd;
 }
 
 export interface CheckResult {
@@ -216,21 +210,32 @@ export async function evaluatePolicy(userId: string, calls: CallInput[]): Promis
     }
   }
   const needsUsd = policy.perTxLimitEnabled || policy.dailyLimitEnabled;
-  let opUsd = 0;
   if (needsUsd) {
-    opUsd = await spendsUsd(deriveSpends(calls));
-    if (policy.perTxLimitEnabled && opUsd > policy.perTxLimitUsd) {
+    const op = await spendsUsd(deriveSpends(calls));
+    if (op.unpriced) {
       return {
         allowed: false,
-        reason: `This transaction (~$${opUsd.toFixed(2)}) exceeds your per-transaction limit of $${policy.perTxLimitUsd.toFixed(2)}.`,
+        reason: "This transaction includes a token with no USD price, so it can't be checked against your spending limits.",
+      };
+    }
+    if (policy.perTxLimitEnabled && op.usd > policy.perTxLimitUsd) {
+      return {
+        allowed: false,
+        reason: `This transaction (~$${op.usd.toFixed(2)}) exceeds your per-transaction limit of $${policy.perTxLimitUsd.toFixed(2)}.`,
       };
     }
     if (policy.dailyLimitEnabled) {
-      const spent = await spentTodayUsd(userId);
-      if (spent + opUsd > policy.dailyLimitUsd) {
+      const spent = await spentTodayTally(userId);
+      if (spent.unpriced) {
         return {
           allowed: false,
-          reason: `Daily limit exceeded (spent $${spent.toFixed(2)} of $${policy.dailyLimitUsd.toFixed(2)} in the last 24h).`,
+          reason: "Recent wallet activity includes a token with no USD price, so your daily limit can't be checked. This transaction is blocked.",
+        };
+      }
+      if (spent.usd + op.usd > policy.dailyLimitUsd) {
+        return {
+          allowed: false,
+          reason: `Daily limit exceeded (spent $${spent.usd.toFixed(2)} of $${policy.dailyLimitUsd.toFixed(2)} in the last 24h).`,
         };
       }
     }

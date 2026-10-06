@@ -1,4 +1,7 @@
 import { ETH_ADDRESS, USDC_ADDRESS, OAR_ADDRESS, getTokenDecimals } from "./chain";
+import { ethTipAmountError } from "./eth-tip";
+
+export { ethTipAmountError };
 
 const FALLBACK_PRICES: Record<string, number> = {
   [ETH_ADDRESS.toLowerCase()]: 0,

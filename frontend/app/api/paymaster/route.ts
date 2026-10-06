@@ -10,6 +10,7 @@ import {
   recordPaymasterSuccess,
   sponsoredToday,
 } from "@/lib/paymaster";
+import { getPolicy } from "@/lib/policy";
 
 export const dynamic = "force-dynamic";
 
@@ -103,6 +104,16 @@ export async function POST(req: NextRequest) {
 
   const commitsSponsorship = method === "pm_getPaymasterData";
   if (commitsSponsorship) {
+    // Pause is enforceable here because sponsorship is a server call.
+    // Allowlists and USD caps are enforced by /api/wallet/policy/check before
+    // the official client asks CDP to sign. A modified client can still ask
+    // the browser SDK to sign a user-paid operation; this proxy cannot see
+    // that signature. Unpriced tokens are rejected by the policy check
+    // rather than counted as $0.
+    const policy = await getPolicy(userId);
+    if (policy.pauseAll) {
+      return NextResponse.json({ error: "transactions are paused" }, { status: 403 });
+    }
     if (!isPaymasterHealthy()) {
       return NextResponse.json({ error: "paymaster unavailable — try again" }, { status: 503 });
     }

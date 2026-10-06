@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { uploadImage } from "@/lib/azure";
+import { canEditRepoIcon } from "@/lib/repo-icon-auth";
 
 const MAX_SIZE = 2 * 1024 * 1024;
 const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -39,9 +40,16 @@ export async function POST(req: NextRequest) {
   }
 
   const user: any = session.user;
-  const login = user.login || user.name;
-  const [owner] = repoId.split("/");
-  if (login?.toLowerCase() !== owner.toLowerCase()) {
+  const wallet = await prisma.userWallet.findUnique({
+    where: { address: repo.payout_address },
+    select: { userId: true },
+  });
+  if (!canEditRepoIcon({
+    githubLogin: typeof user.login === "string" ? user.login : null,
+    repoId,
+    sessionUserId: user.id,
+    payoutWalletUserId: wallet?.userId ?? null,
+  })) {
     return NextResponse.json({ error: "not authorized" }, { status: 403 });
   }
 

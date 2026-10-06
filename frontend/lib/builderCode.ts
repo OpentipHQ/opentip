@@ -5,7 +5,6 @@ export const BUILDER_CODE = (process.env.NEXT_PUBLIC_BUILDER_CODE as string) || 
 // Uses ox if installed, else fallback hardcoded for bc_s44rnr4k.
 let suffix: `0x${string}` = "0x" as `0x${string}`;
 try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { Attribution } = require("ox/erc8021");
   suffix = Attribution.toDataSuffix({ codes: [BUILDER_CODE] }) as `0x${string}`;
 } catch {

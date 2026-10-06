@@ -1,18 +1,19 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSignMessage, useSendTransaction } from "wagmi";
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSignMessage, useSendTransaction, useSwitchChain } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import { signIn, useSession } from "next-auth/react";
 import { parseUnits, formatUnits, parseEther, encodeFunctionData } from "viem";
 import { opentipV2Abi, erc20Abi } from "@/lib/contract";
-import { CHAIN_ID, CONTRACT_ADDRESS, USDC_ADDRESS, OAR_ADDRESS, ETH_ADDRESS, getTokenDecimals, capitalize } from "@/lib/chain";
+import { CHAIN_ID, CONTRACT_ADDRESS, USDC_ADDRESS, OAR_ADDRESS, ETH_ADDRESS, VIEM_CHAIN, getTokenDecimals, capitalize } from "@/lib/chain";
+import { mayAnnounceTipSent } from "@/lib/wallet-chain";
 import { DATA_SUFFIX } from "@/lib/builderCode";
 import { useOpentipSend, type OpentipCall } from "@/lib/cdpSend";
 import { logWalletTx, confirmWalletTx } from "@/lib/walletTx";
 import { estimateGasUsd } from "@/lib/gasEstimate";
 import TxReviewModal from "@/components/TxReviewModal";
-import { fmtUsd } from "@/lib/prices";
+import { ethTipAmountError, fmtUsd } from "@/lib/prices";
 import { markInstallTipped } from "@/components/installPrompt";
 import { useToast } from "@/app/providers";
 import { Input } from "@/components/motion/input";
@@ -40,7 +41,8 @@ function formatAmount(raw: bigint, token: TokenInfo): string {
 export default function TipClient({ repoId }: { repoId: string }) {
   const router = useRouter();
   const repoIdLower = repoId.toLowerCase();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
+  const { switchChainAsync } = useSwitchChain();
   const { open } = useAppKit();
   const { data: session } = useSession();
   const { showToast, dismissToast } = useToast();
@@ -198,11 +200,26 @@ export default function TipClient({ repoId }: { repoId: string }) {
   const registerW = useWriteContract();
   const ethSend = useSendTransaction();
 
-  const approveReceipt = useWaitForTransactionReceipt({ hash: approveW.data });
-  const tipReceipt = useWaitForTransactionReceipt({ hash: tipW.data });
-  const claimReceipt = useWaitForTransactionReceipt({ hash: claimW.data });
-  const registerReceipt = useWaitForTransactionReceipt({ hash: registerW.data });
-  const ethReceipt = useWaitForTransactionReceipt({ hash: ethSend.data });
+  const approveReceipt = useWaitForTransactionReceipt({ hash: approveW.data, chainId: CHAIN_ID });
+  const tipReceipt = useWaitForTransactionReceipt({ hash: tipW.data, chainId: CHAIN_ID });
+  const claimReceipt = useWaitForTransactionReceipt({ hash: claimW.data, chainId: CHAIN_ID });
+  const registerReceipt = useWaitForTransactionReceipt({ hash: registerW.data, chainId: CHAIN_ID });
+  const ethReceipt = useWaitForTransactionReceipt({ hash: ethSend.data, chainId: CHAIN_ID });
+
+  const ensureConfiguredChain = async (): Promise<boolean> => {
+    if (chainId === CHAIN_ID) return true;
+    try {
+      await switchChainAsync({ chainId: CHAIN_ID });
+      return true;
+    } catch {
+      showToast({
+        status: "error",
+        title: "Wrong network",
+        description: `Switch your wallet to ${VIEM_CHAIN.name} before sending.`,
+      });
+      return false;
+    }
+  };
 
   const validateAmount = (v: string, token: TokenInfo, priceMap: Record<string, number> = {}) => {
     const n = Number(v);
@@ -210,7 +227,9 @@ export default function TipClient({ repoId }: { repoId: string }) {
     try {
       parseUnits(v, token.decimals);
     } catch { return "Invalid amount"; }
-    // $1 minimum tip — skipped only when no price data is available
+    if (token.address.toLowerCase() === ETH_ADDRESS.toLowerCase()) {
+      return ethTipAmountError(n, priceMap[token.address.toLowerCase()]);
+    }
     const price = priceMap[token.address.toLowerCase()] ?? 0;
     if (price > 0 && n * price < 1) return "Minimum tip is $1";
     return undefined;
@@ -222,7 +241,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
       const baseUnits = parseUnits(amount, currentToken.decimals);
       setTipFlow("sending");
       showLoading("Sending tip...", `${amount} ${currentToken.symbol} → ${repoIdLower}`);
-      tipW.writeContract({ address: contract!, abi: opentipV2Abi, functionName: "receiveTip", args: [repoIdLower, selectedToken as `0x${string}`, baseUnits] });
+      tipW.writeContract({ address: contract!, abi: opentipV2Abi, functionName: "receiveTip", args: [repoIdLower, selectedToken as `0x${string}`, baseUnits], chainId: CHAIN_ID });
     }
     if (tipFlow==="approving" && approveReceipt.isError) {
       if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
@@ -234,6 +253,12 @@ export default function TipClient({ repoId }: { repoId: string }) {
   // ERC-20 tip receipt
   useEffect(()=>{
     if (tipFlow==="sending" && tipReceipt.isSuccess) {
+      if (!mayAnnounceTipSent(chainId, CHAIN_ID)) {
+        if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
+        showToast({ status:"error", title:"Wrong network", description:`That transaction was not confirmed on ${VIEM_CHAIN.name}.` });
+        setTipFlow("error"); setTimeout(()=>setTipFlow("idle"), 2000);
+        return;
+      }
       if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
       if (tipW.data && address) {
         try {
@@ -256,6 +281,12 @@ export default function TipClient({ repoId }: { repoId: string }) {
   // ETH send receipt
   useEffect(()=>{
     if (tipFlow==="sending" && ethReceipt.isSuccess) {
+      if (!mayAnnounceTipSent(chainId, CHAIN_ID)) {
+        if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
+        showToast({ status:"error", title:"Wrong network", description:`That transaction was not confirmed on ${VIEM_CHAIN.name}.` });
+        setTipFlow("error"); setTimeout(()=>setTipFlow("idle"), 2000);
+        return;
+      }
       if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
       if (ethSend.data && address) {
         try {
@@ -365,6 +396,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
     }
 
     if (!isConnected || !address) { showToast({ status:"error", title:"Connect wallet" }); return; }
+    if (!(await ensureConfiguredChain())) return;
 
     if (isETH) {
       setTipFlow("sending");
@@ -375,6 +407,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
         to: contract,
         value: wei,
         data: (baseData + DATA_SUFFIX.slice(2)) as `0x${string}`,
+        chainId: CHAIN_ID,
       });
       return;
     }
@@ -385,11 +418,11 @@ export default function TipClient({ repoId }: { repoId: string }) {
     if (currentAllowance < baseUnits) {
       setTipFlow("approving");
       showLoading("Approving spend...", `${amount} ${currentToken.symbol}`);
-      approveW.writeContract({ address: selectedToken as `0x${string}`, abi: erc20Abi, functionName: "approve", args: [contract!, baseUnits] });
+      approveW.writeContract({ address: selectedToken as `0x${string}`, abi: erc20Abi, functionName: "approve", args: [contract!, baseUnits], chainId: CHAIN_ID });
     } else {
       setTipFlow("sending");
       showLoading("Sending tip...", `${amount} ${currentToken.symbol} → ${repoIdLower}`);
-      tipW.writeContract({ address: contract!, abi: opentipV2Abi, functionName: "receiveTip", args: [repoIdLower, selectedToken as `0x${string}`, baseUnits] });
+      tipW.writeContract({ address: contract!, abi: opentipV2Abi, functionName: "receiveTip", args: [repoIdLower, selectedToken as `0x${string}`, baseUnits], chainId: CHAIN_ID });
     }
   };
 
@@ -414,8 +447,9 @@ export default function TipClient({ repoId }: { repoId: string }) {
       }
       return;
     }
+    if (!(await ensureConfiguredChain())) return;
     setClaimState("loading");
-    claimW.writeContract({ address: contract, abi: opentipV2Abi, functionName: "claimAll", args: [repoIdLower] });
+    claimW.writeContract({ address: contract, abi: opentipV2Abi, functionName: "claimAll", args: [repoIdLower], chainId: CHAIN_ID });
   };
 
   const onRegister = async () => {
@@ -437,11 +471,13 @@ export default function TipClient({ repoId }: { repoId: string }) {
         }
         return;
       }
+      if (!(await ensureConfiguredChain())) { setRegisterState("idle"); return; }
       registerW.writeContract({
         address: contract,
         abi: opentipV2Abi,
         functionName: "registerRepo",
         args: [repoIdLower, payout as `0x${string}`, BigInt(ownership.expiry), BigInt(ownership.nonce), ownership.signature as `0x${string}`],
+        chainId: CHAIN_ID,
       });
       return;
     }
@@ -463,6 +499,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
         setOwnership({ owns: true, via: "github", loading: false, signature: j.signature, expiry: j.expiry, nonce: j.nonce });
       } else {
         setOwnership({ owns: false, loading: false });
+        if (j.error) showToast({ status: "error", title: "Can't register", description: String(j.error).slice(0, 180) });
       }
     } catch {
       setOwnership({ owns: false, loading: false });

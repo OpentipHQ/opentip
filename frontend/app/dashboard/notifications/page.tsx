@@ -6,7 +6,7 @@ import Link from "next/link";
 
 const NOTIFICATION_TYPES = [
   { key: "tip_received", label: "Tip received", description: "When someone tips on your repo" },
-  { key: "claim_available", label: "Claim available", description: "When you can claim tips from a repo" },
+  { key: "claim_available", label: "Tips paid out", description: "When tips are withdrawn from a repo" },
   { key: "tip_sent", label: "Tip submitted", description: "When you submit a tip" },
   { key: "claim_submitted", label: "Claim submitted", description: "When you submit a claim" },
   { key: "send_out", label: "Sent", description: "When you send funds out of your wallet" },

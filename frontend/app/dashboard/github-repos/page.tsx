@@ -12,13 +12,17 @@ const PAGE_SIZE = 20;
 export default function DashboardGithubRepos() {
   const { status } = useSession();
   const [repos, setRepos] = useState<any[]>([]);
+  const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (status !== "authenticated") return;
-    fetch("/api/github/repos?per_page=100").then(r => r.json()).then(j => Array.isArray(j) ? setRepos(j) : setRepos([])).catch(() => setRepos([])).finally(() => setLoading(false));
+    fetch("/api/github/repos?per_page=100").then(r => r.json()).then(j => {
+      if (Array.isArray(j)) { setRepos(j); setNotice(null); }
+      else { setRepos(Array.isArray(j?.repos) ? j.repos : []); setNotice(typeof j?.error === "string" ? j.error : null); }
+    }).catch(() => setRepos([])).finally(() => setLoading(false));
   }, [status]);
 
   const filtered = useMemo(() => {
@@ -50,7 +54,7 @@ export default function DashboardGithubRepos() {
       {loading ? (
         <div className="py-12 flex justify-center"><Loader variant="dots" size={20} /></div>
       ) : repos.length === 0 ? (
-        <p className="text-sm text-zinc-500">No repos found.</p>
+        <p className="text-sm text-zinc-500">{notice || "No repos found."}</p>
       ) : filtered.length === 0 ? (
         <p className="text-sm text-zinc-500">No repos match &ldquo;{search}&rdquo;</p>
       ) : (

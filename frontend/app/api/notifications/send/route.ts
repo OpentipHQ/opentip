@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { findNotificationByTx, pushToUser, recordNotification } from "@/lib/notify";
+import { isTrustedNotificationRequest, NOTIFICATION_SECRET_HEADER } from "@/lib/notification-auth";
 
 export async function POST(request: Request) {
+  // Trusted server callers only. Checked before any parse, DB write, or push.
+  if (!isTrustedNotificationRequest(request.headers.get(NOTIFICATION_SECRET_HEADER))) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
   let body: any;
   try { body = await request.json(); } catch { return NextResponse.json({ error: "invalid body" }, { status: 400 }); }
   const { userId, type, title, body: msgBody, txHash, url } = body;

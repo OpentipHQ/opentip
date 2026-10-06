@@ -184,6 +184,7 @@ npm run dev            # http://localhost:3000
 | `RESEND_API_KEY` | Resend API key (verification + password reset emails) |
 | `RESEND_FROM` | Sender email address (e.g. `noreply@opentip.tech`) |
 | `GITHUB_TOKEN` | GitHub personal access token for API requests |
+| `NOTIFICATION_SECRET` | Shared secret for `POST /api/notifications/send` (same value as the indexer). Generate with `openssl rand -hex 32` |
 | `AZURE_STORAGE_ACCOUNT` | Azure Blob Storage account name |
 | `AZURE_STORAGE_KEY` | Azure Blob Storage access key |
 
@@ -198,6 +199,8 @@ npm run dev            # http://localhost:3000
 | `POLL_MS` | Polling interval (default: 12000ms) |
 | `CHAIN` | `base` (mainnet) or `baseSepolia` (testnet) |
 | `GETLOGS_RANGE` | Max blocks per `eth_getLogs` call (default: 10) |
+| `NOTIFICATION_API_URL` | Push endpoint (default: `https://opentip.tech/api/notifications/send`) |
+| `NOTIFICATION_SECRET` | Shared secret sent as `x-notification-secret` (same value as the frontend) |
 
 ### Contract deploy (`contracts/.env`)
 

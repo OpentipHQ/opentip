@@ -1,9 +1,16 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend: Resend | null = null;
+
+function getResend(): Resend {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) throw new Error("RESEND_API_KEY is not set");
+  if (!resend) resend = new Resend(key);
+  return resend;
+}
 
 export async function sendVerificationEmail(email: string, code: string) {
-  await resend.emails.send({
+  await getResend().emails.send({
     from: process.env.RESEND_FROM || "noreply@opentip.tech",
     to: email,
     subject: "Verify your email | Opentip",
@@ -49,7 +56,7 @@ export async function sendVerificationEmail(email: string, code: string) {
 export async function sendPasswordResetEmail(email: string, token: string) {
   const resetUrl = `${process.env.NEXTAUTH_URL || "https://opentip.tech"}/reset-password?token=${token}`;
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: process.env.RESEND_FROM || "noreply@opentip.tech",
     to: email,
     subject: "Reset your password | Opentip",

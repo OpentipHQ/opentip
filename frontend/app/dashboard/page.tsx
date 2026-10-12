@@ -125,12 +125,12 @@ export default function DashboardProfile() {
   const fallbackName = session?.user?.name || session?.user?.email || "U";
 
   return (
-    <div className="max-w-lg space-y-8">
+    <div className="flex max-w-2xl flex-col gap-6">
       <div>
-        <h1 className="serif text-2xl font-semibold">Profile</h1>
-        <p className="text-sm text-zinc-600">
+        <h1 className="font-display text-4xl">Profile</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
           {login
-            ? <>Your public profile at <span className="stats text-xs">/dev/{login}</span></>
+            ? <>Shown on <span className="font-mono text-xs">/dev/{login}</span>.</>
             : "Link GitHub to get a public profile at /dev/{username}"}
         </p>
       </div>
@@ -138,26 +138,24 @@ export default function DashboardProfile() {
       <input ref={pfpInput} type="file" accept="image/*" className="hidden" onChange={handlePfpChange} />
       <input ref={headerInput} type="file" accept="image/*" className="hidden" onChange={handleHeaderChange} />
 
-      {/* Header */}
-      <section className="space-y-2">
-        <div className="border-t rule" />
-        <h2 className="text-xs font-medium text-zinc-700">Header</h2>
+      <section className="rounded-[10px] border border-border p-4">
+        <h2 className="text-sm font-medium">Header</h2>
         <div
-          className="relative w-full h-32 rounded-sm overflow-hidden border rule cursor-pointer group"
+          className="relative mt-3 h-32 w-full cursor-pointer overflow-hidden rounded-[10px] border border-border group"
           onClick={() => headerInput.current?.click()}
         >
           {header ? (
-            <Image src={header} alt="Header" width={800} height={192} className="w-full h-full object-cover" />
+            <Image src={header} alt="Header" width={800} height={192} className="h-full w-full object-cover" />
           ) : (
-            <div className="w-full h-full bg-zinc-200/50 flex items-center justify-center text-zinc-400 text-xs">
+            <div className="flex h-full w-full items-center justify-center bg-muted text-xs text-muted-foreground">
               {uploadingHeader ? "Uploading..." : "Click to upload header image"}
             </div>
           )}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/10">
             {uploadingHeader ? (
               <Loader variant="spinner" size={20} />
             ) : (
-              <span className="text-xs text-white bg-black/40 px-2 py-1 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="rounded-sm bg-black/40 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
                 {header ? "Change header" : "Upload header"}
               </span>
             )}
@@ -165,96 +163,90 @@ export default function DashboardProfile() {
         </div>
       </section>
 
-      {/* Profile picture */}
-      <section className="space-y-2">
-        <div className="border-t rule" />
-        <h2 className="text-xs font-medium text-zinc-700">Profile picture</h2>
-        <div className="flex items-center gap-4">
+      <section className="rounded-[10px] border border-border p-4">
+        <h2 className="text-sm font-medium">Profile picture</h2>
+        <div className="mt-3 flex items-center gap-4">
           <button
             onClick={() => pfpInput.current?.click()}
-            className="relative w-20 h-20 rounded-sm overflow-hidden border rule shrink-0 group"
+            className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-[10px] border border-border"
           >
             {pfp ? (
-              <Image src={pfp} alt="Profile" width={96} height={96} className="w-full h-full object-cover" />
+              <Image src={pfp} alt="Profile" width={96} height={96} className="h-full w-full object-cover" />
             ) : (
-              <div className="w-full h-full bg-zinc-200/50 flex items-center justify-center text-zinc-400 text-lg font-semibold">
+              <div className="flex h-full w-full items-center justify-center bg-muted text-lg font-semibold text-muted-foreground">
                 {fallbackName.charAt(0).toUpperCase()}
               </div>
             )}
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/20">
               {uploadingPfp ? (
                 <Loader variant="spinner" size={16} />
               ) : (
-                <span className="text-xs text-white bg-black/40 px-2 py-1 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="rounded-sm bg-black/40 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
                   Change
                 </span>
               )}
             </div>
           </button>
-          <div className="text-xs text-zinc-500">
+          <div className="text-xs text-muted-foreground">
             <p>Click to upload a new profile picture.</p>
             <p>JPG, PNG, WebP, or GIF. Max 2MB.</p>
           </div>
         </div>
       </section>
 
-      {/* Bio */}
-      <section className="space-y-2">
-        <div className="border-t rule" />
-        <h2 className="text-xs font-medium text-zinc-700">Bio</h2>
+      <section className="rounded-[10px] border border-border p-4">
+        <h2 className="text-sm font-medium">Public profile</h2>
+        <label className="mt-4 block text-xs text-muted-foreground" htmlFor="bio">Bio</label>
         <textarea
+          id="bio"
           value={bio}
           onChange={(e) => setBio(e.target.value)}
           rows={3}
           placeholder="Tell people about yourself..."
-          className="w-full bg-transparent border rule rounded-sm px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:border-accent resize-none"
+          className="mt-1 w-full resize-none rounded-[10px] border border-border bg-transparent px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:border-accent"
         />
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <SocialField id="website" label="Website" value={website} onChange={setWebsite} placeholder="https://yoursite.com" />
+          <SocialField id="github" label="GitHub" value={github} onChange={setGithub} placeholder={login || "username"} />
+          <SocialField id="twitter" label="X" value={twitter} onChange={setTwitter} placeholder="username" />
+          <SocialField id="discord" label="Discord" value={discord} onChange={setDiscord} placeholder="username" />
+          <SocialField id="telegram" label="Telegram" value={telegram} onChange={setTelegram} placeholder="username" />
+          <SocialField id="farcaster" label="Farcaster" value={farcaster} onChange={setFarcaster} placeholder="username" />
+        </div>
+        <div className="mt-4 flex items-center gap-3">
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? "Saving..." : "Save profile"}
+          </Button>
+          {message && <span className="text-xs text-muted-foreground">{message}</span>}
+        </div>
       </section>
-
-      {/* Social links */}
-      <section className="space-y-3">
-        <div className="border-t rule" />
-        <h2 className="text-xs font-medium text-zinc-700">Social links</h2>
-        <SocialField label="Website" value={website} onChange={setWebsite} placeholder="https://yoursite.com" />
-        <SocialField label="GitHub" value={github} onChange={setGithub} placeholder={login || "username"} />
-        <SocialField label="Twitter" value={twitter} onChange={setTwitter} placeholder="username" />
-        <SocialField label="Discord" value={discord} onChange={setDiscord} placeholder="username" />
-        <SocialField label="Telegram" value={telegram} onChange={setTelegram} placeholder="username" />
-        <SocialField label="Farcaster" value={farcaster} onChange={setFarcaster} placeholder="username" />
-      </section>
-
-      <div className="border-t rule" />
-
-      <div className="flex items-center gap-3">
-        <Button onClick={handleSave} disabled={saving}>
-          {saving ? "Saving..." : "Save profile"}
-        </Button>
-        {message && <span className="text-xs text-zinc-600">{message}</span>}
-      </div>
     </div>
   );
 }
 
 function SocialField({
+  id,
   label,
   value,
   onChange,
   placeholder,
 }: {
+  id: string;
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder: string;
 }) {
   return (
-    <div className="flex items-center gap-3">
-      <label className="text-xs text-zinc-500 w-20 shrink-0">{label}</label>
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-muted-foreground" htmlFor={id}>{label}</label>
       <input
+        id={id}
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="flex-1 bg-transparent border rule rounded-sm px-3 py-1.5 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:border-accent"
+        className="h-10 rounded-[10px] border border-border bg-transparent px-3 text-sm outline-none placeholder:text-muted-foreground focus:border-accent"
       />
     </div>
   );

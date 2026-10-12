@@ -71,35 +71,34 @@ function LinksEditor({ repoId, onClose }: { repoId: string; onClose: () => void 
   if (loading) return <div className="py-4"><Loader variant="dots" size={16} /></div>;
 
   return (
-    <div className="mt-3 border-t rule pt-4 space-y-4">
-      {/* Links */}
+    <div className="mt-3 space-y-4 border-t border-border pt-4">
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Links</h4>
-          <span className="text-xs text-zinc-400">{links.length}/10</span>
+          <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Links</h4>
+          <span className="text-xs text-muted-foreground">{links.length}/10</span>
         </div>
         {links.length === 0 && (
-          <p className="text-xs text-zinc-400">No links yet. Add documentation, social, or community links.</p>
+          <p className="text-xs text-muted-foreground">No links yet. Add documentation, social, or community links.</p>
         )}
         {links.map((link, i) => (
-          <div key={i} className="flex gap-2 items-start">
+          <div key={i} className="flex items-start gap-2">
             <input
               type="text"
               placeholder="Title"
               value={link.title}
               onChange={(e) => updateLink(i, "title", e.target.value)}
-              className="w-32 px-2 py-1.5 bg-zinc-50 border rule rounded-sm text-xs focus:outline-none focus:ring-1 focus:ring-zinc-300"
+              className="w-32 rounded-[10px] border border-border bg-transparent px-2 py-1.5 text-xs outline-none focus:border-accent"
             />
             <input
               type="url"
               placeholder="https://..."
               value={link.url}
               onChange={(e) => updateLink(i, "url", e.target.value)}
-              className="flex-1 px-2 py-1.5 bg-zinc-50 border rule rounded-sm text-xs font-mono focus:outline-none focus:ring-1 focus:ring-zinc-300"
+              className="flex-1 rounded-[10px] border border-border bg-transparent px-2 py-1.5 font-mono text-xs outline-none focus:border-accent"
             />
             <button
               onClick={() => removeLink(i)}
-              className="px-2 py-1.5 text-xs text-zinc-400 hover:text-red-500 transition-colors"
+              className="px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:text-destructive"
             >
               ✕
             </button>
@@ -108,16 +107,15 @@ function LinksEditor({ repoId, onClose }: { repoId: string; onClose: () => void 
         {links.length < 10 && (
           <button
             onClick={addLink}
-            className="text-xs text-zinc-500 hover:text-accent transition-colors"
+            className="text-xs text-muted-foreground transition-colors hover:text-accent"
           >
             + Add link
           </button>
         )}
       </div>
 
-      {/* Summary status */}
-      <div className="flex items-center gap-3 border-t rule pt-3">
-        <span className="text-xs text-zinc-500">
+      <div className="flex items-center gap-3 border-t border-border pt-3">
+        <span className="text-xs text-muted-foreground">
           {summaryStatus || "No summary generated yet"}
         </span>
       </div>
@@ -201,15 +199,20 @@ export default function DashboardRepos() {
   if (status === "loading") return <div className="py-20 flex justify-center"><Loader variant="spinner" size={24} /></div>;
 
   return (
-    <div className="space-y-0">
-      <h1 className="serif text-2xl font-semibold mb-6">Repos</h1>
+    <div>
+      <h1 className="font-display text-4xl">Your repos</h1>
+      <p className="mt-2 text-sm text-muted-foreground">Claim a pending balance whenever you want.</p>
 
       {loadingRegistered ? (
         <div className="py-12 flex justify-center"><Loader variant="dots" size={20} /></div>
       ) : registeredRepos.length === 0 ? (
-        <p className="text-sm text-zinc-500">No registered repos yet. Visit a repo page to register.</p>
+        <div className="mt-6 rounded-[10px] border border-dashed border-border px-4 py-10 text-center">
+          <p className="font-medium">No registered repos</p>
+          <p className="mt-1 text-sm text-muted-foreground">Visit a repo page to register.</p>
+          <Link href="/dashboard/github-repos" className="mt-3 inline-flex text-sm text-brand hover:underline">Register from GitHub</Link>
+        </div>
       ) : (
-        <ul className="divide-y rule">
+        <ul className="mt-6 flex flex-col gap-3">
           {registeredRepos.map((r: any) => {
             const onChain = onChainMap[r.repo_id];
             const isClaimant = address && contract && r.payout_address.toLowerCase() === address.toLowerCase();
@@ -227,15 +230,15 @@ export default function DashboardRepos() {
             }
 
             return (
-              <li key={r.repo_id} className="py-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
-                  <div className="flex items-center gap-3">
+              <li key={r.repo_id} className="rounded-[10px] border border-border p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-start gap-3">
                     <label className="relative cursor-pointer flex-shrink-0">
                       {r.icon ? (
-                        <Image src={r.icon} alt={capitalize(r.repo_id.split("/")[1])} width={40} height={40} className="rounded-sm" />
+                        <Image src={r.icon} alt={capitalize(r.repo_id.split("/")[1])} width={40} height={40} className="size-10 rounded-[8px] object-cover" />
                       ) : (
-                        <div className="w-10 h-10 rounded-sm bg-zinc-200 flex items-center justify-center text-zinc-400 text-xs">
-                          {uploadingIcon === r.repo_id ? <Loader variant="spinner" size={16} /> : "icon"}
+                        <div className="flex size-10 items-center justify-center rounded-[8px] border border-border bg-muted text-xs text-muted-foreground">
+                          {uploadingIcon === r.repo_id ? <Loader variant="spinner" size={16} /> : capitalize(r.repo_id.split("/")[1]).slice(0, 1)}
                         </div>
                       )}
                       <input
@@ -249,13 +252,10 @@ export default function DashboardRepos() {
                         }}
                       />
                     </label>
-                    <div>
-                      <Link href={`/${r.repo_id}`} className="font-mono text-sm underline underline-offset-4 hover:text-accent">{capitalize(r.repo_id.split("/")[1])}</Link>
-                      <div className="flex gap-4 mt-1">
-                        <span className="stats text-xs text-zinc-500">pending: {fmtUsd(pendingUsd)}</span>
-                        <span className="stats text-xs text-zinc-500">total: {fmtUsd(totalUsd)}</span>
-                        <span className="stats text-xs text-zinc-500">{r.tip_count} tips</span>
-                      </div>
+                    <div className="min-w-0">
+                      <Link href={`/${r.repo_id}`} className="text-sm font-medium hover:text-brand">{capitalize(r.repo_id.split("/")[1])}</Link>
+                      <p className="mt-1 font-mono text-lg tabular-nums">{fmtUsd(pendingUsd)} pending</p>
+                      <p className="text-xs text-muted-foreground">{fmtUsd(totalUsd)} funded · {r.tip_count} funds</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -267,10 +267,29 @@ export default function DashboardRepos() {
                       {isExpanded ? "Close" : "Manage"}
                     </Button>
                     {isClaimant && (
-                      <Link href={`/${r.repo_id}`}><Button size="sm" variant="secondary">Claim</Button></Link>
+                      <Link href={`/${r.repo_id}`}><Button size="sm">Claim</Button></Link>
                     )}
                   </div>
                 </div>
+                <ul className="mt-3 flex flex-col gap-1 text-sm">
+                  {tokens.map((token) => {
+                    const decimals = getTokenDecimals(token);
+                    const raw = onChain?.pending[token] ?? 0n;
+                    const amount = Number(formatUnits(raw, decimals));
+                    const price = prices[token.toLowerCase()] ?? 0;
+                    const symbol = token === USDC_ADDRESS ? "USDC" : token === ETH_ADDRESS ? "ETH" : "OAR";
+                    return (
+                      <li key={token} className="flex justify-between gap-3">
+                        <span>{symbol}</span>
+                        <span className="font-mono text-xs tabular-nums">
+                          {amount >= 1 ? amount.toFixed(2) : amount.toFixed(4)}
+                          {price > 0 ? ` · ${fmtUsd(amount * price)}` : ""}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+                {r.payout_address ? <p className="mt-2 font-mono text-[11px] text-muted-foreground">Payout {r.payout_address}</p> : null}
                 {isExpanded && (
                   <LinksEditor
                     repoId={r.repo_id}

@@ -38,7 +38,7 @@ export default function HeaderShell() {
   return (
     <>
       <header className="sticky top-0 z-header border-b border-border bg-background/90 backdrop-blur-md">
-        <nav className="mx-auto flex h-16 w-full max-w-[1120px] items-center gap-3 px-4">
+        <nav className="mx-auto flex h-16 w-full min-w-0 max-w-[1120px] items-center gap-3 px-4">
           <button
             className="p-1 md:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}

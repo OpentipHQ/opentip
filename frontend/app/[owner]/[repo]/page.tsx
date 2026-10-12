@@ -1,15 +1,12 @@
-import Image from "next/image";
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { fetchRepoMeta } from "@/lib/github";
 import { prisma } from "@/lib/prisma";
 import { getTokenPrices, usdValue, fmtUsd } from "@/lib/prices";
-import { generateRepoSummary } from "@/lib/ai";
+import { generateRepoSummary, type RepoSummary } from "@/lib/ai";
 import { capitalize } from "@/lib/chain";
 import { isHiddenRepo } from "@/lib/repo-visibility";
-import RepoTabs from "./RepoTabs";
-import LinkIcons from "@/components/LinkIcons";
+import TipClient from "./TipClient";
 
 type Link = { title: string; url: string };
 
@@ -91,37 +88,23 @@ export default async function RepoPage({ params }: { params: Promise<{ owner: st
   const repoId = `${owner}/${repo}`;
   const meta = await fetchRepoMeta(owner, repo);
 
-  let developer: { login: string; pfp: string | null; image: string | null } | null = null;
-  let summary = null;
+  let summary: RepoSummary | null = null;
   let links: Link[] = [];
   let repoRecord: { payout_address: string; hidden: boolean; icon: string | null } | null = null;
 
   try {
-      repoRecord = await prisma.repo.findUnique({
-        where: { repo_id: repoId.toLowerCase() },
-        select: { payout_address: true, hidden: true, icon: true },
-      });
+    repoRecord = await prisma.repo.findUnique({
+      where: { repo_id: repoId.toLowerCase() },
+      select: { payout_address: true, hidden: true, icon: true },
+    });
     // notFound() throws; calling it inside this try would be swallowed and
     // the hidden repo would render. The check below runs after the catch.
     if (repoRecord && !isHiddenRepo(repoRecord)) {
-      const wallet = await prisma.userWallet.findUnique({
-        where: { address: repoRecord.payout_address },
-        select: {
-          user: {
-            select: { login: true, pfp: true, image: true },
-          },
-        },
-      });
-      if (wallet?.user?.login) {
-        developer = { login: wallet.user.login, pfp: wallet.user.pfp, image: wallet.user.image };
-      }
-
-      // Fetch or generate summary + links in parallel
       const [s, l] = await Promise.all([
         getOrCreateSummary(repoId, owner, repo),
         getLinks(repoId),
       ]);
-      summary = s;
+      summary = asSummary(s);
       links = l;
     }
   } catch {}
@@ -129,57 +112,25 @@ export default async function RepoPage({ params }: { params: Promise<{ owner: st
   if (isHiddenRepo(repoRecord)) notFound();
 
   return (
-    <div className="space-y-0">
-      <section className="py-12 md:py-16 border-b rule">
-        <div className="flex flex-wrap gap-5 items-start">
-          {meta ? (
-            <>
-              {repoRecord?.icon ? (
-                <Image src={repoRecord.icon} alt={repo} width={96} height={96} className="rounded-[10px] border border-border" />
-              ) : (
-                <Image src={meta.owner.avatar_url} alt={owner} width={96} height={96} className="rounded-[10px] border border-border" />
-              )}
-              <div className="space-y-2">
-                <h1 className="font-display fluid-heading flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <span>{capitalize(repo)}</span>
-                  {developer && (
-                    <a href={`/dev/${developer.login}`} className="inline-flex items-center gap-1.5 group">
-                      <span className="text-xs text-zinc-500 group-hover:text-accent transition-colors">
-                        by <span className="font-medium text-zinc-700 group-hover:text-accent">{developer.login}</span>
-                      </span>
-                      <img
-                        src={developer.pfp || developer.image || `https://avatars.githubusercontent.com/${developer.login}`}
-                        alt={developer.login}
-                        width={20}
-                        height={20}
-                        className="rounded-full"
-                      />
-                    </a>
-                  )}
-                </h1>
-                {meta.description && <p className="text-zinc-600 text-sm leading-relaxed">{meta.description}</p>}
-                <p className="text-xs text-zinc-500">★ {meta.stargazers_count}</p>
-                <LinkIcons links={links} />
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-wrap gap-5 items-start">
-              {repoRecord?.icon && (
-                <Image src={repoRecord.icon} alt={repo} width={96} height={96} className="rounded-[10px] border border-border" />
-              )}
-              <div className="space-y-1">
-                <h1 className="font-display fluid-heading">{capitalize(repoId.split("/")[1])}</h1>
-                <p className="text-zinc-500 text-sm">Could not fetch GitHub metadata.</p>
-                <LinkIcons links={links} />
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
-
-      <Suspense fallback={<div className="py-12 text-center text-sm text-zinc-500">Loading...</div>}>
-        <RepoTabs repoId={repoId} summary={summary} links={links} />
-      </Suspense>
-    </div>
+    <TipClient
+      repoId={repoId}
+      project={capitalize(repo)}
+      description={meta?.description ?? null}
+      icon={repoRecord?.icon || meta?.owner.avatar_url || null}
+      summary={summary}
+      links={links}
+    />
   );
+}
+
+function asSummary(value: unknown): RepoSummary | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as Partial<RepoSummary>;
+  if (typeof row.description !== "string") return null;
+  return {
+    description: row.description,
+    techStack: Array.isArray(row.techStack) ? row.techStack.filter((item): item is string => typeof item === "string") : [],
+    features: Array.isArray(row.features) ? row.features.filter((item): item is string => typeof item === "string") : [],
+    audience: typeof row.audience === "string" ? row.audience : "",
+  };
 }

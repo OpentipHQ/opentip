@@ -10,7 +10,7 @@ export default function SiteShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <HeaderShell />
-      <main id="main-content" className={home ? "flex-1" : "mx-auto flex w-full min-w-0 max-w-[1120px] flex-1 flex-col px-4 py-8"}>
+      <main id="main-content" className={home ? "flex w-full min-w-0 flex-1 flex-col" : "mx-auto flex w-full min-w-0 max-w-[1120px] flex-1 flex-col px-4 py-8"}>
         {children}
       </main>
       {home ? null : <ConditionalFooter />}

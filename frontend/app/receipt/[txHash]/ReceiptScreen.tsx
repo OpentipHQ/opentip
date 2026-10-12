@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { toPng } from "html-to-image";
+import { getFontEmbedCSS, toBlob } from "html-to-image";
 import { Button } from "@/components/motion/button";
 import { ReceiptCard } from "@/components/ledger/ReceiptCard";
 import { useToast } from "@/app/providers";
@@ -28,18 +28,48 @@ export function ReceiptScreen({ receipt, network }: { receipt: LoadedReceipt; ne
   }, [receipt.status, router]);
 
   async function download() {
-    if (!cardRef.current || !ready) return;
+    const node = cardRef.current;
+    if (!node || !ready) return;
     setSaving(true);
+    const restoreFonts = pinReceiptFonts(node);
     try {
+      await document.fonts.ready;
       const backgroundColor = getComputedStyle(document.body).backgroundColor;
-      const dataUrl = await toPng(cardRef.current, { pixelRatio: 2, cacheBust: true, backgroundColor });
-      const link = document.createElement("a");
-      link.href = dataUrl;
-      link.download = `opentip-${receipt.kind}-${(receipt.hash || "receipt").slice(0, 10)}.png`;
-      link.click();
-    } catch {
+      const { width, height } = captureBox(node);
+      const fontEmbedCSS = await receiptFontCss(node);
+      const options = {
+        pixelRatio: 2,
+        cacheBust: true,
+        backgroundColor,
+        width,
+        height,
+        fontEmbedCSS,
+        // The card's margin is outside its border box. Leaving it on the clone
+        // pushes the scallop past the capture height. Lock the border box instead.
+        style: {
+          margin: "0",
+          overflow: "visible",
+          width: `${width}px`,
+          height: `${height}px`,
+          maxHeight: "none",
+        },
+      };
+      // Safari's first html-to-image pass is often blank.
+      await toBlob(node, options);
+      const blob = await toBlob(node, options);
+      if (!blob) throw new Error("empty receipt image");
+      const filename = `opentip-${receipt.kind}-${(receipt.hash || "receipt").slice(0, 10)}.png`;
+      const file = new File([blob], filename, { type: "image/png" });
+      if (canShareReceipt(file)) {
+        await navigator.share({ files: [file] });
+        return;
+      }
+      saveReceiptFile(blob, filename);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
       showToast({ status: "error", title: "Could not save the receipt" });
     } finally {
+      restoreFonts();
       setSaving(false);
     }
   }
@@ -120,4 +150,118 @@ function XMark() {
       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.727-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
     </svg>
   );
+}
+
+const RECEIPT_FONT_VARS = ["--font-geist", "--font-geist-mono", "--font-bricolage"] as const;
+const RECEIPT_FONT_FAMILY = /^(geist|geist fallback|geist mono|geist mono fallback|bricolage grotesque|bricolage grotesque fallback)$/i;
+
+function pinReceiptFonts(node: HTMLElement) {
+  const root = getComputedStyle(document.documentElement);
+  const previous = RECEIPT_FONT_VARS.map((name) => [name, node.style.getPropertyValue(name)] as const);
+  for (const name of RECEIPT_FONT_VARS) {
+    const value = root.getPropertyValue(name).trim();
+    if (value) node.style.setProperty(name, value);
+  }
+  return () => {
+    for (const [name, value] of previous) {
+      if (value) node.style.setProperty(name, value);
+      else node.style.removeProperty(name);
+    }
+  };
+}
+
+function captureBox(node: HTMLElement) {
+  const rect = node.getBoundingClientRect();
+  let right = rect.right;
+  let bottom = rect.bottom;
+  for (const el of node.querySelectorAll<HTMLElement>("*")) {
+    const box = el.getBoundingClientRect();
+    if (box.right > right) right = box.right;
+    if (box.bottom > bottom) bottom = box.bottom;
+  }
+  return {
+    width: Math.ceil(Math.max(node.scrollWidth, node.offsetWidth, right - rect.left)),
+    height: Math.ceil(Math.max(node.scrollHeight, node.offsetHeight, bottom - rect.top)),
+  };
+}
+
+let receiptFontCssPromise: Promise<string> | null = null;
+
+function receiptFontCss(node: HTMLElement) {
+  receiptFontCssPromise ??= buildReceiptFontCss(node);
+  return receiptFontCssPromise;
+}
+
+async function buildReceiptFontCss(node: HTMLElement) {
+  const seen = new Set<string>();
+  const chunks: string[] = [];
+  for (const sheet of Array.from(document.styleSheets)) {
+    let rules: CSSRuleList;
+    try {
+      rules = sheet.cssRules;
+    } catch {
+      continue;
+    }
+    const base = sheet.href || document.baseURI;
+    for (const rule of Array.from(rules)) {
+      if (!(rule instanceof CSSFontFaceRule)) continue;
+      const family = rule.style.getPropertyValue("font-family").replace(/["']/g, "").trim();
+      if (!RECEIPT_FONT_FAMILY.test(family) || seen.has(rule.cssText)) continue;
+      seen.add(rule.cssText);
+      chunks.push(await inlineFontFace(rule.cssText, base));
+    }
+  }
+  const css = chunks.join("\n").replace(/font-display:\s*swap;?/gi, "font-display: block;");
+  if (css.includes("data:")) return css;
+  const embedded = await getFontEmbedCSS(node);
+  return embedded.replace(/font-display:\s*swap;?/gi, "font-display: block;");
+}
+
+async function inlineFontFace(cssText: string, base: string) {
+  let result = cssText;
+  for (const match of cssText.matchAll(/url\((['"]?)([^'")]+)\1\)/g)) {
+    const raw = match[2];
+    if (!raw || raw.startsWith("data:")) continue;
+    try {
+      const absolute = new URL(raw, base).href;
+      const response = await fetch(absolute);
+      if (!response.ok) continue;
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      const mime = absolute.includes(".woff2") ? "font/woff2" : absolute.includes(".woff") ? "font/woff" : "font/ttf";
+      result = result.replace(match[0], `url("data:${mime};base64,${bytesToBase64(bytes)}")`);
+    } catch {
+      // Keep the original URL when the face cannot be inlined.
+    }
+  }
+  return result;
+}
+
+function bytesToBase64(bytes: Uint8Array) {
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
+}
+
+function canShareReceipt(file: File) {
+  const touch = navigator.maxTouchPoints > 0;
+  if (!touch || typeof navigator.canShare !== "function") return false;
+  try {
+    return navigator.canShare({ files: [file] });
+  } catch {
+    return false;
+  }
+}
+
+function saveReceiptFile(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }

@@ -6,6 +6,7 @@ import { Button } from "@/components/motion/button";
 import { Loader } from "@/components/motion/loader";
 import { Search } from "lucide-react";
 import { capitalize } from "@/lib/chain";
+import { fmtUsd } from "@/lib/prices";
 
 const PAGE_SIZE = 20;
 
@@ -70,21 +71,19 @@ export default function ReposDirectory() {
   useEffect(() => { setPage(1); }, [search, sort]);
 
   return (
-    <div className="space-y-0">
-      <section className="py-12 md:py-16 border-b rule space-y-4">
-        <h1 className="serif fluid-page-title font-semibold tracking-tight">Repos</h1>
-        <p className="text-zinc-600 text-sm max-w-xs">Repos registered to receive tips. {total > 0 ? `${total} and counting.` : ""}</p>
-      </section>
-
-      <section className="py-10">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
+    <div>
+      <header className="flex flex-col gap-3">
+        <h1 className="font-display text-4xl">Repos</h1>
+        <p className="max-w-xl text-sm text-muted-foreground">Registered funding pages. {total > 0 ? `${total} and counting.` : ""}</p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="relative w-full sm:max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search repos..."
-              className="h-9 w-full bg-transparent border rule rounded-sm pl-9 pr-3 text-sm text-zinc-900 placeholder:text-zinc-500 outline-none focus:border-accent"
+              placeholder="Search owner or repo"
+              aria-label="Search repos"
+              className="h-10 w-full rounded-[10px] border border-border bg-transparent pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-accent"
             />
           </div>
           <div className="flex gap-1">
@@ -92,68 +91,51 @@ export default function ReposDirectory() {
               <button
                 key={s}
                 onClick={() => setSort(s)}
-                className={`px-3 py-1.5 text-xs rounded-sm transition-colors ${sort === s ? "bg-zinc-900 text-white" : "text-zinc-600 hover:bg-zinc-900/5"}`}
+                className={`rounded-full px-3 py-1.5 text-xs transition-colors ${sort === s ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted"}`}
               >
-                {s === "tipped" ? "Most tipped" : s === "recent" ? "Recent" : "Most tips"}
+                {s === "tipped" ? "Most funded" : s === "recent" ? "Recent" : "Most funds"}
               </button>
             ))}
           </div>
         </div>
+      </header>
+
+      <section className="py-6">
 
         {loading ? (
           <div className="py-12 flex justify-center"><Loader variant="dots" size={20} /></div>
         ) : repos.length === 0 ? (
-          <div className="py-12 space-y-3">
-            <p className="text-sm text-zinc-500">No repos registered yet.</p>
-            <Link href="/onboarding" className="text-sm underline underline-offset-4 hover:text-accent">Be the first &rarr;</Link>
+          <div className="space-y-3 rounded-[10px] border border-dashed border-border px-4 py-12 text-center">
+            <p className="text-sm text-muted-foreground">No repos registered yet.</p>
+            <Link href="/onboarding" className="text-sm underline underline-offset-4 hover:text-brand">Be the first &rarr;</Link>
           </div>
         ) : (
           <>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <ul className="divide-y divide-border rounded-[10px] border border-border">
               {repos.map((r: any) => {
                 const meta = metaMap[r.repo_id];
                 const [owner] = r.repo_id.split("/");
                 return (
-                  <Link
-                    key={r.repo_id}
-                    href={`/${r.repo_id}`}
-                    className="border rule rounded-sm p-5 hover:border-zinc-400 transition-colors group"
-                  >
-                    <div className="flex items-start gap-4">
+                  <li key={r.repo_id}>
+                    <Link href={`/${r.repo_id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/60">
                       {r.icon ? (
-                        <Image src={r.icon} alt={capitalize(r.repo_id.split("/")[1])} width={40} height={40} className="rounded-sm flex-shrink-0" />
+                        <Image src={r.icon} alt={capitalize(r.repo_id.split("/")[1])} width={36} height={36} className="size-9 flex-shrink-0 rounded-[8px]" />
                       ) : meta ? (
-                        <Image src={meta.owner.avatar_url} alt={owner} width={40} height={40} className="rounded-sm flex-shrink-0" />
+                        <Image src={meta.owner.avatar_url} alt={owner} width={36} height={36} className="size-9 flex-shrink-0 rounded-[8px]" />
                       ) : (
-                        <div className="w-10 h-10 rounded-sm bg-zinc-200 flex-shrink-0" />
+                        <span className="flex size-9 flex-shrink-0 items-center justify-center rounded-[8px] border border-border font-display">{capitalize(r.repo_id.split("/")[1]).slice(0, 1)}</span>
                       )}
-                      <div className="flex-1 min-w-0">
-                        <div className="font-mono text-sm font-medium group-hover:text-accent transition-colors truncate">{capitalize(r.repo_id.split("/")[1])}</div>
-                        {meta?.description && (
-                          <p className="text-xs text-zinc-500 mt-1 line-clamp-2 leading-relaxed">{meta.description}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between mt-4 pt-3 border-t rule">
-                      <div className="flex gap-4">
-                        <div>
-                          <div className="stats text-sm font-medium">{r.tip_count}</div>
-                          <div className="text-[0.6rem] uppercase tracking-[0.15em] text-zinc-500 mt-0.5">tips</div>
-                        </div>
-                        {meta && (
-                          <div>
-                            <div className="stats text-sm font-medium">★ {meta.stargazers_count.toLocaleString()}</div>
-                            <div className="text-[0.6rem] uppercase tracking-[0.15em] text-zinc-500 mt-0.5">stars</div>
-                          </div>
-                        )}
-                      </div>
-                      <span className="text-sm underline underline-offset-4 text-zinc-700 group-hover:text-accent">View</span>
-                    </div>
-                  </Link>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium">{capitalize(r.repo_id.split("/")[1])}</span>
+                        {meta?.description ? <span className="block truncate text-xs text-muted-foreground">{meta.description}</span> : null}
+                      </span>
+                      <span className="hidden text-xs text-muted-foreground sm:inline">{r.tip_count} funds</span>
+                      <span className="font-mono text-sm tabular-nums">{typeof r.tipped_usd === "number" ? fmtUsd(r.tipped_usd) : ""}</span>
+                    </Link>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
 
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-6 pt-4 border-t rule">

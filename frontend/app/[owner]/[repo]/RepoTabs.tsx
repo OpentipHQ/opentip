@@ -33,18 +33,18 @@ export default function RepoTabs({
           onClick={() => setTab("tip")}
           className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-px ${
             activeTab === "tip"
-              ? "border-zinc-900 text-zinc-900"
-              : "border-transparent text-zinc-500 hover:text-zinc-700"
+              ? "border-foreground text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
-          Tip
+          Fund
         </button>
         <button
           onClick={() => setTab("about")}
           className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-px ${
             activeTab === "about"
-              ? "border-zinc-900 text-zinc-900"
-              : "border-transparent text-zinc-500 hover:text-zinc-700"
+              ? "border-foreground text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           About

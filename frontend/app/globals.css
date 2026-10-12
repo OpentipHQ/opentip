@@ -3,46 +3,49 @@
 @tailwind utilities;
 @layer base {
   :root {
-    /* Fluid spacing tokens */
     --space-page: clamp(1rem, 4vw, 10rem);
     --space-section: clamp(3rem, 6vw, 6rem);
     --space-gap: clamp(1.5rem, 3vw, 3rem);
 
-    /* Fluid typography tokens */
     --text-display: clamp(2.5rem, 1.25rem + 5vw, 6rem);
     --text-hero: clamp(2.5rem, 1.25rem + 5vw, 10rem);
     --text-page: clamp(1.5rem, 0.75rem + 2.5vw, 3.5rem);
     --text-heading: clamp(1.25rem, 0.5rem + 2vw, 2.5rem);
     --text-subheading: clamp(1rem, 0.4rem + 1.5vw, 1.75rem);
 
-    --background: 39 11% 73%;
-    --foreground: 0 0% 9%;
+    /* Ledger palette. Values are HSL components for Tailwind alpha modifiers. */
+    --background: 60 23% 97.5%;
+    --foreground: 150 8% 5%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
+    --card-foreground: 150 8% 5%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 39 11% 73%;
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 39 8% 88%;
-    --muted-foreground: 0 0% 45%;
-    --accent: 239 71% 42%;
-    --accent-foreground: 0 0% 98%;
-    --paper: 39 11% 73%;
-    --paper-deep: 39 8% 68%;
-    --ink: 0 0% 9%;
-    --ink-soft: 0 0% 32%;
-    --ink-faint: 0 0% 51%;
-    --hairline: 0 0% 9% / 0.12;
+    --popover-foreground: 150 8% 5%;
+    --primary: 240 68% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 60 14% 94%;
+    --secondary-foreground: 150 8% 5%;
+    --muted: 60 14% 94%;
+    --muted-foreground: 133 3% 43%;
+    --accent: 240 68% 50%;
+    --accent-foreground: 0 0% 100%;
+    --accent-hover: 241 70% 40%;
+    --brand: 240 68% 50%;
+    --pending: 32 91% 44%;
+    --fee: 60 8% 84%;
+    --paper: 60 23% 97.5%;
+    --paper-deep: 60 10% 92%;
+    --ink: 150 8% 5%;
+    --ink-soft: 150 4% 28%;
+    --ink-faint: 133 3% 43%;
+    --hairline: 60 7% 89%;
     --rise: 142 48% 30%;
     --drop: 15 62% 34%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 9% / 0.12;
-    --input: 0 0% 9% / 0.12;
-    --ring: 239 71% 42%;
-    --radius: 0.25rem;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 60 7% 89%;
+    --input: 60 7% 89%;
+    --ring: 240 68% 50%;
+    --radius: 0.625rem;
 
     /*
      * Stacking scale, low to high.
@@ -54,15 +57,6 @@
      * header, and later in the tree, so it covered the open menu. Header
      * menus stay inside the header and ride --z-header, which is above
      * in-page chrome and below drawers, dialogs, and toasts.
-     *
-     * --z-sticky           10  sticky bars and in-page popovers
-     * --z-header           30  site header; menus inside it paint on this layer
-     * --z-dropdown         30  menus portaled out of a lower stacking context
-     * --z-overlay          40  drawers and scrims (cover the header)
-     * --z-overlay-control  50  controls that stay clickable above an open drawer
-     * --z-modal            60  dialogs
-     * --z-toast            70  toasts
-     * --z-skip             80  skip link
      */
     --z-sticky: 10;
     --z-header: 30;
@@ -73,16 +67,53 @@
     --z-toast: 70;
     --z-skip: 80;
   }
+
+  .dark {
+    --background: 150 8% 5%;
+    --foreground: 60 14% 95%;
+    --card: 140 8% 8%;
+    --card-foreground: 60 14% 95%;
+    --popover: 140 7% 9%;
+    --popover-foreground: 60 14% 95%;
+    --primary: 240 68% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 140 6% 11%;
+    --secondary-foreground: 60 14% 95%;
+    --muted: 140 6% 11%;
+    --muted-foreground: 140 3% 64%;
+    --accent: 240 68% 50%;
+    --accent-foreground: 0 0% 100%;
+    --accent-hover: 241 70% 40%;
+    --brand: 234 100% 68%;
+    --pending: 40 90% 61%;
+    --fee: 140 5% 24%;
+    --paper: 150 8% 5%;
+    --paper-deep: 140 6% 11%;
+    --ink: 60 14% 95%;
+    --ink-soft: 140 3% 72%;
+    --ink-faint: 140 3% 64%;
+    --hairline: 150 6% 15%;
+    --destructive: 0 91% 71%;
+    --destructive-foreground: 150 8% 5%;
+    --border: 150 6% 15%;
+    --input: 140 6% 17%;
+    --ring: 234 100% 68%;
+  }
 }
 @layer base {
   * { @apply border-border; }
-  body { @apply bg-[#c1c0b6] text-zinc-900 antialiased; }
-  .serif { font-family: var(--font-fraunces), ui-serif, Georgia, serif; }
-  .stats { font-family: var(--font-plex-mono), ui-monospace, monospace; }
+  body { @apply bg-background text-foreground antialiased; }
+  .serif { font-family: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif; font-weight: 800; letter-spacing: -0.03em; }
+  .stats { font-family: var(--font-geist-mono), ui-monospace, monospace; }
   .rule { border-color: hsl(var(--hairline)); }
   ::selection { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  /* Dark-mode highlight is true blue, including existing text-accent links. */
+  .dark .text-accent,
+  .dark .hover\:text-accent:hover {
+    color: #5b6cff;
+  }
 }
 @layer utilities {
   .fluid-page { padding-inline: var(--space-page); }
@@ -94,4 +125,66 @@
   .fluid-subheading { font-size: var(--text-subheading); }
   .fluid-gap { gap: var(--space-gap); }
   .fluid-grid-3 { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+}
+
+.logo-mark {
+  display: block;
+  width: 1.7rem;
+  height: 1.7rem;
+  flex: none;
+  background: #2a2ad6;
+  -webkit-mask: url("/mark.png") center / contain no-repeat;
+  mask: url("/mark.png") center / contain no-repeat;
+}
+
+.receipt-scallop {
+  background-image: radial-gradient(circle at 10px 0, transparent 9px, hsl(var(--card)) 10px);
+  background-size: 20px 12px;
+  background-repeat: repeat-x;
+}
+
+.host-swap {
+  display: inline-grid;
+  align-items: center;
+}
+
+.host-swap-github,
+.host-swap-opentip {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+
+.host-swap-github {
+  color: hsl(var(--muted-foreground));
+  text-decoration: line-through;
+  animation: host-out 3.6s ease-in-out infinite;
+}
+
+.host-swap-opentip {
+  color: hsl(var(--brand));
+  background: hsl(var(--brand) / 0.12);
+  border-radius: 999px;
+  padding: 0 0.35rem;
+  animation: host-in 3.6s ease-in-out infinite;
+}
+
+@keyframes host-out {
+  0%, 28% { opacity: 1; transform: translateY(0); }
+  42%, 78% { opacity: 0; transform: translateY(6px); }
+  92%, 100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes host-in {
+  0%, 28% { opacity: 0; transform: translateY(-6px); }
+  42%, 78% { opacity: 1; transform: translateY(0); }
+  92%, 100% { opacity: 0; transform: translateY(-6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .host-swap-github { display: none; }
+  .host-swap-opentip {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }

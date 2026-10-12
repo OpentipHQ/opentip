@@ -43,8 +43,8 @@ export default function ActivityFeed() {
   return (
     <div className="space-y-0">
       <section className="py-12 md:py-16 border-b rule space-y-4">
-        <h1 className="serif fluid-page-title font-semibold tracking-tight">Activity</h1>
-        <p className="text-zinc-600 text-sm max-w-xs">Every tip, as it happens.</p>
+        <h1 className="font-display text-4xl">Activity</h1>
+        <p className="max-w-xl text-sm text-muted-foreground">A live feed of funding.</p>
       </section>
 
       <section className="py-10">
@@ -52,33 +52,38 @@ export default function ActivityFeed() {
           <div className="py-12 flex justify-center"><Loader variant="dots" size={20} /></div>
         ) : tips.length === 0 ? (
           <div className="py-12 space-y-3">
-            <p className="text-sm text-zinc-500">No tips yet.</p>
-            <Link href="/repos" className="text-sm underline underline-offset-4 hover:text-accent">Send the first one &rarr;</Link>
+            <p className="text-sm text-muted-foreground">No funding yet.</p>
+            <Link href="/repos" className="text-sm underline underline-offset-4 hover:text-brand">Fund a repo &rarr;</Link>
           </div>
         ) : (
           <>
-            <ul className="divide-y rule">
-              {tips.map((t: any) => (
-                <li key={t.id} className="py-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Link href={`/${t.repo_id}`} className="font-mono text-sm underline underline-offset-4 hover:text-accent">{capitalize(t.repo_id.split("/")[1])}</Link>
-                        <span className="text-xs text-zinc-500">received</span>
-                        <span className="stats text-sm font-medium">{(Number(t.amount) / Math.pow(10, getTokenDecimals(t.token))).toFixed(2)} {getTokenSymbol(t.token)}</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-zinc-500">
-                        <span>by {t.display_name || truncate(t.tipper_address)}</span>
-                        <span>{timeAgo(t.timestamp)}</span>
-                        <a href={getBasescanTxUrl(t.tx_hash)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-accent transition-colors">
-                          tx <ExternalLink className="h-3 w-3" />
-                        </a>
-                      </div>
-                    </div>
-                    <Link href={`/${t.repo_id}`} className="text-sm underline underline-offset-4 text-zinc-700 hover:text-accent">View</Link>
+            <ul className="flex flex-col gap-2">
+              {tips.map((t: any) => {
+                const hash = typeof t.tx_hash === "string" ? t.tx_hash : "";
+                const onChain = /^0x[0-9a-fA-F]{64}$/.test(hash);
+                return (
+                <li key={t.id} className="rounded-[10px] border border-border px-4 py-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm">
+                      <span className="font-mono text-xs">{t.display_name || truncate(t.tipper_address)}</span>
+                      {" funded "}
+                      <Link href={`/${t.repo_id}`} className="font-medium text-brand">{capitalize(t.repo_id.split("/")[1])}</Link>
+                    </p>
+                    <span className="font-mono text-xs tabular-nums text-brand">+{(Number(t.amount) / Math.pow(10, getTokenDecimals(t.token))).toFixed(2)} {getTokenSymbol(t.token)}</span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
+                    {onChain ? (
+                      <a href={getBasescanTxUrl(hash)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-mono text-[11px] hover:text-brand">
+                        {truncate(hash)} <ExternalLink className="h-3 w-3" />
+                      </a>
+                    ) : (
+                      <span className="font-mono text-[11px]">{hash ? truncate(hash) : "—"}</span>
+                    )}
+                    <span className="ml-auto">{timeAgo(t.timestamp)}</span>
                   </div>
                 </li>
-              ))}
+                );
+              })}
             </ul>
 
             <div className="flex items-center justify-between mt-6 pt-4 border-t rule">

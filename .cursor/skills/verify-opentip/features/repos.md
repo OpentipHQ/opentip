@@ -3,7 +3,7 @@
 ## Sub-features
 
 - `/repos` heading `Repos` (`frontend/app/repos/page.tsx`).
-- Sort buttons `Most tipped`, `Recent`, and `Most tips`.
+- Sort buttons `Most funded`, `Recent`, and `Most funds`. The query values stay `tipped`, `recent`, and `tips`.
 - Search box placeholder `Search repos...`.
 - A card linking to `/vercel/next.js` with the text `Next.js` and a `View` affordance.
 - Empty copy `No repos registered yet.` when the `Repo` table has no visible rows.
@@ -22,7 +22,7 @@ const page = await (await browser.newContext({ viewport: { width: 390, height: 8
 page.setDefaultTimeout(60000);
 await page.goto("http://127.0.0.1:3000/repos", { waitUntil: "domcontentloaded" });
 await page.getByRole("heading", { name: "Repos" }).waitFor();
-await page.getByRole("button", { name: "Most tipped" }).waitFor();
+await page.getByRole("button", { name: "Most funded" }).waitFor();
 const card = page.getByRole("link", { name: /Next\.js/ });
 await card.waitFor();
 await page.screenshot({ path: "/opt/cursor/artifacts/screenshots/repos-mobile-loaded.png" });
@@ -42,6 +42,6 @@ The search input has no `<label>`. The stable handle is the placeholder `Search 
 ## Gotchas
 
 - The first paint is a loader (`loading` starts true). Wait for the `Next.js` link, not only the heading.
-- Sort `Most tipped` is the default. It asks the database for tip totals and then CoinGecko for ETH. The card still renders if the price request fails.
+- Sort `Most funded` is the default. It asks the database for funding totals and then CoinGecko for ETH. The row still renders if the price request fails.
 - GitHub avatars need `api.github.com`. A rate limit leaves the gray placeholder and the `Next.js` name, which comes from the repo id.
 - Hidden repos are excluded by the API. The seed sets `hidden` false.

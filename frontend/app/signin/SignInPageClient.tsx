@@ -57,7 +57,7 @@ export default function SignInPageClient() {
   return (
     <div className="min-h-[80vh] flex flex-col justify-center">
       <div className="max-w-sm w-full mx-auto space-y-10">
-        <h1 className="serif fluid-display font-semibold tracking-tight leading-[0.9]">Sign in</h1>
+        <h1 className="font-display text-5xl leading-[0.9]">Sign in</h1>
 
         <div className="space-y-3">
           <Button onClick={onGithub} size="lg" className="w-full px-6">
@@ -75,7 +75,7 @@ export default function SignInPageClient() {
           </div>
 
           {mode === "login" && (
-            <Link href="/forgot-password" className="text-xs text-zinc-500 underline underline-offset-4 hover:text-zinc-700">
+            <Link href="/forgot-password" className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground">
               Forgot your password?
             </Link>
           )}
@@ -84,17 +84,17 @@ export default function SignInPageClient() {
             {mode === "signup" ? "Create account" : "Sign in"}
           </StatefulButton>
 
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-muted-foreground">
             {mode === "login" ? (
-              <>Don&apos;t have an account? <button onClick={() => setMode("signup")} className="underline underline-offset-4 text-zinc-700 hover:text-zinc-900">Create one</button></>
+              <>Don&apos;t have an account? <button onClick={() => setMode("signup")} className="text-foreground underline underline-offset-4 hover:text-brand">Create one</button></>
             ) : (
-              <>Already have an account? <button onClick={() => setMode("login")} className="underline underline-offset-4 text-zinc-700 hover:text-zinc-900">Sign in</button></>
+              <>Already have an account? <button onClick={() => setMode("login")} className="text-foreground underline underline-offset-4 hover:text-brand">Sign in</button></>
             )}
           </p>
         </div>
 
         <div className="border-t rule pt-6">
-          <Link href="/" className="text-sm text-zinc-600 underline underline-offset-4">← Back to home</Link>
+          <Link href="/" className="text-sm text-muted-foreground underline underline-offset-4">← Back to home</Link>
         </div>
       </div>
     </div>

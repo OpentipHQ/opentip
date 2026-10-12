@@ -1,10 +1,13 @@
 "use client";
 import Link from "next/link";
-import Image from "next/image";
-import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
+import { Menu, Moon, Search, Sun, X } from "lucide-react";
 import HeaderAuth from "@/components/HeaderAuth";
 import NotificationBell from "@/components/NotificationBell";
+import { Logo } from "@/components/ledger/Logo";
+import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
   { href: "/repos", label: "Repos" },
@@ -13,49 +16,91 @@ const NAV_LINKS = [
   { href: "/docs", label: "Docs" },
 ];
 
+const RESERVED = new Set([
+  "docs", "repos", "leaderboard", "activity", "signin", "dashboard", "wallet",
+  "notifications", "onboarding", "admin", "legal", "install", "dev",
+  "forgot-password", "reset-password", "verify-email", "receipt",
+]);
+
 export default function HeaderShell() {
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const parts = pathname.split("/").filter(Boolean);
+  const center = parts.length === 2 && !RESERVED.has(parts[0])
+    ? `opentip.tech/${parts[0]}/${parts[1]}`
+    : null;
+  const chainLabel = process.env.NEXT_PUBLIC_CHAIN === "base" ? "Base" : "Base Sepolia";
+
   return (
     <>
-      <header className="border-b rule sticky top-0 bg-[#c1c0b6]/80 backdrop-blur z-header">
-        <nav className="w-full px-6 md:px-10 py-5 flex items-center justify-between relative">
-          <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-header border-b border-border bg-background/90 backdrop-blur-md">
+        <nav className="mx-auto flex h-16 w-full max-w-[1120px] items-center gap-3 px-4">
+          <button
+            className="p-1 md:hidden"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+          <Link href="/" className="shrink-0" aria-label="Opentip home">
+            <Logo />
+          </Link>
+          {center ? (
+            <p className="hidden min-w-0 flex-1 truncate text-center font-mono text-xs text-muted-foreground sm:block">
+              {center}
+            </p>
+          ) : (
+            <div className="ml-4 hidden items-center gap-5 md:flex" aria-label="Primary">
+              {NAV_LINKS.map(({ href, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className={cn(
+                    "text-sm text-muted-foreground transition-colors hover:text-foreground",
+                    pathname === href && "text-foreground",
+                  )}
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          )}
+          <div className="ml-auto flex items-center gap-1.5">
             <button
-              className="md:hidden p-1"
-              onClick={() => setMobileOpen(!mobileOpen)}
-              aria-label="Toggle menu"
+              type="button"
+              aria-label="Search repositories"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+              onClick={() => window.dispatchEvent(new Event("opentip-search"))}
             >
-              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              <Search className="h-4 w-4" />
             </button>
-            <Link href="/" className="flex items-center gap-2.5">
-              <Image src="/Opentip.png" alt="Opentip" width={28} height={28} />
-              <span className="serif font-semibold text-2xl tracking-tight">Opentip</span>
-            </Link>
-          </div>
-          <div className="hidden md:flex gap-x-8 text-sm items-center text-zinc-700 absolute left-1/2 -translate-x-1/2">
-            {NAV_LINKS.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className="relative px-3 py-1.5 hover:text-zinc-900 transition-colors before:content-[''] before:absolute before:top-0 before:left-0 before:w-3 before:h-3 before:border-t-[1.5px] before:border-l-[1.5px] before:border-zinc-400 before:-translate-x-1.5 before:-translate-y-1.5 after:content-[''] after:absolute after:bottom-0 after:right-0 after:w-3 after:h-3 after:border-b-[1.5px] after:border-r-[1.5px] after:border-zinc-400 after:translate-x-1.5 after:translate-y-1.5"
-              >
-                {label}
-              </Link>
-            ))}
-          </div>
-          <div className="flex items-center gap-4">
+            <span className="hidden items-center rounded-full border border-border px-2.5 py-1 text-xs sm:inline-flex">
+              {chainLabel}
+            </span>
+            <button
+              type="button"
+              aria-label="Toggle color theme"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+              {mounted && theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
             <NotificationBell />
             <HeaderAuth />
           </div>
         </nav>
       </header>
       {mobileOpen && (
-        <div className="md:hidden border-b rule bg-[#c1c0b6] px-6 py-4 space-y-3">
+        <div className="border-b border-border bg-background px-6 py-4 md:hidden">
           {NAV_LINKS.map(({ href, label }) => (
             <Link
               key={href}
               href={href}
-              className="block text-sm text-zinc-700 hover:text-zinc-900"
+              className="block py-2 text-sm text-muted-foreground hover:text-foreground"
               onClick={() => setMobileOpen(false)}
             >
               {label}

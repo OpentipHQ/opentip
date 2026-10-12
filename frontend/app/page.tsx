@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { HomePage } from "@/components/home/HomePage";
 
 const description =
-  "Opentip turns any GitHub repo into a funding page. Users, companies, and fans send ETH, USDC, or OAR straight to a smart contract on Base, and maintainers claim it whenever they want.";
+  "Funding for open source, from the open market. Fund maintainers in ETH or USDC. No account needed. OAR is coming soon.";
 
 export const metadata: Metadata = {
   title: { absolute: "Opentip | Funding for open source" },

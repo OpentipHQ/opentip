@@ -5,17 +5,15 @@ import { authOptions } from "@/lib/auth";
 import Providers from "./providers";
 import SiteShell from "@/components/SiteShell";
 import PwaSplash from "@/components/PwaSplash";
-import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
 
-const fraunces = Fraunces({
+const sans = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });
+const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", display: "swap" });
+const display = Bricolage_Grotesque({
   subsets: ["latin"],
-  style: ["normal", "italic"],
-  axes: ["SOFT", "WONK", "opsz"],
-  variable: "--font-fraunces",
+  variable: "--font-bricolage",
   display: "swap",
 });
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
-const plexMono = IBM_Plex_Mono({ weight: ["400","500"], subsets: ["latin"], variable: "--font-plex-mono", display: "swap" });
 
 export const metadata = {
   metadataBase: new URL("https://opentip.tech"),
@@ -23,14 +21,14 @@ export const metadata = {
     default: "Opentip | Funding for open source",
     template: "%s | Opentip",
   },
-  description: "Opentip turns any GitHub repo into a funding page. Users, companies, and fans send ETH, USDC, or OAR straight to a smart contract on Base, and maintainers claim it whenever they want.",
+  description: "Funding for open source, from the open market. Fund maintainers in ETH or USDC. No account needed. OAR is coming soon.",
   icons: { icon: "/Opentip.png" },
   other: {
     "base:app_id": "6ab5fa7b81234bc7e80b13bf",
   },
   openGraph: {
     title: "Opentip | Funding for open source",
-    description: "Opentip turns any GitHub repo into a funding page. Users, companies, and fans send ETH, USDC, or OAR straight to a smart contract on Base, and maintainers claim it whenever they want.",
+    description: "Funding for open source, from the open market. Fund maintainers in ETH or USDC. No account needed. OAR is coming soon.",
     url: "https://opentip.tech",
     siteName: "Opentip",
     type: "website",
@@ -39,7 +37,7 @@ export const metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Opentip | Funding for open source",
-    description: "Opentip turns any GitHub repo into a funding page. Users, companies, and fans send ETH, USDC, or OAR straight to a smart contract on Base, and maintainers claim it whenever they want.",
+    description: "Funding for open source, from the open market. Fund maintainers in ETH or USDC. No account needed. OAR is coming soon.",
     images: ["/ogimage.png"],
   },
 };
@@ -48,7 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const [session, headersObj] = await Promise.all([getServerSession(authOptions), headers()]);
   const cookies = headersObj.get("cookie");
   return (
-    <html lang="en" className={`${fraunces.variable} ${inter.variable} ${plexMono.variable}`}>
+    <html lang="en" className={`${sans.variable} ${mono.variable} ${display.variable}`} suppressHydrationWarning>
       <head>
         <meta name="base:app_id" content="6ab5fa7b81234bc7e80b13bf" />
         <link rel="manifest" href="/manifest.json" />
@@ -79,7 +77,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           }
         ` }} />
       </head>
-      <body className="min-h-screen bg-[#c1c0b6] text-zinc-900 antialiased">
+      <body className="flex min-h-screen flex-col bg-background font-sans text-foreground antialiased">
         <PwaSplash />
         <Providers cookies={cookies} session={session}>
           <div className="flex flex-col min-h-screen">

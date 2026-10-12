@@ -9,6 +9,12 @@ const nextConfig = {
     ],
   },
   transpilePackages: ["wagmi", "@wagmi/core", "@wagmi/connectors", "ox", "@coinbase/cdp-hooks", "@coinbase/cdp-core", "@coinbase/cdp-api-client"],
+  async redirects() {
+    return [
+      { source: "/terms", destination: "/legal/terms", permanent: false },
+      { source: "/privacy", destination: "/legal/privacy", permanent: false },
+    ];
+  },
   async rewrites() {
     return [
       // CDP fetches /.well-known/jwks.json server-side — dot-folders can 404/redirect

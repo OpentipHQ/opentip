@@ -10,16 +10,16 @@ export interface ButtonProps extends Omit<React.ComponentPropsWithoutRef<typeof 
   variant?: ButtonVariant; size?: ButtonSize; pressScale?: number; children?: ReactNode;
 }
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
-  primary: "bg-accent text-accent-foreground hover:bg-accent/90",
-  secondary: "border rule text-zinc-900 hover:bg-zinc-900/5",
-  ghost: "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-900/5",
-  outline: "border rule text-zinc-900 hover:bg-zinc-900/5",
+  primary: "bg-accent text-white hover:bg-[hsl(var(--accent-hover))]",
+  secondary: "border border-border bg-card text-foreground hover:bg-muted",
+  ghost: "text-muted-foreground hover:text-foreground hover:bg-muted",
+  outline: "border border-border bg-transparent text-foreground hover:bg-muted",
 };
 const SIZE_CLASS: Record<ButtonSize, string> = {
-  sm: "h-8 px-3 text-xs gap-1.5 rounded-sm",
-  md: "h-9 px-4 text-sm gap-2 rounded-sm",
-  lg: "h-10 px-5 text-sm gap-2 rounded-sm",
-  icon: "h-8 w-8 rounded-sm",
+  sm: "h-8 px-3 text-xs gap-1.5 rounded-full",
+  md: "h-9 px-4 text-sm gap-2 rounded-full",
+  lg: "h-10 px-5 text-sm gap-2 rounded-full",
+  icon: "h-8 w-8 rounded-full",
 };
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button({ variant = "primary", size = "md", pressScale = 0.97, className, children, ...rest }, ref) {
   const reduce = useReducedMotion();

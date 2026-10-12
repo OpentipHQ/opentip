@@ -44,7 +44,7 @@ function Toggle({ on, onClick, label }: { on: boolean; onClick: () => void; labe
       className={`w-10 h-6 rounded-full transition-colors flex-shrink-0 ${on ? "bg-zinc-900" : "bg-zinc-300"}`}
     >
       <span
-        className={`block w-5 h-5 m-0.5 rounded-full bg-[#c1c0b6] transition-transform ${on ? "translate-x-4" : "translate-x-0"}`}
+        className={`block w-5 h-5 m-0.5 rounded-full bg-card transition-transform ${on ? "translate-x-4" : "translate-x-0"}`}
       />
     </button>
   );

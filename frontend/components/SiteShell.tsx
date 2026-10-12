@@ -6,14 +6,14 @@ import ConditionalFooter from "@/components/ConditionalFooter";
 
 export default function SiteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  if (pathname === "/") return <>{children}</>;
+  const home = pathname === "/";
   return (
     <>
       <HeaderShell />
-      <main id="main-content" className="w-full fluid-page flex-1">
+      <main id="main-content" className={home ? "flex-1" : "mx-auto flex w-full min-w-0 max-w-[1120px] flex-1 flex-col px-4 py-8"}>
         {children}
       </main>
-      <ConditionalFooter />
+      {home ? null : <ConditionalFooter />}
     </>
   );
 }

@@ -31,7 +31,7 @@ await browser.close();
 
 Repeat with viewport `{ width: 1440, height: 900 }` and `desktop` in the file name.
 
-End state: heading `Next.js` is visible, and the About tab shows `Verification fixture summary for the Next.js repository.` The Tip tab shows heading `Claim this repo` with `Not claimed yet` when the Base Sepolia contract reports the repo as unregistered, or heading `Tip Next.js` with an Amount field when `isRegistered` is true.
+End state: heading `Next.js` is visible, and the About tab shows `Verification fixture summary for the Next.js repository.` The Fund tab shows heading `Claim this repo` with `Not claimed yet` when the Base Sepolia contract reports the repo as unregistered, or heading `Fund Next.js` with an Amount field when `isRegistered` is true.
 
 A route-only shot, without the About click:
 
@@ -46,7 +46,7 @@ node .cursor/skills/verify-opentip/screenshot.mjs \
 ## Gotchas
 
 - `TipClient` calls `useOpentipSend`, which calls `useCurrentUser`. `launch.sh` sets `NEXT_PUBLIC_CDP_PROJECT_ID` to the stub UUID `00000000-0000-4000-8000-000000000000` so `CDPHooksProvider` mounts. With that variable unset, this page hits the error boundary `Something went wrong`. The stub does not create a wallet.
-- `NEXT_PUBLIC_CHAIN=baseSepolia` and the public contract `0xeD13dB8234d437771e115419BF7498Ddef90Dc8D` make the registration read hit Base Sepolia via `https://sepolia.base.org`. `vercel/next.js` is not registered there, so the honest Tip tab is Claim this repo. Wait for that heading or for `Tip Next.js`; do not screenshot the spinner (`isRegPending`) as the final state.
+- `NEXT_PUBLIC_CHAIN=baseSepolia` and the public contract `0xeD13dB8234d437771e115419BF7498Ddef90Dc8D` make the registration read hit Base Sepolia via `https://sepolia.base.org`. `vercel/next.js` is not registered there, so the honest Fund tab is Claim this repo. Wait for that heading or for `Fund Next.js`; do not screenshot the spinner (`isRegPending`) as the final state.
 - No `GROQ_API_KEY`: a missing or stale summary becomes `An open-source project by vercel.` The seed stores a fresh summary, so About shows the fixture sentence instead.
 - No `GITHUB_TOKEN`: metadata is a public GitHub request. Rate limiting replaces the description with `Could not fetch GitHub metadata.` The heading `Next.js` still renders from the route.
 - Do not click `Get started`, `Sign in with GitHub`, or `Connect wallet`. Those need GitHub OAuth, CDP, or a real WalletConnect project.

@@ -2,7 +2,7 @@
 
 ## Sub-features
 
-- `/leaderboard` heading `Top supporters` (`frontend/app/leaderboard/page.tsx`).
+- `/leaderboard` heading `Leaderboard` (`frontend/app/leaderboard/page.tsx`).
 - One ranked row for the seeded tip: display name `Fixture Supporter`, total `$25.00`.
 - Empty and error copy when the query fails: `No tips yet.` or `Couldn't load the leaderboard. Try again in a minute.`
 
@@ -19,7 +19,7 @@ const browser = await launchBrowser();
 const page = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
 page.setDefaultTimeout(60000);
 await page.goto("http://127.0.0.1:3000/leaderboard", { waitUntil: "domcontentloaded" });
-await page.getByRole("heading", { name: "Top supporters" }).waitFor();
+await page.getByRole("heading", { name: "Leaderboard" }).waitFor();
 await page.getByRole("cell", { name: "Fixture Supporter" }).waitFor();
 await page.getByRole("cell", { name: "$25.00" }).waitFor();
 await page.screenshot({ path: "/opt/cursor/artifacts/screenshots/leaderboard-desktop.png" });

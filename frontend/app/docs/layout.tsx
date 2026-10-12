@@ -38,7 +38,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             className={`block px-3 py-2 text-sm rounded-sm transition-colors ${
               active
                 ? "bg-accent/10 text-accent font-medium"
-                : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-900/5"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
           >
             {label}
@@ -57,7 +57,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="py-4">
       {/* Mobile nav */}
-      <div className="lg:hidden sticky top-[73px] z-sticky bg-[#c1c0b6] fluid-page-neg fluid-page pb-4">
+      <div className="lg:hidden sticky top-16 z-sticky bg-background fluid-page-neg fluid-page pb-4">
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="w-full flex items-center justify-between px-4 py-3 border rule rounded-sm text-sm font-medium"
@@ -66,7 +66,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           <ChevronDown className={`w-4 h-4 transition-transform ${mobileOpen ? "rotate-180" : ""}`} />
         </button>
         {mobileOpen && (
-          <div className="mt-2 border rule rounded-sm bg-[#c1c0b6] p-2 space-y-0.5">
+          <div className="mt-2 space-y-0.5 rounded-[10px] border border-border bg-card p-2">
             <NavLinks onNavigate={() => setMobileOpen(false)} />
           </div>
         )}

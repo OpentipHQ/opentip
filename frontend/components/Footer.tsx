@@ -1,72 +1,54 @@
 "use client";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { Logo } from "@/components/ledger/Logo";
 
-const VISIBLE_PATHS = [
-  "/legal/privacy",
-  "/legal/terms",
-];
+const VISIBLE_PATHS = ["/legal/privacy", "/legal/terms"];
 
 export default function Footer({ force = false }: { force?: boolean }) {
   const pathname = usePathname();
-
-  // Allowlist: the shared footer renders on legal pages and the 404
-  // page (which renders <Footer force /> directly — see app/not-found.tsx).
-  // The homepage ships its own footer.
   if (!force && !VISIBLE_PATHS.includes(pathname)) return null;
 
   return (
-    <footer className="w-full bg-accent text-white">
-      <div className="fluid-page pt-12 pb-6">
-        <div className="flex flex-col md:flex-row items-start justify-between gap-10">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2.5">
-              <Image src="/Opentip.png" alt="Opentip" width={28} height={28} />
-              <span className="serif text-2xl font-semibold tracking-tight">Opentip</span>
-            </div>
-            <p className="text-sm opacity-70 max-w-xs">Funding for open source. Tip any GitHub repo in crypto.</p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-xs">
-            <div>
-              <p className="font-medium uppercase tracking-wider text-[0.65rem] opacity-60 mb-3">Products</p>
-              <div className="space-y-2 opacity-80">
-                <Link href="/repos" className="block hover:opacity-100 transition-opacity">Repos</Link>
-                <Link href="/activity" className="block hover:opacity-100 transition-opacity">Activity</Link>
-                <Link href="/leaderboard" className="block hover:opacity-100 transition-opacity">Leaderboard</Link>
-                <Link href="/dashboard" className="block hover:opacity-100 transition-opacity">Dashboard</Link>
-              </div>
-            </div>
-            <div>
-              <p className="font-medium uppercase tracking-wider text-[0.65rem] opacity-60 mb-3">Resources</p>
-              <div className="space-y-2 opacity-80">
-                <Link href="/docs" className="block hover:opacity-100 transition-opacity">Documentation</Link>
-                <a href="https://github.com/opentiphq" target="_blank" rel="noopener noreferrer" className="block hover:opacity-100 transition-opacity">GitHub</a>
-                <a href="https://x.com/opentip_tech" target="_blank" rel="noopener noreferrer" className="block hover:opacity-100 transition-opacity">Twitter</a>
-              </div>
-            </div>
-            <div>
-              <p className="font-medium uppercase tracking-wider text-[0.65rem] opacity-60 mb-3">Legal</p>
-              <div className="space-y-2 opacity-80">
-                <Link href="/legal/terms" className="block hover:opacity-100 transition-opacity">Terms</Link>
-                <Link href="/legal/privacy" className="block hover:opacity-100 transition-opacity">Privacy</Link>
-              </div>
-            </div>
-            <div>
-              <p className="font-medium uppercase tracking-wider text-[0.65rem] opacity-60 mb-3">Contact</p>
-              <div className="space-y-2 opacity-80">
-                <a href="mailto:support@opentip.tech" className="block hover:opacity-100 transition-opacity">support@opentip.tech</a>
-              </div>
-            </div>
-          </div>
+    <footer className="mt-20 border-t border-border">
+      <div className="mx-auto grid w-full max-w-[1120px] gap-8 px-4 py-10 sm:grid-cols-4">
+        <div className="flex flex-col gap-2">
+          <Logo />
+          <p className="max-w-xs text-sm text-muted-foreground">Funding for open source, from the open market.</p>
         </div>
-        <div className="mt-10 pt-6 border-t border-white/20 text-xs opacity-60">
-          <p>© 2026 Opentip</p>
-        </div>
+        <FooterCol title="Product" links={[["Repos", "/repos"], ["Activity", "/activity"], ["Leaderboard", "/leaderboard"], ["Docs", "/docs"]]} />
+        <FooterCol
+          title="Social"
+          links={[
+            ["GitHub", "https://github.com/opentiphq"],
+            ["X", "https://x.com/opentip_tech"],
+            ["support@opentip.tech", "mailto:support@opentip.tech"],
+          ]}
+        />
+        <FooterCol title="Legal" links={[["Terms", "/legal/terms"], ["Privacy", "/legal/privacy"]]} />
       </div>
-      <div className="text-center pb-4">
-        <div className="serif text-[5rem] md:text-[8rem] font-bold tracking-tight opacity-20 leading-none select-none">opentip.</div>
+      <div className="mx-auto flex w-full max-w-[1120px] items-center justify-between px-4 pb-8 text-xs text-muted-foreground">
+        <p>© 2026 Opentip</p>
       </div>
     </footer>
+  );
+}
+
+function FooterCol({ title, links }: { title: string; links: string[][] }) {
+  return (
+    <nav className="flex flex-col gap-2" aria-label={title}>
+      <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">{title}</p>
+      {links.map(([label, href]) =>
+        href.startsWith("http") || href.startsWith("mailto:") ? (
+          <a key={href} href={href} className="text-sm hover:text-brand" target={href.startsWith("http") ? "_blank" : undefined} rel="noreferrer">
+            {label}
+          </a>
+        ) : (
+          <Link key={href} href={href} className="text-sm hover:text-brand">
+            {label}
+          </Link>
+        ),
+      )}
+    </nav>
   );
 }

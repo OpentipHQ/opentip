@@ -14,7 +14,7 @@ import { BASE_URL, accountButton, assertNoCrash, launchBrowser, parseViewport, r
 const READY = {
   "/": "Funding for open source",
   "/docs": "Documentation",
-  "/leaderboard": "Top supporters",
+  "/leaderboard": "Leaderboard",
   "/repos": "Repos",
   "/signin": "Sign in",
   "/vercel/next.js": "Next.js",

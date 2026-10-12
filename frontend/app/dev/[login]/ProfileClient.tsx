@@ -137,7 +137,7 @@ export default function ProfileClient({ data, contributions }: { data: ProfileDa
         {/* PFP overlapping header bottom */}
         <div className="relative px-6 md:px-10">
           <div className="-mt-10 md:-mt-12 inline-block">
-            <div className="w-20 h-20 md:w-24 md:h-24 rounded-sm border-4 border-[#c1c0b6] bg-[#c1c0b6] overflow-hidden">
+            <div className="w-20 h-20 md:w-24 md:h-24 rounded-sm border-4 border-background bg-background overflow-hidden">
               {data.pfp ? (
                 <Image src={data.pfp} alt={data.login || "Profile"} width={96} height={96} className="w-full h-full object-cover" />
               ) : data.image ? (
@@ -186,7 +186,7 @@ export default function ProfileClient({ data, contributions }: { data: ProfileDa
 
       {/* Repos */}
       {data.repos.length > 0 && (
-        <section className="border rule rounded-sm bg-[#c1c0b6]/50 p-6 space-y-4">
+        <section className="border rule rounded-sm bg-card p-6 space-y-4">
           <h2 className="serif text-lg font-semibold">Repos</h2>
           <ul className="divide-y rule">
             {data.repos.map((r) => (
@@ -207,7 +207,7 @@ export default function ProfileClient({ data, contributions }: { data: ProfileDa
 
       {/* Contribution heatmap */}
       {contributions.length > 0 && (
-        <section className="border rule rounded-sm bg-[#c1c0b6]/50 p-6 space-y-4">
+        <section className="border rule rounded-sm bg-card p-6 space-y-4">
           <h2 className="serif text-lg font-semibold">GitHub contribution activity</h2>
           <ContributionHeatmap contributions={contributions} />
           <p className="text-xs text-zinc-500">GitHub contributions from the past year</p>

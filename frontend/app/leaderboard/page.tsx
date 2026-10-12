@@ -37,34 +37,26 @@ export default async function LeaderboardPage() {
   const { rows, error } = await getLeaderboard();
   return (
     <div className="space-y-0">
-      <section className="py-12 md:py-16 border-b rule">
-        <h1 className="serif fluid-page-title font-semibold tracking-tight">Top supporters</h1>
-      </section>
+      <header>
+        <h1 className="font-display text-4xl">Leaderboard</h1>
+        <p className="mt-2 max-w-xl text-sm text-muted-foreground">Public totals. Ranks follow funded volume.</p>
+      </header>
 
       <section className="py-6">
         {error ? (
-          <p className="text-sm text-zinc-500 py-12 text-center">Couldn&apos;t load the leaderboard. Try again in a minute.</p>
+          <p className="py-12 text-center text-sm text-muted-foreground">Couldn&apos;t load the leaderboard. Try again in a minute.</p>
         ) : rows.length === 0 ? (
-          <p className="text-sm text-zinc-500 py-12 text-center">No tips yet.</p>
+          <p className="rounded-[10px] border border-dashed border-border px-4 py-12 text-center text-sm text-muted-foreground">No funding yet.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-            <thead>
-              <tr className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500 text-left border-b rule">
-                <th className="pb-3 font-medium">Supporter</th>
-                <th className="pb-3 text-right font-medium">Total USD</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r: any, i: number) => (
-                <tr key={`${r.tipper_address}-${i}`} className="border-b rule last:border-0">
-                  <td className="py-4 font-mono text-zinc-700">{r.display_name || `${r.tipper_address.slice(0,6)}...${r.tipper_address.slice(-4)}`}</td>
-                  <td className="py-4 text-right stats font-medium">{fmtUsd(r.usd)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-            </div>
+          <ol className="flex flex-col gap-2">
+            {rows.map((r, i) => (
+              <li key={`${r.tipper_address}-${i}`} className="flex items-center gap-3 rounded-[10px] border border-border px-4 py-3">
+                <span className="w-6 font-mono text-sm text-brand">{i + 1}</span>
+                <span className="flex-1 font-mono text-sm">{r.display_name || `${r.tipper_address.slice(0,6)}...${r.tipper_address.slice(-4)}`}</span>
+                <span className="font-mono text-sm tabular-nums">{fmtUsd(r.usd)}</span>
+              </li>
+            ))}
+          </ol>
         )}
       </section>
     </div>

@@ -1,8 +1,10 @@
 "use client";
 import { SessionProvider } from "next-auth/react";
+import { ThemeProvider } from "next-themes";
 import { createContext, useContext } from "react";
 import ContextProvider from "@/context";
 import CdpProvider from "@/components/cdp/CdpProvider";
+import { CommandSearch } from "@/components/ledger/CommandSearch";
 import { AnimatedToastStack, useAnimatedToastStack, type ToastInput } from "@/components/motion/animated-toast-stack";
 
 type ToastCtx = { showToast: (i: ToastInput) => string; updateToast: (id: string, p: Partial<ToastInput>) => void; dismissToast: (id: string) => void };
@@ -28,7 +30,12 @@ export default function Providers({ children, cookies, session }: { children: Re
     <SessionProvider session={session} refetchOnWindowFocus refetchInterval={5 * 60} basePath="/api/auth">
       <CdpProvider>
         <ContextProvider cookies={cookies}>
-          <ToastProvider>{children}</ToastProvider>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+        <ToastProvider>
+          {children}
+          <CommandSearch />
+        </ToastProvider>
+      </ThemeProvider>
         </ContextProvider>
       </CdpProvider>
     </SessionProvider>

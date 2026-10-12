@@ -235,7 +235,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="md:hidden fixed top-5 left-4 z-overlay-control">
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="p-2 bg-[#c1c0b6] border rule rounded-sm"
+          className="p-2 bg-card border rule rounded-sm"
           aria-label="Toggle menu"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -259,7 +259,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-overlay">
           <div className="absolute inset-0 bg-black/20" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute left-0 top-0 bottom-0 w-[240px] bg-[#c1c0b6] border-r rule">
+          <aside className="absolute left-0 top-0 bottom-0 w-[240px] bg-card border-r rule">
             <div className="flex items-center justify-between px-4 py-4 border-b rule">
               <span className="serif font-semibold text-sm">Admin</span>
               <button onClick={() => setMobileOpen(false)} className="p-1 hover:bg-zinc-900/5 rounded-sm">

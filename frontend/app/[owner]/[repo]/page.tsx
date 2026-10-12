@@ -78,11 +78,11 @@ export async function generateMetadata({
     const count = tips.reduce((s, t) => s + (t._count ?? 0), 0);
     const description =
       count > 0
-        ? `${fmtUsd(totalUsd)} tipped across ${count} tip${count === 1 ? "" : "s"} — tip ${repoId} in crypto on Opentip.`
-        : `Tip ${repoId} in crypto on Opentip — be the first, from $1.`;
+        ? `${fmtUsd(totalUsd)} funded across ${count} payment${count === 1 ? "" : "s"} — fund ${repoId} on Opentip.`
+        : `Fund ${repoId} on Opentip — be the first, from $1.`;
     return { title: repoId, description };
   } catch {
-    return { title: repoId, description: `Tip ${repoId} in crypto on Opentip.` };
+    return { title: repoId, description: `Fund ${repoId} on Opentip.` };
   }
 }
 
@@ -135,12 +135,12 @@ export default async function RepoPage({ params }: { params: Promise<{ owner: st
           {meta ? (
             <>
               {repoRecord?.icon ? (
-                <Image src={repoRecord.icon} alt={repo} width={96} height={96} className="rounded-full border-2 border-zinc-400" />
+                <Image src={repoRecord.icon} alt={repo} width={96} height={96} className="rounded-[10px] border border-border" />
               ) : (
-                <Image src={meta.owner.avatar_url} alt={owner} width={96} height={96} className="rounded-full border-2 border-zinc-400" />
+                <Image src={meta.owner.avatar_url} alt={owner} width={96} height={96} className="rounded-[10px] border border-border" />
               )}
               <div className="space-y-2">
-                <h1 className="serif fluid-heading font-semibold tracking-tight flex flex-wrap items-center gap-x-3 gap-y-1">
+                <h1 className="font-display fluid-heading flex flex-wrap items-center gap-x-3 gap-y-1">
                   <span>{capitalize(repo)}</span>
                   {developer && (
                     <a href={`/dev/${developer.login}`} className="inline-flex items-center gap-1.5 group">
@@ -165,10 +165,10 @@ export default async function RepoPage({ params }: { params: Promise<{ owner: st
           ) : (
             <div className="flex flex-wrap gap-5 items-start">
               {repoRecord?.icon && (
-                <Image src={repoRecord.icon} alt={repo} width={96} height={96} className="rounded-full border-2 border-zinc-400" />
+                <Image src={repoRecord.icon} alt={repo} width={96} height={96} className="rounded-[10px] border border-border" />
               )}
               <div className="space-y-1">
-                <h1 className="serif fluid-heading font-semibold tracking-tight">{capitalize(repoId.split("/")[1])}</h1>
+                <h1 className="font-display fluid-heading">{capitalize(repoId.split("/")[1])}</h1>
                 <p className="text-zinc-500 text-sm">Could not fetch GitHub metadata.</p>
                 <LinkIcons links={links} />
               </div>

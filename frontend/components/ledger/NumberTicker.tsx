@@ -2,14 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useReducedMotion } from "motion/react";
+import { fmtUsd } from "@/lib/prices";
 
-export function NumberTicker({
-  value,
-  format,
-}: {
-  value: number;
-  format: (n: number) => string;
-}) {
+export function NumberTicker({ value }: { value: number }) {
   const reduce = useReducedMotion();
   const [shown, setShown] = useState(reduce ? value : 0);
 
@@ -32,5 +27,5 @@ export function NumberTicker({
     return () => cancelAnimationFrame(frame);
   }, [value, reduce]);
 
-  return <span className="tabular-nums">{format(Number.isFinite(shown) ? shown : 0)}</span>;
+  return <span className="tabular-nums">{fmtUsd(Number.isFinite(shown) ? shown : 0)}</span>;
 }

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { capitalize, getTokenDecimals, getTokenSymbol } from "@/lib/chain";
-import { fmtUsd, getTokenPrices, usdValue } from "@/lib/prices";
+import { getTokenPrices, usdValue } from "@/lib/prices";
 
 export type HomeLedgerTip = {
   id: string;
@@ -86,6 +86,3 @@ export async function getHomeLedger(): Promise<HomeLedger | null> {
   }
 }
 
-export function formatLedgerUsd(value: number): string {
-  return fmtUsd(value);
-}

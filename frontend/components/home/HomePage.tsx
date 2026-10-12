@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import { UrlSwap } from "@/components/ledger/UrlSwap";
 import { SplitBar } from "@/components/ledger/SplitBar";
 import { NumberTicker } from "@/components/ledger/NumberTicker";
-import { formatLedgerUsd, getHomeLedger } from "@/lib/home-ledger";
+import { getHomeLedger } from "@/lib/home-ledger";
 import { bpsLabel, readFeeBps } from "@/lib/fee-bps";
 import type { ReactNode } from "react";
 import { CONTRACT_ADDRESS } from "@/lib/chain";
@@ -53,7 +53,7 @@ export async function HomePage() {
             <p className="text-sm font-medium">{ledger?.project ?? "No funding yet"}</p>
             <p className="mt-5 text-xs text-muted-foreground">Total funded</p>
             <p className="mt-1 font-mono text-4xl tracking-tight">
-              <NumberTicker value={ledger?.fundedUsd ?? 0} format={formatLedgerUsd} />
+              <NumberTicker value={ledger?.fundedUsd ?? 0} />
             </p>
             <div className="mt-4 flex flex-col gap-2">
               <SplitBar maintainerBps={maintainer} />

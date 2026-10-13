@@ -4,10 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getFontEmbedCSS, toBlob } from "html-to-image";
+import { motion, useReducedMotion } from "motion/react";
 import { Button } from "@/components/motion/button";
 import { ReceiptCard } from "@/components/ledger/ReceiptCard";
 import { useToast } from "@/app/providers";
 import { formatAmount } from "@/lib/formatAmount";
+import { SPRING_PRESS } from "@/lib/ease";
+import { useHoverCapable } from "@/lib/hooks/use-hover-capable";
 import type { LoadedReceipt } from "@/lib/receipt";
 
 export function ReceiptScreen({ receipt, network }: { receipt: LoadedReceipt; network: string }) {
@@ -16,6 +19,9 @@ export function ReceiptScreen({ receipt, network }: { receipt: LoadedReceipt; ne
   const cardRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState(false);
   const ready = receipt.status === "ready" && receipt.kind && receipt.repoId && receipt.project;
+  const reduceMotion = useReducedMotion();
+  const canHover = useHoverCapable();
+  const openShareInNewTab = useOpenShareInNewTab();
 
   useEffect(() => {
     if (receipt.status !== "pending" && receipt.status !== "unknown") return;
@@ -74,18 +80,6 @@ export function ReceiptScreen({ receipt, network }: { receipt: LoadedReceipt; ne
     }
   }
 
-  function share() {
-    if (!ready || !receipt.project || !receipt.repoId) return;
-    const pageUrl = `https://opentip.tech/${receipt.repoId}`;
-    const leg = receipt.legs[0];
-    const claimed = leg ? `${formatAmount(leg.maintainer, leg.token) ?? "0"} ${leg.symbol}` : "";
-    const text = receipt.kind === "claim"
-      ? `Just claimed ${claimed} in tips for ${receipt.project} on @opentip_tech. Tips for open source, from the open market.`
-      : `I just sent a tip to ${receipt.project} on @opentip_tech. Tips for open source, from the open market.`;
-    const intent = `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(pageUrl)}`;
-    window.open(intent, "_blank", "noopener,noreferrer");
-  }
-
   return (
     <div className="mx-auto flex w-full max-w-md flex-col items-center py-6">
       <div className="mb-8 flex w-full items-center justify-between">
@@ -107,10 +101,19 @@ export function ReceiptScreen({ receipt, network }: { receipt: LoadedReceipt; ne
               network={network}
             />
           </div>
-          <Button className="mt-6 h-12 w-full rounded-full" aria-label="Share on X" onClick={share}>
+          <motion.a
+            href={xShareIntent(receipt)}
+            aria-label="Share on X"
+            target={openShareInNewTab ? "_blank" : undefined}
+            rel={openShareInNewTab ? "noopener noreferrer" : undefined}
+            whileTap={reduceMotion ? undefined : { scale: 0.97 }}
+            whileHover={reduceMotion || !canHover ? undefined : { scale: 1.02 }}
+            transition={SPRING_PRESS}
+            className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent px-4 text-sm font-medium text-white select-none transition-colors hover:bg-[hsl(var(--accent-hover))]"
+          >
             Share on
             <XMark />
-          </Button>
+          </motion.a>
           <Button variant="outline" className="mt-2 h-12 w-full rounded-full" disabled={saving} onClick={() => void download()}>
             {saving ? "Saving…" : "Download receipt"}
           </Button>
@@ -142,6 +145,25 @@ export function ReceiptScreen({ receipt, network }: { receipt: LoadedReceipt; ne
       )}
     </div>
   );
+}
+
+function xShareIntent(receipt: LoadedReceipt) {
+  const pageUrl = `https://opentip.tech/${receipt.repoId}`;
+  const leg = receipt.legs[0];
+  const claimed = leg ? `${formatAmount(leg.maintainer, leg.token) ?? "0"} ${leg.symbol}` : "";
+  const text = receipt.kind === "claim"
+    ? `Just claimed ${claimed} in tips for ${receipt.project} on @opentip_tech. Tips for open source, from the open market.`
+    : `I just sent a tip to ${receipt.project} on @opentip_tech. Tips for open source, from the open market.`;
+  return `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(pageUrl)}`;
+}
+
+function useOpenShareInNewTab() {
+  const [openInNewTab, setOpenInNewTab] = useState(false);
+  useEffect(() => {
+    const touch = navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches;
+    setOpenInNewTab(!touch);
+  }, []);
+  return openInNewTab;
 }
 
 function XMark() {

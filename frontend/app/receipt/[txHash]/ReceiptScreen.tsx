@@ -30,6 +30,7 @@ export function ReceiptScreen({
   const reduceMotion = useReducedMotion();
   const canHover = useHoverCapable();
   const openShareInNewTab = useOpenShareInNewTab();
+  const share = xShareLinks(receipt, prices);
 
   useEffect(() => {
     if (receipt.status !== "pending" && receipt.status !== "unknown") return;
@@ -111,10 +112,11 @@ export function ReceiptScreen({
             />
           </div>
           <motion.a
-            href={xShareIntent(receipt, prices)}
+            href={share.intentUrl}
             aria-label="Share on X"
             target={openShareInNewTab ? "_blank" : undefined}
             rel={openShareInNewTab ? "noopener noreferrer" : undefined}
+            onClick={(event) => openXOnTouch(event, share)}
             whileTap={reduceMotion ? undefined : { scale: 0.97 }}
             whileHover={reduceMotion || !canHover ? undefined : { scale: 1.02 }}
             transition={SPRING_PRESS}
@@ -156,20 +158,48 @@ export function ReceiptScreen({
   );
 }
 
-function xShareIntent(receipt: LoadedReceipt, prices: Record<string, number>) {
+const X_APP_FALLBACK_MS = 1200;
+
+function xShareLinks(receipt: LoadedReceipt, prices: Record<string, number>) {
   const pageUrl = `https://opentip.tech/${receipt.repoId}`;
   const claimed = claimShareTotal(receipt.legs, prices);
   const text = receipt.kind === "claim"
     ? `Just claimed ${claimed} in tips for ${receipt.project} on @opentip_tech. Tips for open source, from the open market.`
     : `I just sent a tip to ${receipt.project} on @opentip_tech. Tips for open source, from the open market.`;
-  return `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(pageUrl)}`;
+  return {
+    intentUrl: `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(pageUrl)}`,
+    appUrl: `twitter://post?message=${encodeURIComponent(`${text} ${pageUrl}`)}`,
+  };
+}
+
+function isTouchShareDevice() {
+  return navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches;
+}
+
+function openXOnTouch(
+  event: { preventDefault(): void },
+  links: { appUrl: string; intentUrl: string },
+) {
+  if (!isTouchShareDevice()) return;
+  event.preventDefault();
+  let timer = window.setTimeout(() => {
+    disarm();
+    if (document.visibilityState === "visible") window.location.href = links.intentUrl;
+  }, X_APP_FALLBACK_MS);
+  function disarm() {
+    window.clearTimeout(timer);
+    document.removeEventListener("visibilitychange", disarm);
+    window.removeEventListener("pagehide", disarm);
+  }
+  document.addEventListener("visibilitychange", disarm);
+  window.addEventListener("pagehide", disarm);
+  window.location.href = links.appUrl;
 }
 
 function useOpenShareInNewTab() {
   const [openInNewTab, setOpenInNewTab] = useState(false);
   useEffect(() => {
-    const touch = navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches;
-    setOpenInNewTab(!touch);
+    setOpenInNewTab(!isTouchShareDevice());
   }, []);
   return openInNewTab;
 }

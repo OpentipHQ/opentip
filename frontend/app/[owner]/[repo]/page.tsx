@@ -90,7 +90,19 @@ export default async function RepoPage({ params }: { params: Promise<{ owner: st
 
   let summary: RepoSummary | null = null;
   let links: Link[] = [];
+  let funderCount: number | null = null;
+  let developer: { login: string; pfp: string | null; image: string | null } | null = null;
   let repoRecord: { payout_address: string; hidden: boolean; icon: string | null } | null = null;
+
+  try {
+    const funders = await prisma.tip.groupBy({
+      by: ["tipper_address"],
+      where: { repo_id: repoId.toLowerCase() },
+    });
+    funderCount = funders.length;
+  } catch {
+    funderCount = null;
+  }
 
   try {
     repoRecord = await prisma.repo.findUnique({
@@ -100,6 +112,13 @@ export default async function RepoPage({ params }: { params: Promise<{ owner: st
     // notFound() throws; calling it inside this try would be swallowed and
     // the hidden repo would render. The check below runs after the catch.
     if (repoRecord && !isHiddenRepo(repoRecord)) {
+      const wallet = await prisma.userWallet.findUnique({
+        where: { address: repoRecord.payout_address },
+        select: { user: { select: { login: true, pfp: true, image: true } } },
+      });
+      if (wallet?.user?.login) {
+        developer = { login: wallet.user.login, pfp: wallet.user.pfp, image: wallet.user.image };
+      }
       const [s, l] = await Promise.all([
         getOrCreateSummary(repoId, owner, repo),
         getLinks(repoId),
@@ -119,6 +138,8 @@ export default async function RepoPage({ params }: { params: Promise<{ owner: st
       icon={repoRecord?.icon || meta?.owner.avatar_url || null}
       summary={summary}
       links={links}
+      developer={developer}
+      funderCount={funderCount}
     />
   );
 }

@@ -154,15 +154,15 @@ export default function OnboardingPage() {
 
   return (
     <div className="max-w-sm mx-auto space-y-0">
-      <section className="py-16 md:py-24 border-b rule space-y-6">
-        <h1 className="serif fluid-page-title font-semibold tracking-tight leading-[0.9]">Set up Opentip</h1>
+      <section className="py-16 md:py-24 border-b border-border space-y-6">
+        <h1 className="font-display text-3xl tracking-tight">Set up Opentip</h1>
         <div className="flex gap-1.5">
           {STAGES.map((label, i) => {
             const n = i + 1;
             return (
               <div key={label} className="flex-1 flex flex-col gap-2">
-                <div className={`h-1 rounded-sm ${stageIndex >= n ? "bg-zinc-900" : "bg-zinc-300"}`} />
-                <span className={`text-[0.6rem] uppercase tracking-[0.15em] ${stageIndex >= n ? "text-zinc-700" : "text-zinc-400"}`}>{label}</span>
+                <div className={`h-1 rounded-sm ${stageIndex >= n ? "bg-foreground" : "bg-border"}`} />
+                <span className={`text-[0.6rem] uppercase tracking-[0.15em] ${stageIndex >= n ? "text-foreground/80" : "text-muted-foreground"}`}>{label}</span>
               </div>
             );
           })}
@@ -170,9 +170,9 @@ export default function OnboardingPage() {
       </section>
 
       {step === "account" && (
-        <section className="py-10 border-b rule space-y-4">
-          <h2 className="serif text-xl font-semibold">Create your account</h2>
-          <p className="text-sm text-zinc-600">Sign in with GitHub or email. Tippers don&apos;t need an account — just connect a wallet on any tip page.</p>
+        <section className="py-10 border-b border-border space-y-4">
+          <h2 className="font-display text-lg">Create your account</h2>
+          <p className="text-sm text-muted-foreground">Sign in with GitHub or email. Tippers don&apos;t need an account — just connect a wallet on any tip page.</p>
           <div className="flex gap-3">
             <Button onClick={() => signIn("github", { callbackUrl: "/onboarding" })}>Sign in with GitHub</Button>
             <Button variant="ghost" onClick={() => router.push("/signin")}>Use email</Button>
@@ -181,9 +181,9 @@ export default function OnboardingPage() {
       )}
 
       {step === "github" && (
-        <section className="py-10 border-b rule space-y-4">
-          <h2 className="serif text-xl font-semibold">Connect GitHub</h2>
-          <p className="text-sm text-zinc-600">Link your GitHub so you can verify repo ownership and register repos for tips.</p>
+        <section className="py-10 border-b border-border space-y-4">
+          <h2 className="font-display text-lg">Connect GitHub</h2>
+          <p className="text-sm text-muted-foreground">Link your GitHub so you can verify repo ownership and register repos for tips.</p>
           <div>
             <Button onClick={connectGithub} disabled={connectingGithub}>
               {connectingGithub ? "Redirecting…" : "Connect GitHub"}
@@ -193,7 +193,7 @@ export default function OnboardingPage() {
       )}
 
       {step === "creating" && (
-        <section className="py-10 border-b rule space-y-4">
+        <section className="py-10 border-b border-border space-y-4">
           <WalletCreator
             key={retryNonce}
             onDone={(addr) => { setWalletAddress(addr); setCreateError(null); setStep("created"); }}
@@ -201,8 +201,8 @@ export default function OnboardingPage() {
           />
           {createError ? (
             <>
-              <h2 className="serif text-xl font-semibold">Wallet creation failed</h2>
-              <p className="text-sm text-zinc-600">{createError.slice(0, 200)}</p>
+              <h2 className="font-display text-lg">Wallet creation failed</h2>
+              <p className="text-sm text-muted-foreground">{createError.slice(0, 200)}</p>
               <div>
                 <Button onClick={() => { setCreateError(null); setRetryNonce((n) => n + 1); }}>Try again</Button>
               </div>
@@ -210,24 +210,24 @@ export default function OnboardingPage() {
           ) : (
             <>
               <div className="flex justify-center py-4"><Loader variant="spinner" size={28} /></div>
-              <h2 className="serif text-xl font-semibold text-center">Creating your wallet, please wait…</h2>
-              <p className="text-sm text-zinc-600 text-center">Your Opentip Smart Wallet works on every device. This takes a few seconds.</p>
+              <h2 className="font-display text-lg text-center">Creating your wallet, please wait…</h2>
+              <p className="text-sm text-muted-foreground text-center">Your Opentip Smart Wallet works on every device. This takes a few seconds.</p>
             </>
           )}
         </section>
       )}
 
       {step === "created" && walletAddress && (
-        <section className="py-10 border-b rule space-y-4">
-          <h2 className="serif text-xl font-semibold">Wallet created</h2>
+        <section className="py-10 border-b border-border space-y-4">
+          <h2 className="font-display text-lg">Wallet created</h2>
           <div className="flex items-center gap-2">
-            <span className="stats text-sm text-zinc-900 border rule rounded-sm px-2 py-1">{truncate(walletAddress)}</span>
-            <span className="text-[0.6rem] bg-zinc-900 text-white px-1.5 py-0.5 rounded">SMART</span>
-            <button onClick={copyAddress} className="p-1 text-zinc-400 hover:text-zinc-700 transition-colors" aria-label="Copy address">
+            <span className="stats text-sm text-foreground rounded-[10px] border border-border px-2 py-1">{truncate(walletAddress)}</span>
+            <span className="text-[0.6rem] bg-foreground text-background px-1.5 py-0.5 rounded">SMART</span>
+            <button onClick={copyAddress} className="p-1 text-muted-foreground hover:text-foreground transition-colors" aria-label="Copy address">
               <Copy className="h-3.5 w-3.5" />
             </button>
           </div>
-          <p className="text-sm text-zinc-600">Fund your wallet now — send ETH, USDC, or OAR on <strong>Base</strong>.</p>
+          <p className="text-sm text-muted-foreground">Fund your wallet now — send ETH, USDC, or OAR on <strong>Base</strong>.</p>
           <div>
             <Button onClick={() => setStep("welcome")}>Next</Button>
           </div>
@@ -235,9 +235,9 @@ export default function OnboardingPage() {
       )}
 
       {step === "welcome" && (
-        <section className="py-10 border-b rule space-y-4">
-          <h2 className="serif text-xl font-semibold">Welcome to Opentip</h2>
-          <p className="text-sm text-zinc-600">You are all set — account linked, wallet ready.</p>
+        <section className="py-10 border-b border-border space-y-4">
+          <h2 className="font-display text-lg">Welcome to Opentip</h2>
+          <p className="text-sm text-muted-foreground">You are all set — account linked, wallet ready.</p>
           <div>
             <Button onClick={() => router.push(next)}>{next === "/dashboard/github-repos" ? "Register repo now" : "Continue"}</Button>
           </div>

@@ -21,12 +21,12 @@ export default function ResetPasswordClient() {
     return (
       <div className="min-h-[80vh] flex flex-col justify-center">
         <div className="max-w-sm w-full mx-auto space-y-10">
-          <h1 className="serif fluid-display font-semibold tracking-tight leading-[0.9]">Invalid link</h1>
-          <p className="text-sm text-zinc-600">
+          <h1 className="font-display text-4xl tracking-tight">Invalid link</h1>
+          <p className="text-sm text-muted-foreground">
             This password reset link is invalid or has expired.
           </p>
-          <div className="border-t rule pt-6">
-            <Link href="/forgot-password" className="text-sm text-zinc-600 underline underline-offset-4">Request a new link</Link>
+          <div className="border-t border-border pt-6">
+            <Link href="/forgot-password" className="text-sm text-muted-foreground underline underline-offset-4">Request a new link</Link>
           </div>
         </div>
       </div>
@@ -37,12 +37,12 @@ export default function ResetPasswordClient() {
     return (
       <div className="min-h-[80vh] flex flex-col justify-center">
         <div className="max-w-sm w-full mx-auto space-y-10">
-          <h1 className="serif fluid-display font-semibold tracking-tight leading-[0.9]">Password reset</h1>
-          <p className="text-sm text-zinc-600">
+          <h1 className="font-display text-4xl tracking-tight">Password reset</h1>
+          <p className="text-sm text-muted-foreground">
             Your password has been reset. You can now sign in with your new password.
           </p>
-          <div className="border-t rule pt-6">
-            <Link href="/signin" className="text-sm text-zinc-600 underline underline-offset-4">Sign in →</Link>
+          <div className="border-t border-border pt-6">
+            <Link href="/signin" className="text-sm text-muted-foreground underline underline-offset-4">Sign in →</Link>
           </div>
         </div>
       </div>
@@ -84,7 +84,7 @@ export default function ResetPasswordClient() {
   return (
     <div className="min-h-[80vh] flex flex-col justify-center">
       <div className="max-w-sm w-full mx-auto space-y-10">
-        <h1 className="serif fluid-display font-semibold tracking-tight leading-[0.9]">New password</h1>
+        <h1 className="font-display text-4xl tracking-tight">New password</h1>
 
         <div className="space-y-4">
           <Input
@@ -112,8 +112,8 @@ export default function ResetPasswordClient() {
           </StatefulButton>
         </div>
 
-        <div className="border-t rule pt-6">
-          <Link href="/signin" className="text-sm text-zinc-600 underline underline-offset-4">← Back to sign in</Link>
+        <div className="border-t border-border pt-6">
+          <Link href="/signin" className="text-sm text-muted-foreground underline underline-offset-4">← Back to sign in</Link>
         </div>
       </div>
     </div>

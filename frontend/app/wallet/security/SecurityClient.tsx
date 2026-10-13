@@ -41,7 +41,7 @@ function Toggle({ on, onClick, label }: { on: boolean; onClick: () => void; labe
       aria-checked={on}
       aria-label={label}
       onClick={onClick}
-      className={`w-10 h-6 rounded-full transition-colors flex-shrink-0 ${on ? "bg-zinc-900" : "bg-zinc-300"}`}
+      className={`w-10 h-6 rounded-full transition-colors flex-shrink-0 ${on ? "bg-foreground" : "bg-border"}`}
     >
       <span
         className={`block w-5 h-5 m-0.5 rounded-full bg-card transition-transform ${on ? "translate-x-4" : "translate-x-0"}`}
@@ -64,11 +64,11 @@ function Section({
   children?: React.ReactNode;
 }) {
   return (
-    <section className="border rule rounded-sm p-4 space-y-3">
+    <section className="rounded-[10px] border border-border p-4 space-y-3">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="serif text-sm font-semibold">{title}</h2>
-          <p className="text-xs text-zinc-600 mt-1">{desc}</p>
+          <h2 className="font-medium text-sm">{title}</h2>
+          <p className="text-xs text-muted-foreground mt-1">{desc}</p>
         </div>
         <Toggle on={on} onClick={onToggle} label={title} />
       </div>
@@ -143,8 +143,8 @@ export default function SecurityClient() {
   return (
     <div className="max-w-3xl mx-auto px-6 md:px-10 py-8 space-y-6">
       <div>
-        <h1 className="serif text-2xl font-semibold">Security</h1>
-        <p className="text-sm text-zinc-600 mt-1">Spending controls for your Opentip Smart Wallet. External wallets sign in their own apps and aren&apos;t covered.</p>
+        <h1 className="font-display text-3xl">Security</h1>
+        <p className="text-sm text-muted-foreground mt-1">Spending controls for your Opentip Smart Wallet. External wallets sign in their own apps and aren&apos;t covered.</p>
       </div>
 
       <Section
@@ -167,10 +167,10 @@ export default function SecurityClient() {
         on={policy.dailyLimitEnabled}
         onToggle={() => { const n = { ...policy, dailyLimitEnabled: !policy.dailyLimitEnabled }; set(n); save(n, "daily-toggle"); }}
       >
-        <p className="text-xs text-zinc-700">Spent today: ${spent.toFixed(2)} / ${Number(policy.dailyLimitUsd).toFixed(2)}</p>
+        <p className="text-xs text-foreground/80">Spent today: ${spent.toFixed(2)} / ${Number(policy.dailyLimitUsd).toFixed(2)}</p>
         <div className="flex gap-2 items-end">
           <div className="flex-1">
-            <label className="text-xs text-zinc-500">Limit $</label>
+            <label className="text-xs text-muted-foreground">Limit $</label>
             <Input
               value={String(policy.dailyLimitUsd)}
               onChange={(v) => set({ dailyLimitUsd: Number(v) || 0 })}
@@ -189,7 +189,7 @@ export default function SecurityClient() {
       >
         <div className="flex gap-2 items-end">
           <div className="flex-1">
-            <label className="text-xs text-zinc-500">Limit $</label>
+            <label className="text-xs text-muted-foreground">Limit $</label>
             <Input
               value={String(policy.perTxLimitUsd)}
               onChange={(v) => set({ perTxLimitUsd: Number(v) || 0 })}
@@ -210,17 +210,17 @@ export default function SecurityClient() {
           <Button size="sm" variant="secondary" onClick={() => addRecipient(CONTRACT_ADDRESS || "", "Opentip")}>
             <Plus className="h-3.5 w-3.5" /> Add Opentip contract
           </Button>
-          <button onClick={() => setShowWhy(true)} className="text-zinc-400 hover:text-zinc-700 transition-colors" aria-label="Why add the Opentip contract?">
+          <button onClick={() => setShowWhy(true)} className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Why add the Opentip contract?">
             <Info className="h-4 w-4" />
           </button>
         </div>
         {policy.permittedRecipients.length === 0 ? (
-          <p className="text-xs text-zinc-500">No recipients yet. Nothing can be sent while this list is on and empty.</p>
+          <p className="text-xs text-muted-foreground">No recipients yet. Nothing can be sent while this list is on and empty.</p>
         ) : (
           <ul className="space-y-1">
             {policy.permittedRecipients.map((r) => (
-              <li key={r.address} className="flex items-center justify-between border rule rounded-sm px-2 py-1.5">
-                <span className="stats text-xs text-zinc-700">
+              <li key={r.address} className="flex items-center justify-between rounded-[10px] border border-border px-2 py-1.5">
+                <span className="stats text-xs text-foreground/80">
                   {truncate(r.address)}{r.label ? ` · ${r.label}` : ""}
                 </span>
                 <button
@@ -228,7 +228,7 @@ export default function SecurityClient() {
                     const n = { ...policy, permittedRecipients: policy.permittedRecipients.filter((x) => x.address !== r.address) };
                     set(n); save(n, "recipients");
                   }}
-                  className="text-zinc-400 hover:text-red-600 transition-colors"
+                  className="text-muted-foreground hover:text-red-600 transition-colors"
                   aria-label="Remove recipient"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -239,11 +239,11 @@ export default function SecurityClient() {
         )}
         <div className="flex gap-2 items-end">
           <div className="flex-1">
-            <label className="text-xs text-zinc-500">Address</label>
+            <label className="text-xs text-muted-foreground">Address</label>
             <Input value={newAddr} onChange={setNewAddr} placeholder="0x..." />
           </div>
           <div className="w-28">
-            <label className="text-xs text-zinc-500">Label (optional)</label>
+            <label className="text-xs text-muted-foreground">Label (optional)</label>
             <Input value={newLabel} onChange={setNewLabel} placeholder="Cold wallet" />
           </div>
           <Button
@@ -263,7 +263,7 @@ export default function SecurityClient() {
       </Section>
 
       <Modal open={showWhy} onClose={() => setShowWhy(false)} title="Why add the Opentip contract?">
-        <p className="text-xs text-zinc-600">
+        <p className="text-xs text-muted-foreground">
           Tipping, claiming, and registering all talk to the Opentip smart contract. While permitted recipients is on, any destination not on your list — including Opentip itself — is blocked. Add it here so tips and claims keep working under lockdown.
         </p>
         <Button

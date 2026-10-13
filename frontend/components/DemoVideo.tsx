@@ -100,7 +100,7 @@ export default function DemoVideo({ src, poster }: DemoVideoProps) {
   };
 
   return (
-    <div ref={containerRef} className="relative group rounded-sm overflow-hidden border rule bg-black">
+    <div ref={containerRef} className="relative group overflow-hidden rounded-[10px] border border-border bg-black">
       {/* Video */}
       <video
         ref={videoRef}

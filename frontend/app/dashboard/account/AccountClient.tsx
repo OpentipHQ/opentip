@@ -249,24 +249,24 @@ export default function AccountClient() {
   return (
     <div className="max-w-xl space-y-12">
       <div>
-        <h1 className="serif text-3xl font-semibold tracking-tight leading-[0.9]">Account</h1>
-        <p className="text-sm text-zinc-500 mt-2">Manage your sign-in options and security.</p>
+        <h1 className="font-display text-3xl tracking-tight">Account</h1>
+        <p className="text-sm text-muted-foreground mt-2">Manage your sign-in options and security.</p>
       </div>
 
       {/* GitHub */}
       <section className="space-y-4">
-        <div className="border-t rule" />
-        <h2 className="text-sm font-medium text-zinc-900">GitHub</h2>
+        <div className="border-t border-border" />
+        <h2 className="text-sm font-medium text-foreground">GitHub</h2>
         {accountStatus.hasGithub ? (
           <div className="flex items-center gap-3">
-            <GithubIcon className="h-5 w-5 text-zinc-700" />
-            <span className="text-sm text-zinc-700">
+            <GithubIcon className="h-5 w-5 text-foreground/80" />
+            <span className="text-sm text-foreground/80">
               Connected as <span className="font-medium">{accountStatus.githubLogin}</span>
             </span>
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-muted-foreground">
               Connect your GitHub account to register repos and verify ownership.
             </p>
             <Button onClick={connectGithub} size="sm" className="px-4">
@@ -278,12 +278,12 @@ export default function AccountClient() {
 
       {/* Email */}
       <section className="space-y-4">
-        <div className="border-t rule" />
-        <h2 className="text-sm font-medium text-zinc-900">Email</h2>
+        <div className="border-t border-border" />
+        <h2 className="text-sm font-medium text-foreground">Email</h2>
         {accountStatus.hasEmail ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-zinc-700">{accountStatus.email}</span>
+              <span className="text-sm text-foreground/80">{accountStatus.email}</span>
               {accountStatus.emailVerified ? (
                 <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-sm">
                   <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none"><path d="M10 3L4.5 8.5 2 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -305,7 +305,7 @@ export default function AccountClient() {
                   </div>
                 ) : (
                     <div className="space-y-3">
-                    <p className="text-sm text-zinc-500">Enter the 6-digit code sent to your email.</p>
+                    <p className="text-sm text-muted-foreground">Enter the 6-digit code sent to your email.</p>
                     <div className="flex gap-3 items-end">
                       <div>
                         <OtpInput
@@ -333,7 +333,7 @@ export default function AccountClient() {
                       type="button"
                       onClick={sendVerifyCode}
                       disabled={resendCooldown > 0 || verifySending}
-                      className="text-xs text-zinc-500 underline underline-offset-4 hover:text-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Didn't get it? Resend"}
                     </button>
@@ -344,7 +344,7 @@ export default function AccountClient() {
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-muted-foreground">
               Add an email to enable password sign-in and reset.
             </p>
             <div className="flex gap-3">
@@ -372,14 +372,14 @@ export default function AccountClient() {
 
       {/* Password */}
       <section className="space-y-4">
-        <div className="border-t rule" />
-        <h2 className="text-sm font-medium text-zinc-900">Password</h2>
+        <div className="border-t border-border" />
+        <h2 className="text-sm font-medium text-foreground">Password</h2>
         {accountStatus.hasPassword ? (
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-muted-foreground">
             Change your password below.
           </p>
         ) : (
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-muted-foreground">
             Set a password to sign in with email.
           </p>
         )}
@@ -422,7 +422,7 @@ export default function AccountClient() {
         {accountStatus.hasPassword && (
           <Link
             href="/forgot-password"
-            className="text-xs text-zinc-500 underline underline-offset-4 hover:text-zinc-700"
+            className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
           >
             Forgot your password?
           </Link>

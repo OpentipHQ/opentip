@@ -56,33 +56,33 @@ export default function InstallModal() {
           <div className="absolute inset-0 bg-black/40" onClick={handleDismiss} />
 
           <motion.div
-            className="relative bg-card border rule rounded-sm p-6 w-full max-w-sm space-y-5"
+            className="relative bg-card rounded-[10px] border border-border p-6 w-full max-w-sm space-y-5"
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ type: "spring", stiffness: 420, damping: 40, mass: 0.5 }}
           >
-            <button onClick={handleDismiss} className="absolute top-3 right-3 text-zinc-400 hover:text-zinc-700 transition-colors" aria-label="Dismiss">
+            <button onClick={handleDismiss} className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors" aria-label="Dismiss">
               <X size={16} />
             </button>
 
             <div className="flex justify-center">
               <div className="w-20 h-36 rounded-2xl border-2 border-zinc-400 bg-white flex flex-col items-center justify-center gap-2">
                 <Image src="/Opentip.png" alt="Opentip" width={36} height={36} className="rounded-lg" />
-                <span className="text-[0.55rem] font-medium text-zinc-600 leading-none">Opentip</span>
+                <span className="text-[0.55rem] font-medium text-muted-foreground leading-none">Opentip</span>
               </div>
             </div>
 
             <div className="text-center space-y-1">
-              <h3 className="serif text-lg font-semibold">Use Opentip easily from your home screen</h3>
-              <p className="text-sm text-zinc-500">Install it as an app for quick access.</p>
+              <h3 className="font-display text-lg">Use Opentip easily from your home screen</h3>
+              <p className="text-sm text-muted-foreground">Install it as an app for quick access.</p>
             </div>
 
             <div className="flex gap-3">
-              <button onClick={handleInstall} className="flex-1 py-2.5 text-sm font-medium bg-zinc-900 text-white rounded-sm hover:bg-zinc-800 transition-colors">
+              <button onClick={handleInstall} className="flex-1 py-2.5 text-sm font-medium bg-foreground text-background rounded-sm hover:opacity-90 transition-opacity">
                 Install
               </button>
-              <button onClick={handleDismiss} className="px-4 py-2.5 text-sm font-medium text-zinc-500 hover:text-zinc-800 transition-colors">
+              <button onClick={handleDismiss} className="px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 Not now
               </button>
             </div>

@@ -31,11 +31,11 @@ export default function InstallPage() {
 
   return (
     <div className="max-w-md mx-auto px-6 py-20 space-y-6 text-center">
-      <h1 className="serif text-3xl font-semibold tracking-tight">Install Opentip</h1>
-      <p className="text-sm text-zinc-600">Add Opentip to your home screen for quick access and push notifications.</p>
+      <h1 className="font-display text-3xl tracking-tight">Install Opentip</h1>
+      <p className="text-sm text-muted-foreground">Add Opentip to your home screen for quick access and push notifications.</p>
 
       {installed && (
-        <div className="border rule rounded-sm p-6">
+        <div className="rounded-[10px] border border-border p-6">
           <p className="text-emerald-700 font-medium">Installed!</p>
           <Link href="/" className="text-accent underline">Go to dashboard</Link>
         </div>
@@ -48,7 +48,7 @@ export default function InstallPage() {
       )}
 
       {!installed && !deferredPrompt && (
-        <div className="border rule rounded-sm p-6 text-sm text-zinc-500 space-y-3">
+        <div className="rounded-[10px] border border-border p-6 text-sm text-muted-foreground space-y-3">
           <p>Use your browser's menu to install Opentip.</p>
           <Link href="/" className="text-accent underline">Go to dashboard</Link>
         </div>

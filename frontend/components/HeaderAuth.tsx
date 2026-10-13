@@ -55,11 +55,11 @@ export default function HeaderAuth() {
           {image ? (
             <Image src={image} alt={login || "Profile"} width={32} height={32} className="w-8 h-8 rounded-sm object-cover" />
           ) : (
-            <div className="w-8 h-8 rounded-sm bg-zinc-300 flex items-center justify-center text-xs font-medium text-foreground">
+            <div className="w-8 h-8 rounded-sm bg-border flex items-center justify-center text-xs font-medium text-foreground">
               {login?.charAt(0)?.toUpperCase()}
             </div>
           )}
-          <span className="text-sm text-foreground hover:text-zinc-900 hidden sm:inline">{login}</span>
+          <span className="text-sm text-foreground hover:text-foreground hidden sm:inline">{login}</span>
         </button>
 
         {open && (
@@ -67,35 +67,35 @@ export default function HeaderAuth() {
             <div className="py-1">
               <Link
                 href={`/dev/${login}`}
-                className="block px-3 py-2 text-sm text-foreground hover:bg-zinc-900/5 transition-colors"
+                className="block px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                 onClick={() => setOpen(false)}
               >
                 Profile
               </Link>
               <Link
                 href="/dashboard"
-                className="block px-3 py-2 text-sm text-foreground hover:bg-zinc-900/5 transition-colors"
+                className="block px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                 onClick={() => setOpen(false)}
               >
                 Dashboard
               </Link>
               <Link
                 href="/wallet"
-                className="block px-3 py-2 text-sm text-foreground hover:bg-zinc-900/5 transition-colors"
+                className="block px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                 onClick={() => setOpen(false)}
               >
                 Wallet
               </Link>
               <Link
                 href="/wallet/security"
-                className="block px-3 py-2 text-sm text-foreground hover:bg-zinc-900/5 transition-colors"
+                className="block px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                 onClick={() => setOpen(false)}
               >
                 Security
               </Link>
               <Link
                 href="/dashboard/account"
-                className="block px-3 py-2 text-sm text-foreground hover:bg-zinc-900/5 transition-colors"
+                className="block px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                 onClick={() => setOpen(false)}
               >
                 Account
@@ -103,7 +103,7 @@ export default function HeaderAuth() {
               {adminRole && (
                 <Link
                   href="/admin"
-                  className="block px-3 py-2 text-sm text-foreground hover:bg-zinc-900/5 transition-colors"
+                  className="block px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
                   onClick={() => setOpen(false)}
                 >
                   Admin
@@ -111,7 +111,7 @@ export default function HeaderAuth() {
               )}
               <button
                 onClick={() => { setOpen(false); signOut(); }}
-                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-zinc-900/5 transition-colors"
+                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
               >
                 Sign out
               </button>

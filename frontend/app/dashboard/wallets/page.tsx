@@ -108,13 +108,13 @@ export default function DashboardWallets() {
 
   return (
     <div className="space-y-6">
-      <h1 className="serif text-2xl font-semibold">Wallets</h1>
+      <h1 className="font-display text-3xl">Wallets</h1>
 
       {!hasSmart && !loading && (
-        <div className="border rule rounded-sm p-4 bg-amber-50/50 flex items-center justify-between gap-4">
+        <div className="rounded-[10px] border border-border p-4 bg-amber-50/50 flex items-center justify-between gap-4">
           <div>
             <p className="text-sm font-medium flex items-center gap-2"><Sparkles className="h-4 w-4" /> Create your Opentip Smart Wallet</p>
-            <p className="text-xs text-zinc-600 mt-1">Real smart account — same address on any device via email. Becomes primary automatically.</p>
+            <p className="text-xs text-muted-foreground mt-1">Real smart account — same address on any device via email. Becomes primary automatically.</p>
             {!cdpConfigured && <p className="text-xs text-red-600 mt-1">Missing NEXT_PUBLIC_CDP_PROJECT_ID — add it to .env and restart dev.</p>}
           </div>
           <CdpCreateWalletButton onCreated={refresh} />
@@ -122,15 +122,15 @@ export default function DashboardWallets() {
       )}
 
       <div className="space-y-3">
-        <p className="text-sm text-zinc-600">Link wallets to register repos and receive tips. Payout wallets for your repos.</p>
+        <p className="text-sm text-muted-foreground">Link wallets to register repos and receive tips. Payout wallets for your repos.</p>
 
         {isConnected && address && (
           <div className="flex items-center gap-3 flex-wrap">
-            <span className="stats text-xs text-zinc-700 border rule rounded-sm px-2 py-1">{truncate(address)}</span>
+            <span className="stats text-xs text-foreground/80 rounded-[10px] border border-border px-2 py-1">{truncate(address)}</span>
             <Button size="sm" onClick={linkWallet} disabled={linking}>
               {linking ? "Linking..." : "Link current wallet"}
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => disconnect()} className="text-xs text-zinc-400 hover:text-zinc-600">
+            <Button size="sm" variant="ghost" onClick={() => disconnect()} className="text-xs text-muted-foreground hover:text-foreground">
               Disconnect
             </Button>
           </div>
@@ -140,23 +140,23 @@ export default function DashboardWallets() {
           <Button size="sm" variant="secondary" onClick={() => open()}>Connect wallet to link</Button>
         )}
 
-        {message && <p className="text-xs text-zinc-600">{message}</p>}
+        {message && <p className="text-xs text-muted-foreground">{message}</p>}
       </div>
 
-      <div className="border-t rule pt-4">
-        <h2 className="serif text-sm font-semibold mb-3">Linked payout wallets</h2>
+      <div className="border-t border-border pt-4">
+        <h2 className="font-medium text-sm mb-3">Linked payout wallets</h2>
         {loading ? (
           <Loader variant="dots" size={16} />
         ) : wallets.length === 0 ? (
-          <p className="text-xs text-zinc-500">No wallets linked yet.</p>
+          <p className="text-xs text-muted-foreground">No wallets linked yet.</p>
         ) : (
           <div className="space-y-1">
             {wallets.map((w) => (
-              <div key={w.address} className="flex items-center justify-between border rule rounded-sm px-2 py-1.5 w-fit gap-4">
+              <div key={w.address} className="flex items-center justify-between rounded-[10px] border border-border px-2 py-1.5 w-fit gap-4">
                 <div className="flex items-center gap-2">
-                  <span className="stats text-xs text-zinc-700">{truncate(w.address)}</span>
-                  {w.walletType==="smart" && <span className="text-[0.6rem] bg-zinc-900 text-white px-1.5 py-0.5 rounded">SMART</span>}
-                  {w.isPrimary && <span className="text-[0.6rem] border rule px-1.5 py-0.5 rounded">PRIMARY</span>}
+                  <span className="stats text-xs text-foreground/80">{truncate(w.address)}</span>
+                  {w.walletType==="smart" && <span className="text-[0.6rem] bg-foreground text-background px-1.5 py-0.5 rounded">SMART</span>}
+                  {w.isPrimary && <span className="text-[0.6rem] border border-border px-1.5 py-0.5 rounded">PRIMARY</span>}
                 </div>
                 <div className="flex items-center gap-1.5">
                   {!w.isPrimary && <button onClick={() => setPrimary(w.address)} className="text-xs text-accent hover:underline">Set primary</button>}
@@ -164,14 +164,14 @@ export default function DashboardWallets() {
                     <div className="relative">
                       <button
                         onClick={() => setInfoFor(infoFor === w.address ? null : w.address)}
-                        className="text-zinc-400 hover:text-zinc-600 transition-colors"
+                        className="text-muted-foreground hover:text-foreground transition-colors"
                         aria-label="Why can't I unlink?"
                       >
                         <Info className="h-3.5 w-3.5" />
                       </button>
                       {infoFor === w.address && (
-                        <div className="absolute left-0 top-full mt-1 z-sticky w-56 bg-white border rule rounded-sm px-3 py-2 shadow-sm">
-                          <p className="text-xs text-zinc-600">
+                        <div className="absolute left-0 top-full mt-1 z-sticky w-56 bg-card rounded-[10px] border border-border px-3 py-2 shadow-sm">
+                          <p className="text-xs text-muted-foreground">
                             This wallet is the payout address for {w.repoCount} repo{singular(w.repoCount)}. Unregister the repo{singular(w.repoCount)} first before unlinking.
                           </p>
                         </div>
@@ -179,7 +179,7 @@ export default function DashboardWallets() {
                     </div>
                   ) : confirmFor === w.address ? (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-zinc-600">Unlink?</span>
+                      <span className="text-xs text-muted-foreground">Unlink?</span>
                       <Button size="sm" variant="ghost" onClick={() => unlinkWallet(w.address)} disabled={unlinking === w.address} className="h-6 px-2 text-xs text-red-600 hover:text-red-700">
                         {unlinking === w.address ? "..." : "Yes"}
                       </Button>
@@ -191,7 +191,7 @@ export default function DashboardWallets() {
                     <button
                       onClick={() => setConfirmFor(w.address)}
                       disabled={unlinking === w.address}
-                      className="text-zinc-400 hover:text-red-600 transition-colors disabled:opacity-50"
+                      className="text-muted-foreground hover:text-red-600 transition-colors disabled:opacity-50"
                       aria-label="Unlink wallet"
                     >
                       <Trash2 className="h-3.5 w-3.5" />

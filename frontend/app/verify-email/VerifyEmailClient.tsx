@@ -103,9 +103,9 @@ export default function VerifyEmailClient() {
   return (
     <div className="min-h-[80vh] flex flex-col justify-center">
       <div className="max-w-sm w-full mx-auto space-y-10">
-        <h1 className="serif fluid-display font-semibold tracking-tight leading-[0.9]">Verify your email</h1>
+        <h1 className="font-display text-4xl tracking-tight">Verify your email</h1>
 
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm text-muted-foreground">
           Enter the 6-digit code sent to <span className="font-medium">{email}</span>.
         </p>
         <div className="space-y-4">
@@ -126,7 +126,7 @@ export default function VerifyEmailClient() {
             type="button"
             onClick={sendCode}
             disabled={resendCooldown > 0 || sending}
-            className="text-xs text-zinc-500 underline underline-offset-4 hover:text-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Didn't get it? Resend"}
           </button>

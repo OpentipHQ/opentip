@@ -77,7 +77,7 @@ export function OtpInput({ length = 6, value, onChange, disabled = false, autoFo
           onKeyDown={(e) => handleKeyDown(i, e)}
           onPaste={handlePaste}
           className={cn(
-            "w-11 h-12 text-center text-lg font-mono font-semibold text-zinc-900 caret-zinc-900",
+            "w-11 h-12 text-center text-lg font-mono font-semibold text-foreground caret-foreground",
             "bg-transparent border rounded-sm outline-none transition-colors duration-200",
             "border-hairline focus:border-accent focus:ring-1 focus:ring-accent/20",
             "disabled:opacity-40 disabled:cursor-not-allowed"

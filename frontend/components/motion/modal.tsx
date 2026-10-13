@@ -41,17 +41,17 @@ export default function Modal({
           <div className="absolute inset-0 backdrop-blur-sm" onClick={onClose} />
 
           <motion.div
-            className="relative bg-card border rule rounded-sm p-6 w-full max-w-sm space-y-4"
+            className="relative bg-card rounded-[10px] border border-border p-6 w-full max-w-sm space-y-4"
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ type: "spring", stiffness: 420, damping: 40, mass: 0.5 }}
           >
-            <button onClick={onClose} className="absolute top-3 right-3 text-zinc-400 hover:text-zinc-700 transition-colors" aria-label="Close">
+            <button onClick={onClose} className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors" aria-label="Close">
               <X size={16} />
             </button>
 
-            <h3 className="serif text-lg font-semibold pr-6">{title}</h3>
+            <h3 className="font-medium pr-6">{title}</h3>
             {children}
           </motion.div>
         </motion.div>

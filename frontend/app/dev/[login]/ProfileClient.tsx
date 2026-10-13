@@ -45,6 +45,7 @@ interface ProfileData {
     repo_id: string;
     total_tipped: number;
     tip_count: number;
+    usd: number;
   }[];
   stats: {
     total_tipped_usd: number;
@@ -104,8 +105,8 @@ export function ContributionHeatmap({ contributions }: { contributions: Contribu
   const weeks = getWeeks(contributions);
 
   return (
-    <div className="overflow-x-auto -mx-6 px-6 scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-      <div className="flex gap-[2px] min-w-fit">
+    <div className="max-w-full overflow-x-auto">
+      <div className="flex w-max gap-[2px]">
         {weeks.map((week, wi) => (
           <div key={wi} className="flex flex-col gap-[2px]">
             {week.map((day, di) => (
@@ -123,96 +124,72 @@ export function ContributionHeatmap({ contributions }: { contributions: Contribu
 }
 
 export default function ProfileClient({ data, contributions }: { data: ProfileData; contributions: ContributionDay[] }) {
+  const avatar = data.pfp || data.image;
   return (
-    <div className="max-w-2xl mx-auto py-12 md:py-20 space-y-10">
-      {/* Header + PFP overlay */}
-      <section className="-mx-0 sm:-mx-6 md:-mx-10 -mt-12 md:-mt-20">
-        {/* Header banner */}
-        {data.header ? (
-          <Image src={data.header} alt="Header" width={800} height={192} className="w-full h-32 md:h-48 object-cover" />
-        ) : (
-          <div className="w-full h-32 md:h-48 bg-zinc-200/50" />
-        )}
-
-        {/* PFP overlapping header bottom */}
-        <div className="relative px-6 md:px-10">
-          <div className="-mt-10 md:-mt-12 inline-block">
-            <div className="w-20 h-20 md:w-24 md:h-24 rounded-sm border-4 border-background bg-background overflow-hidden">
-              {data.pfp ? (
-                <Image src={data.pfp} alt={data.login || "Profile"} width={96} height={96} className="w-full h-full object-cover" />
-              ) : data.image ? (
-                <Image src={data.image} alt={data.login || "Profile"} width={96} height={96} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-zinc-200 flex items-center justify-center text-zinc-400 text-2xl font-semibold">
-                  {data.login?.charAt(0)?.toUpperCase()}
-                </div>
-              )}
-            </div>
-          </div>
+    <div className="flex min-w-0 flex-col gap-6">
+      <header className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="size-16 shrink-0 overflow-hidden rounded-full border border-border bg-muted">
+          {avatar ? (
+            <Image src={avatar} alt="" width={64} height={64} className="size-16 object-cover" />
+          ) : (
+            <div className="flex size-16 items-center justify-center font-display text-xl">{data.login?.charAt(0)?.toUpperCase()}</div>
+          )}
         </div>
-
-        {/* Name + bio below header */}
-        <div className="px-6 md:px-10 pt-3 text-center md:text-left">
-          <h1 className="serif fluid-heading font-semibold tracking-tight">{data.login}</h1>
-          {data.name && data.name !== data.login && (
-            <p className="text-sm text-zinc-600 mt-1">{data.name}</p>
-          )}
-          {data.bio && (
-            <p className="text-sm text-zinc-700 max-w-md leading-relaxed mt-3">{renderBioWithLinks(data.bio)}</p>
-          )}
-          <div className="mt-3 flex justify-center md:justify-start">
+        <div className="min-w-0">
+          <h1 className="truncate font-display text-4xl">{data.login}</h1>
+          {data.name && data.name !== data.login ? <p className="mt-1 truncate text-sm text-muted-foreground">{data.name}</p> : null}
+          {data.bio ? <p className="mt-3 max-w-xl break-words text-sm leading-relaxed text-muted-foreground">{renderBioWithLinks(data.bio)}</p> : null}
+          <div className="mt-3">
             <SocialLinks social={data.social} />
           </div>
         </div>
-      </section>
+      </header>
 
-      {/* Stats */}
-      <section className="border-t border-b rule py-6">
-        <div className="flex justify-center fluid-gap">
-          <div className="text-center">
-            <div className="stats text-2xl font-medium">{fmtUsd(data.stats.total_tipped_usd)}</div>
-            <div className="text-xs text-zinc-500 mt-1">total tipped</div>
-          </div>
-          <div className="text-center">
-            <div className="stats text-2xl font-medium">{data.stats.repo_count}</div>
-            <div className="text-xs text-zinc-500 mt-1">repos</div>
-          </div>
-          <div className="text-center">
-            <div className="stats text-2xl font-medium">{data.stats.total_tips}</div>
-            <div className="text-xs text-zinc-500 mt-1">tips received</div>
-          </div>
-        </div>
-      </section>
+      <div className="grid min-w-0 gap-3 sm:grid-cols-3">
+        <Stat label="Total funded" value={fmtUsd(data.stats.total_tipped_usd)} />
+        <Stat label="Repos" value={data.stats.repo_count.toLocaleString("en-US")} />
+        <Stat label="Funds" value={data.stats.total_tips.toLocaleString("en-US")} />
+      </div>
 
-      {/* Repos */}
-      {data.repos.length > 0 && (
-        <section className="border rule rounded-sm bg-card p-6 space-y-4">
-          <h2 className="serif text-lg font-semibold">Repos</h2>
-          <ul className="divide-y rule">
+      <section className="min-w-0">
+        <h2 className="text-sm font-medium">Repos</h2>
+        {data.repos.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">No public repos yet.</p>
+        ) : (
+          <ul className="mt-3 flex flex-col gap-2">
             {data.repos.map((r) => (
-              <li key={r.repo_id} className="py-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Link href={`/${r.repo_id}`} className="font-mono text-sm underline underline-offset-4 hover:text-accent">{capitalize(r.repo_id.split("/")[1])}</Link>
-                    <div className="flex gap-4 mt-1">
-                      <span className="stats text-xs text-zinc-500">{r.tip_count} tips</span>
-                    </div>
-                  </div>
-                </div>
+              <li key={r.repo_id}>
+                <Link href={`/${r.repo_id}`} className="flex min-w-0 items-center justify-between gap-3 rounded-[10px] border border-border px-4 py-3 hover:bg-muted/50">
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium">{capitalize(r.repo_id.split("/")[1] || r.repo_id)}</span>
+                    <span className="text-xs text-muted-foreground">{r.tip_count.toLocaleString("en-US")} funds</span>
+                  </span>
+                  <span className="shrink-0 font-mono text-sm tabular-nums">{fmtUsd(r.usd)}</span>
+                </Link>
               </li>
             ))}
           </ul>
-        </section>
-      )}
+        )}
+      </section>
 
-      {/* Contribution heatmap */}
-      {contributions.length > 0 && (
-        <section className="border rule rounded-sm bg-card p-6 space-y-4">
-          <h2 className="serif text-lg font-semibold">GitHub contribution activity</h2>
-          <ContributionHeatmap contributions={contributions} />
-          <p className="text-xs text-zinc-500">GitHub contributions from the past year</p>
+      {contributions.length > 0 ? (
+        <section className="min-w-0 rounded-[10px] border border-border p-4">
+          <h2 className="text-sm font-medium">GitHub contribution activity</h2>
+          <div className="mt-4">
+            <ContributionHeatmap contributions={contributions} />
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">GitHub contributions from the past year</p>
         </section>
-      )}
+      ) : null}
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 rounded-[10px] border border-border bg-card px-4 py-3">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-1 truncate font-mono text-2xl tabular-nums">{value}</p>
     </div>
   );
 }
@@ -231,14 +208,14 @@ function SocialLinks({ social }: { social: ProfileData["social"] }) {
   if (visible.length === 0) return null;
 
   return (
-    <div className="flex gap-3">
+    <div className="flex max-w-full flex-wrap gap-3">
       {visible.map((link) => (
         <a
           key={link.key}
           href={link.href!}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-zinc-500 hover:text-zinc-900 transition-colors"
+          className="text-muted-foreground transition-colors hover:text-foreground"
           title={link.key}
         >
           {link.icon}

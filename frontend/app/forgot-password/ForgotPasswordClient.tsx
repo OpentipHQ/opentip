@@ -36,12 +36,12 @@ export default function ForgotPasswordClient() {
     return (
       <div className="min-h-[80vh] flex flex-col justify-center">
         <div className="max-w-sm w-full mx-auto space-y-10">
-          <h1 className="serif fluid-display font-semibold tracking-tight leading-[0.9]">Check your email</h1>
-          <p className="text-sm text-zinc-600">
+          <h1 className="font-display text-4xl tracking-tight">Check your email</h1>
+          <p className="text-sm text-muted-foreground">
             If an account exists for <span className="font-medium">{email}</span>, we&apos;ve sent a password reset link.
           </p>
-          <div className="border-t rule pt-6">
-            <Link href="/signin" className="text-sm text-zinc-600 underline underline-offset-4">← Back to sign in</Link>
+          <div className="border-t border-border pt-6">
+            <Link href="/signin" className="text-sm text-muted-foreground underline underline-offset-4">← Back to sign in</Link>
           </div>
         </div>
       </div>
@@ -51,8 +51,8 @@ export default function ForgotPasswordClient() {
   return (
     <div className="min-h-[80vh] flex flex-col justify-center">
       <div className="max-w-sm w-full mx-auto space-y-10">
-        <h1 className="serif fluid-display font-semibold tracking-tight leading-[0.9]">Reset password</h1>
-        <p className="text-sm text-zinc-600">
+        <h1 className="font-display text-4xl tracking-tight">Reset password</h1>
+        <p className="text-sm text-muted-foreground">
           Enter your email and we&apos;ll send you a link to reset your password.
         </p>
 
@@ -73,8 +73,8 @@ export default function ForgotPasswordClient() {
           </StatefulButton>
         </div>
 
-        <div className="border-t rule pt-6">
-          <Link href="/signin" className="text-sm text-zinc-600 underline underline-offset-4">← Back to sign in</Link>
+        <div className="border-t border-border pt-6">
+          <Link href="/signin" className="text-sm text-muted-foreground underline underline-offset-4">← Back to sign in</Link>
         </div>
       </div>
     </div>

@@ -15,6 +15,7 @@ import Modal from "@/components/motion/modal";
 import { useToast } from "@/app/providers";
 import CdpCreateWalletButton from "@/components/cdp/CdpCreateWalletButton";
 import { Copy, ExternalLink, Fuel } from "lucide-react";
+import { Segmented } from "@/components/ledger/Segmented";
 
 function truncate(a: string) { return a.slice(0, 6) + "..." + a.slice(-4); }
 
@@ -261,19 +262,19 @@ export default function WalletClient({ initialLinked }: { initialLinked?: any[] 
     if (linkedLoading) {
       return (
         <div className="max-w-3xl mx-auto px-6 md:px-10 py-8 space-y-6">
-          <h1 className="serif text-2xl font-semibold">Wallet</h1>
-          <div className="border rule rounded-sm p-6 space-y-3 animate-pulse" aria-label="Loading wallet">
-            <div className="h-4 bg-zinc-900/10 rounded-sm w-2/3" />
-            <div className="h-9 bg-zinc-900/10 rounded-sm" />
+          <h1 className="font-display text-3xl">Wallet</h1>
+          <div className="rounded-[10px] border border-border p-6 space-y-3 animate-pulse" aria-label="Loading wallet">
+            <div className="h-4 bg-muted rounded-sm w-2/3" />
+            <div className="h-9 bg-muted rounded-sm" />
           </div>
         </div>
       );
     }
     return (
       <div className="max-w-3xl mx-auto px-6 md:px-10 py-8 space-y-6">
-        <h1 className="serif text-2xl font-semibold">Wallet</h1>
-        <div className="border rule rounded-sm p-6 text-center space-y-3">
-          <p className="text-sm text-zinc-600">Create your Opentip Smart Wallet to see balances, or connect an existing wallet.</p>
+        <h1 className="font-display text-3xl">Wallet</h1>
+        <div className="rounded-[10px] border border-border p-6 text-center space-y-3">
+          <p className="text-sm text-muted-foreground">Create your Opentip Smart Wallet to see balances, or connect an existing wallet.</p>
           {!process.env.NEXT_PUBLIC_CDP_PROJECT_ID && <p className="text-xs text-red-600">Missing NEXT_PUBLIC_CDP_PROJECT_ID — add it to .env and restart dev.</p>}
           <div className="flex gap-2 justify-center">
             <CdpCreateWalletButton onCreated={() => location.reload()} />
@@ -287,24 +288,24 @@ export default function WalletClient({ initialLinked }: { initialLinked?: any[] 
   return (
     <div className="max-w-3xl mx-auto px-6 md:px-10 py-8 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="serif text-2xl font-semibold">Wallet</h1>
+        <h1 className="font-display text-3xl">Wallet</h1>
       </div>
 
       {/* Address — Opentip Smart Wallet first */}
-      <div className="flex items-center gap-2 text-xs text-zinc-500">
-        <span className="stats text-sm text-zinc-900">{truncate(displayAddress!)}</span>
-        {smartWallet && <span className="text-[0.6rem] bg-zinc-900 text-white px-1.5 py-0.5 rounded">SMART</span>}
-        {!smartWallet && primaryWallet && <span className="text-[0.6rem] border rule px-1.5 py-0.5 rounded">PRIMARY</span>}
-        <button onClick={() => copy(displayAddress!)} className="p-1 hover:text-zinc-900"><Copy className="h-3.5 w-3.5" /></button>
-        <a href={`https://basescan.org/address/${displayAddress}`} target="_blank" rel="noreferrer" className="p-1 hover:text-zinc-900"><ExternalLink className="h-3.5 w-3.5" /></a>
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <span className="stats text-sm text-foreground">{truncate(displayAddress!)}</span>
+        {smartWallet && <span className="text-[0.6rem] bg-foreground text-background px-1.5 py-0.5 rounded">SMART</span>}
+        {!smartWallet && primaryWallet && <span className="text-[0.6rem] border border-border px-1.5 py-0.5 rounded">PRIMARY</span>}
+        <button onClick={() => copy(displayAddress!)} className="p-1 hover:text-foreground"><Copy className="h-3.5 w-3.5" /></button>
+        <a href={`https://basescan.org/address/${displayAddress}`} target="_blank" rel="noreferrer" className="p-1 hover:text-foreground"><ExternalLink className="h-3.5 w-3.5" /></a>
       </div>
 
       {/* Total */}
-      <div className="border-b rule pb-6">
-        <div className="text-[0.65rem] uppercase tracking-[0.2em] text-zinc-500">Total balance</div>
+      <div className="border-b border-border pb-6">
+        <div className="text-[0.65rem] uppercase tracking-[0.2em] text-muted-foreground">Total balance</div>
         <div className="stats text-4xl font-semibold mt-1">${totalUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
         {activeIsSmart && (
-          <div className="flex items-center gap-1.5 mt-2 text-xs text-zinc-500" title="Sponsored transactions used today — resets daily">
+          <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground" title="Sponsored transactions used today — resets daily">
             <Fuel className="h-3.5 w-3.5" />
             {sponsor ? (
               <span className="stats">{sponsor.usedToday}/{sponsor.cap} sponsored today</span>
@@ -320,19 +321,19 @@ export default function WalletClient({ initialLinked }: { initialLinked?: any[] 
       </div>
 
       <Modal open={showDeposit} onClose={() => setShowDeposit(false)} title="Deposit">
-        <p className="text-xs text-zinc-600">Send ETH, USDC or OAR to this address on Base:</p>
+        <p className="text-xs text-muted-foreground">Send ETH, USDC or OAR to this address on Base:</p>
         <div className="flex items-center gap-2">
-          <code className="text-xs bg-zinc-900 text-white px-2 py-1 rounded flex-1 truncate">{displayAddress!}</code>
+          <code className="text-xs bg-foreground text-background px-2 py-1 rounded flex-1 truncate">{displayAddress!}</code>
           <Button size="sm" variant="ghost" onClick={() => copy(displayAddress!)}>Copy</Button>
         </div>
-        <p className="text-xs text-zinc-500">Or use Coinbase Onramp for USDC on Base (0 fees).</p>
+        <p className="text-xs text-muted-foreground">Or use Coinbase Onramp for USDC on Base (0 fees).</p>
       </Modal>
 
       <Modal open={showSend} onClose={() => setShowSend(false)} title="Send">
         {sendState === "success" ? (
           <div className="space-y-3">
             <p className="text-sm text-emerald-700">Sent {sendAmount} {reviewSymbol}</p>
-            {sendHash && <p className="text-xs text-zinc-500 break-all">{activeIsSmart ? "UserOp" : "Tx"}: {sendHash}</p>}
+            {sendHash && <p className="text-xs text-muted-foreground break-all">{activeIsSmart ? "UserOp" : "Tx"}: {sendHash}</p>}
             {activeIsSmart && (cdpTxData as any)?.transactionHash && (
               <a href={`https://basescan.org/tx/${(cdpTxData as any).transactionHash}`} target="_blank" rel="noreferrer" className="text-xs text-accent hover:underline">View on Basescan →</a>
             )}
@@ -362,11 +363,11 @@ export default function WalletClient({ initialLinked }: { initialLinked?: any[] 
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-xs text-zinc-500">From {truncate(displayAddress!)} {activeIsSmart ? "· SMART" : "· connected wallet"}</p>
+            <p className="text-xs text-muted-foreground">From {truncate(displayAddress!)} {activeIsSmart ? "· SMART" : "· connected wallet"}</p>
             <Input value={sendTo} onChange={setSendTo} placeholder="0x..." className="flex-1" />
             <div className="flex gap-2">
               <Input value={sendAmount} onChange={setSendAmount} placeholder="Amount" className="flex-1" />
-              <select value={sendToken} onChange={e => setSendToken(e.target.value)} className="h-9 border rule rounded-sm px-2 text-sm bg-transparent">
+              <select value={sendToken} onChange={e => setSendToken(e.target.value)} className="h-9 rounded-[10px] border border-border px-2 text-sm bg-transparent">
                 <option value={ETH_ADDRESS}>ETH</option>
                 <option value={USDC_ADDRESS}>USDC</option>
                 <option value={OAR_ADDRESS}>OAR</option>
@@ -377,39 +378,43 @@ export default function WalletClient({ initialLinked }: { initialLinked?: any[] 
         )}
       </Modal>
 
-      {/* Tabs */}
-      <div className="flex gap-6 border-b rule">
-        <button onClick={() => setTab("tokens")} className={`pb-2 text-sm ${tab==="tokens" ? "border-b-2 border-zinc-900 font-medium" : "text-zinc-500"}`}>Tokens</button>
-        <button onClick={() => setTab("history")} className={`pb-2 text-sm ${tab==="history" ? "border-b-2 border-zinc-900 font-medium" : "text-zinc-500"}`}>History</button>
-      </div>
+      <Segmented
+        label="Wallet"
+        value={tab}
+        onChange={setTab}
+        options={[
+          { value: "tokens", label: "Tokens" },
+          { value: "history", label: "History" },
+        ]}
+      />
 
       {tab==="tokens" ? (
-        <div className="divide-y rule border rule rounded-sm">
+        <div className="divide-y divide-border rounded-[10px] border border-border">
           <div className="flex justify-between items-center px-4 py-3">
-            <div><div className="text-sm font-medium">ETH</div><div className="text-xs text-zinc-500">Ethereum</div></div>
-            <div className="text-right"><div className="stats text-sm">{eth.toFixed(4)}</div><div className="text-xs text-zinc-500">${(eth*ethPrice).toFixed(2)}</div></div>
+            <div><div className="text-sm font-medium">ETH</div><div className="text-xs text-muted-foreground">Ethereum</div></div>
+            <div className="text-right"><div className="stats text-sm">{eth.toFixed(4)}</div><div className="text-xs text-muted-foreground">${(eth*ethPrice).toFixed(2)}</div></div>
           </div>
           <div className="flex justify-between items-center px-4 py-3">
-            <div><div className="text-sm font-medium">USDC</div><div className="text-xs text-zinc-500">USD Coin</div></div>
-            <div className="text-right"><div className="stats text-sm">{usdc.toFixed(2)}</div><div className="text-xs text-zinc-500">${(usdc*usdcPrice).toFixed(2)}</div></div>
+            <div><div className="text-sm font-medium">USDC</div><div className="text-xs text-muted-foreground">USD Coin</div></div>
+            <div className="text-right"><div className="stats text-sm">{usdc.toFixed(2)}</div><div className="text-xs text-muted-foreground">${(usdc*usdcPrice).toFixed(2)}</div></div>
           </div>
           <div className="flex justify-between items-center px-4 py-3">
-            <div><div className="text-sm font-medium">OAR</div><div className="text-xs text-zinc-500">Oarcoin</div></div>
-            <div className="text-right"><div className="stats text-sm">{oar.toFixed(4)}</div><div className="text-xs text-zinc-500">${(oar * (prices[OAR_ADDRESS.toLowerCase()] || 0)).toFixed(2)}</div></div>
+            <div><div className="text-sm font-medium">OAR</div><div className="text-xs text-muted-foreground">Oarcoin</div></div>
+            <div className="text-right"><div className="stats text-sm">{oar.toFixed(4)}</div><div className="text-xs text-muted-foreground">${(oar * (prices[OAR_ADDRESS.toLowerCase()] || 0)).toFixed(2)}</div></div>
           </div>
         </div>
       ) : (
         <div className="space-y-2">
-          {chainUnavailable && !chainError && <p className="text-xs text-zinc-500">Showing Opentip tips only — full chain history needs an explorer key.</p>}
+          {chainUnavailable && !chainError && <p className="text-xs text-muted-foreground">Showing Opentip tips only — full chain history needs an explorer key.</p>}
           {chainUnavailable && chainError && <p className="text-xs text-red-600">Chain history unavailable ({chainError}) — showing Opentip tips and claims only.</p>}
           {historyLoading ? (
             [0,1,2].map(i => (
-              <div key={i} className="flex justify-between items-center border rule rounded-sm px-3 py-2 animate-pulse">
-                <div className="space-y-1.5"><div className="h-3 w-32 bg-zinc-900/10 rounded-sm" /><div className="h-2.5 w-20 bg-zinc-900/10 rounded-sm" /></div>
-                <div className="h-3 w-16 bg-zinc-900/10 rounded-sm" />
+              <div key={i} className="flex justify-between items-center rounded-[10px] border border-border px-3 py-2 animate-pulse">
+                <div className="space-y-1.5"><div className="h-3 w-32 bg-muted rounded-sm" /><div className="h-2.5 w-20 bg-muted rounded-sm" /></div>
+                <div className="h-3 w-16 bg-muted rounded-sm" />
               </div>
             ))
-          ) : history.length===0 ? <p className="text-xs text-zinc-500 py-6 text-center">No history yet.</p> : history.map((h:any)=>{
+          ) : history.length===0 ? <p className="text-xs text-muted-foreground py-6 text-center">No history yet.</p> : history.map((h:any)=>{
             const decimals = h.decimals ?? getTokenDecimals(h.token);
             const val = h.amount ? Number(h.amount)/Math.pow(10,decimals) : 0;
             const formatted = decimals === 6 ? val.toFixed(2) : val >= 1000 ? `${(val/1000).toFixed(1)}k` : val >= 1 ? val.toFixed(2) : val.toFixed(4);
@@ -422,16 +427,16 @@ export default function WalletClient({ initialLinked }: { initialLinked?: any[] 
             const symbol = (h.symbol || "").toString().replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 12) || "—";
             const pending = h.status === "pending";
             return (
-            <div key={`${h.direction}-${h.kind}-${h.hash}`} className="flex justify-between items-center border rule rounded-sm px-3 py-2">
+            <div key={`${h.direction}-${h.kind}-${h.hash}`} className="flex justify-between items-center rounded-[10px] border border-border px-3 py-2">
               <div className="text-xs">
                 <div className="font-medium flex items-center gap-2">
                   <span className={isOut ? "text-red-600" : "text-emerald-700"}>{label}</span>
-                  {pending && <span className="text-[0.6rem] border rule px-1.5 py-0.5 rounded text-zinc-500">PENDING</span>}
-                  <span className="text-zinc-500">{detail}</span>
+                  {pending && <span className="text-[0.6rem] border border-border px-1.5 py-0.5 rounded text-muted-foreground">PENDING</span>}
+                  <span className="text-muted-foreground">{detail}</span>
                 </div>
-                <div className="text-zinc-500">{new Date(h.timestamp).toLocaleDateString()}</div>
+                <div className="text-muted-foreground">{new Date(h.timestamp).toLocaleDateString()}</div>
               </div>
-              <div className="text-right"><div className="stats text-sm">{isOut ? "−" : "+"}{formatted} {symbol}</div>{h.isUserOp ? <span className="text-xs text-zinc-500">UserOp {h.hash?.slice(0,6)}...</span> : <a href={`https://basescan.org/tx/${h.hash}`} target="_blank" className="text-xs text-accent hover:underline">{h.hash?.slice(0,6)}...</a>}</div>
+              <div className="text-right"><div className="stats text-sm">{isOut ? "−" : "+"}{formatted} {symbol}</div>{h.isUserOp ? <span className="text-xs text-muted-foreground">UserOp {h.hash?.slice(0,6)}...</span> : <a href={`https://basescan.org/tx/${h.hash}`} target="_blank" className="text-xs text-accent hover:underline">{h.hash?.slice(0,6)}...</a>}</div>
             </div>
             );
           })}

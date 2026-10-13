@@ -46,7 +46,7 @@ export default function SmartWalletPage() {
           <li>Sign up with email or GitHub.</li>
           <li>If you signed up with email, connect GitHub so you can verify repo ownership.</li>
           <li>Your Smart Wallet is created automatically — wait a few seconds.</li>
-          <li>Your new address appears with a copy button. Fund it with ETH or USDC on Base. OAR is coming soon.</li>
+          <li>Your new address appears with a copy button. Send ETH or USDC to it on Base. OAR is coming soon.</li>
         </ol>
         <p className="text-sm text-foreground/80 leading-relaxed">
           When you register a repo, the payout address defaults to your Smart Wallet. You can switch to a linked external wallet from the dropdown if you prefer.
@@ -68,7 +68,7 @@ export default function SmartWalletPage() {
         <div className="space-y-3">
           <div className="p-4 rounded-[10px] border border-border">
             <h3 className="font-medium text-sm">Tipping</h3>
-            <p className="text-sm text-muted-foreground mt-1">Fund any repo in ETH or USDC (minimum $1). OAR is coming soon. For USDC, approval and the payment are batched into a single confirmation.</p>
+            <p className="text-sm text-muted-foreground mt-1">Tip any repo in ETH or USDC (minimum $1). OAR is coming soon. For USDC, approval and the payment are batched into a single confirmation.</p>
           </div>
           <div className="p-4 rounded-[10px] border border-border">
             <h3 className="font-medium text-sm">Claiming</h3>
@@ -80,7 +80,7 @@ export default function SmartWalletPage() {
           </div>
           <div className="p-4 rounded-[10px] border border-border">
             <h3 className="font-medium text-sm">Gas fees</h3>
-            <p className="text-sm text-muted-foreground mt-1">When a paymaster is configured, Opentip can sponsor up to 10 Smart Wallet transactions per account per UTC day. Sponsorship is not always on. If the paymaster is not configured, or it returns 429, 502, or 503, the wallet pays its own gas. A successful payment then includes &quot;(you paid gas — daily sponsorship used up)&quot; when the daily cap was hit, or &quot;(you paid gas)&quot; when the paymaster was unavailable. Keep a little ETH in the wallet for those times. Funding sent without an Opentip account is never sponsored.</p>
+            <p className="text-sm text-muted-foreground mt-1">When a paymaster is configured, Opentip can sponsor up to 10 Smart Wallet transactions per account per UTC day. Sponsorship is not always on. If the paymaster is not configured, or it returns 429, 502, or 503, the wallet pays its own gas. A successful payment then includes &quot;(you paid gas — daily sponsorship used up)&quot; when the daily cap was hit, or &quot;(you paid gas)&quot; when the paymaster was unavailable. Keep a little ETH in the wallet for those times. A tip sent without an Opentip account is never sponsored.</p>
           </div>
         </div>
       </section>
@@ -101,7 +101,7 @@ export default function SmartWalletPage() {
       <section className="border-t border-border pt-10 space-y-6">
         <h2 className="font-display text-xl">Supported assets</h2>
         <p className="text-sm text-foreground/80 leading-relaxed">
-          You can fund a repo in <strong>ETH or USDC</strong> on Base. <strong>OAR is coming soon.</strong> The wallet can still show an OAR balance, and you can send OAR from the wallet, but the funding form does not accept it yet.
+          You can tip a repo in <strong>ETH or USDC</strong> on Base. <strong>OAR is coming soon.</strong> The wallet can still show an OAR balance, and you can send OAR from the wallet, but the tip form does not accept it yet.
         </p>
         <div className="p-4 rounded-[10px] border border-border bg-accent/5">
           <p className="text-sm text-foreground/80">
@@ -145,8 +145,8 @@ export default function SmartWalletPage() {
             <p className="text-sm text-muted-foreground mt-1">If a tip or send is refused with a limit or recipient message, check your controls at <a href="/wallet/security" className="text-accent underline underline-offset-4">Wallet → Security</a> — a daily cap, per-transaction cap, pause switch, or recipients list may be stopping it.</p>
           </div>
           <div className="p-4 rounded-[10px] border border-border">
-            <h3 className="font-medium text-sm">Wrong network or missing funds</h3>
-            <p className="text-sm text-muted-foreground mt-1">Deposits must be sent on Base. Funds sent on other networks will not appear in your wallet.</p>
+            <h3 className="font-medium text-sm">Wrong network or missing balance</h3>
+            <p className="text-sm text-muted-foreground mt-1">Deposits must be sent on Base. Tokens sent on other networks will not appear in your wallet.</p>
           </div>
         </div>
       </section>

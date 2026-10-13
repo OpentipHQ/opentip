@@ -320,7 +320,7 @@ forge test`}</CodeBlock>
           <li>Register a repo (verify ownership → sign → on-chain tx)</li>
           <li>Send a USDC tip (approve + receiveTip)</li>
           <li>Send an ETH tip (payable receiveTipEth)</li>
-          <li>OAR funding is coming soon. The token menu shows &quot;OAR tipping coming soon&quot; and keeps the current token.</li>
+          <li>OAR tipping is coming soon. The token menu shows &quot;OAR tipping coming soon&quot; and keeps the current token.</li>
           <li>Claim tips as the payout address holder</li>
           <li>Set a display name</li>
           <li>Edit profile (bio, social links, pfp, header)</li>

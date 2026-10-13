@@ -255,7 +255,7 @@ export default function DashboardRepos() {
                     <div className="min-w-0">
                       <Link href={`/${r.repo_id}`} className="text-sm font-medium hover:text-brand">{capitalize(r.repo_id.split("/")[1])}</Link>
                       <p className="mt-1 font-mono text-lg tabular-nums">{fmtUsd(pendingUsd)} pending</p>
-                      <p className="text-xs text-muted-foreground">{fmtUsd(totalUsd)} funded · {r.tip_count} funds</p>
+                      <p className="text-xs text-muted-foreground">{fmtUsd(totalUsd)} tipped · {r.tip_count} {r.tip_count === 1 ? "tip" : "tips"}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">

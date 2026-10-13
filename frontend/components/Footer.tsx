@@ -14,7 +14,7 @@ export default function Footer({ force = false }: { force?: boolean }) {
       <div className="mx-auto grid w-full max-w-[1120px] gap-8 px-4 py-10 sm:grid-cols-4">
         <div className="flex flex-col gap-2">
           <Logo />
-          <p className="max-w-xs text-sm text-muted-foreground">Funding for open source, from the open market.</p>
+          <p className="max-w-xs text-sm text-muted-foreground">Tips for open source, from the open market.</p>
         </div>
         <FooterCol title="Product" links={[["Repos", "/repos"], ["Activity", "/activity"], ["Leaderboard", "/leaderboard"], ["Docs", "/docs"]]} />
         <FooterCol

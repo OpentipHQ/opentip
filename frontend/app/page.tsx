@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import { HomePage } from "@/components/home/HomePage";
 
 const description =
-  "Funding for open source, from the open market. Fund maintainers in ETH or USDC. No account needed. OAR is coming soon.";
+  "Tips for open source, from the open market. Tip maintainers in ETH or USDC. OAR is coming soon.";
 
 export const metadata: Metadata = {
-  title: { absolute: "Opentip | Funding for open source" },
+  title: { absolute: "Opentip | Tips for open source" },
   description,
   openGraph: {
-    title: "Opentip | Funding for open source",
+    title: "Opentip | Tips for open source",
     description,
     url: "https://opentip.tech",
     siteName: "Opentip",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Opentip | Funding for open source",
+    title: "Opentip | Tips for open source",
     description,
     images: ["/ogimage.png"],
   },

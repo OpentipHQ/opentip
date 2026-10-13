@@ -11,7 +11,7 @@ The open-source tip jar on Base. Send crypto to the developers who build the too
 1. **Find a repo** — browse registered repositories on Opentip
 2. **Change one word in the URL** — replace `github.com` with `opentip.tech` (or visit directly)
 3. **Send a tip** — pay in ETH, USDC, or OAR
-4. **Developer claims** — the repo owner sets a payout address and pulls funds on-chain
+4. **Developer claims** — the repo owner sets a payout address and pulls tips on-chain
 
 Opentip takes a **5% fee** on each tip to keep the platform running. **95% goes directly to the developer.** Minimum tip is $1 to prevent gas fees from eating small amounts.
 

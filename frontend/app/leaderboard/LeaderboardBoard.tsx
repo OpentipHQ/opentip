@@ -24,7 +24,7 @@ export function LeaderboardBoard({
     <div>
       <header>
         <h1 className="font-display text-4xl">Leaderboard</h1>
-        <p className="mt-2 max-w-xl text-sm text-muted-foreground">Public totals. Ranks follow funded volume.</p>
+        <p className="mt-2 max-w-xl text-sm text-muted-foreground">Public totals. Ranks follow tipped volume.</p>
       </header>
       <div className="mt-6">
         <Segmented
@@ -33,7 +33,7 @@ export function LeaderboardBoard({
           onChange={setTab}
           options={[
             { value: "repos", label: "Repos" },
-            { value: "funders", label: "Funders" },
+            { value: "funders", label: "Supporters" },
           ]}
         />
       </div>
@@ -52,7 +52,7 @@ export function LeaderboardBoard({
                   <Link href={`/${repo.repo_id}`} className="flex min-w-0 items-center gap-3 rounded-[10px] border border-border px-4 py-3 hover:bg-muted/50">
                     <span className="w-6 font-mono text-sm text-brand">{index + 1}</span>
                     <span className="min-w-0 flex-1 truncate text-sm font-medium">{capitalize(repo.repo_id.split("/")[1] || repo.repo_id)}</span>
-                    <span className="hidden text-xs text-muted-foreground sm:inline">{repo.funders.toLocaleString("en-US")} funders</span>
+                    <span className="hidden text-xs text-muted-foreground sm:inline">{repo.funders.toLocaleString("en-US")} {repo.funders === 1 ? "supporter" : "supporters"}</span>
                     <span className="font-mono text-sm tabular-nums">{fmtUsd(repo.usd)}</span>
                   </Link>
                 </li>

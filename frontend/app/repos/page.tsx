@@ -74,7 +74,7 @@ export default function ReposDirectory() {
     <div>
       <header className="flex flex-col gap-3">
         <h1 className="font-display text-4xl">Repos</h1>
-        <p className="max-w-xl text-sm text-muted-foreground">Registered funding pages. {total > 0 ? `${total} and counting.` : ""}</p>
+        <p className="max-w-xl text-sm text-muted-foreground">Registered tip pages. {total > 0 ? `${total} and counting.` : ""}</p>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="relative w-full sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -92,8 +92,8 @@ export default function ReposDirectory() {
             onChange={(event) => setSort(event.target.value as typeof sort)}
             className="h-10 rounded-[10px] border border-border bg-background px-3 text-sm"
           >
-            <option value="tipped">Most funded</option>
-            <option value="tips">Most funds</option>
+            <option value="tipped">Most tipped</option>
+            <option value="tips">Most tips</option>
             <option value="recent">Recently registered</option>
           </select>
         </div>

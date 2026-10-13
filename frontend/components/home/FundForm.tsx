@@ -44,7 +44,7 @@ export function FundForm() {
           className="fund-input"
         />
         <button type="submit" className="fund-submit">
-          Fund this repo
+          Tip this repo
           <ArrowIcon />
         </button>
       </div>

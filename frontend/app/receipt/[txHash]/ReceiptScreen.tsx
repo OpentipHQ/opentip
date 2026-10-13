@@ -80,8 +80,8 @@ export function ReceiptScreen({ receipt, network }: { receipt: LoadedReceipt; ne
     const leg = receipt.legs[0];
     const claimed = leg ? `${formatAmount(leg.maintainer, leg.token) ?? "0"} ${leg.symbol}` : "";
     const text = receipt.kind === "claim"
-      ? `Just claimed ${claimed} in funding for ${receipt.project} on @opentip_tech. Funding for open source, from the open market.`
-      : `I just funded ${receipt.project} on @opentip_tech. Funding for open source, from the open market.`;
+      ? `Just claimed ${claimed} in tips for ${receipt.project} on @opentip_tech. Tips for open source, from the open market.`
+      : `I just sent a tip to ${receipt.project} on @opentip_tech. Tips for open source, from the open market.`;
     const intent = `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(pageUrl)}`;
     window.open(intent, "_blank", "noopener,noreferrer");
   }
@@ -94,7 +94,7 @@ export function ReceiptScreen({ receipt, network }: { receipt: LoadedReceipt; ne
       {ready ? (
         <>
           <span className="flex size-12 items-center justify-center rounded-full bg-accent/15 text-brand">✓</span>
-          <h1 className="mt-4 font-display text-5xl">{receipt.kind === "claim" ? "Claimed." : "Funded."}</h1>
+          <h1 className="mt-4 font-display text-5xl">{receipt.kind === "claim" ? "Claimed." : "Tip sent."}</h1>
           <div ref={cardRef} className="mt-8 w-full bg-background px-3 py-2">
             <ReceiptCard
               kind={receipt.kind!}
@@ -120,7 +120,7 @@ export function ReceiptScreen({ receipt, network }: { receipt: LoadedReceipt; ne
             </Link>
           ) : (
             <Link href="/repos" className="mt-2 flex h-12 w-full items-center justify-center rounded-full border border-border text-sm font-medium hover:bg-muted">
-              Fund another repo
+              Tip another repo
             </Link>
           )}
         </>
@@ -130,7 +130,7 @@ export function ReceiptScreen({ receipt, network }: { receipt: LoadedReceipt; ne
             {receipt.status === "pending" ? "Pending." : receipt.status === "unrelated" ? "Not a receipt." : "Receipt not found"}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {receipt.note || "That transaction is not an Opentip funding or claim."}
+            {receipt.note || "That transaction is not an Opentip tip or claim."}
           </p>
           {receipt.repoId && receipt.project ? (
             <p className="mt-3 text-sm">

@@ -112,7 +112,7 @@ export default function ForDevelopersPage() {
       <section className="border-t border-border pt-10 space-y-6">
         <h2 className="font-display text-xl">Step 4 — Claim tips</h2>
         <p className="text-sm text-foreground/80 leading-relaxed">
-          When someone funds your repo, the tokens (USDC or ETH; OAR is coming soon) are held by the smart contract in a per-token pending balance. To withdraw, connect the wallet that was registered as the payout address and click <strong>Claim tips</strong>.
+          When someone tips your repo, the tokens (USDC or ETH; OAR is coming soon) are held by the smart contract in a per-token pending balance. To withdraw, connect the wallet that was registered as the payout address and click <strong>Claim tips</strong>.
         </p>
         <p className="text-sm text-foreground/80 leading-relaxed">
           The full pending balance (after the 5% fee) is transferred to your wallet in one transaction.
@@ -177,7 +177,7 @@ export default function ForDevelopersPage() {
           <li>You (the payout address holder) call <code className="bg-muted px-1.5 py-0.5 rounded-sm font-mono text-xs">claimAll()</code> to withdraw all tokens at once.</li>
         </ol>
         <p className="text-sm text-foreground/80 leading-relaxed">
-          This model means you control when you withdraw, and the contract never has custody of your funds beyond what you are owed.
+          This model means you control when you withdraw, and the contract never has custody of your balance beyond what you are owed.
         </p>
       </section>
 

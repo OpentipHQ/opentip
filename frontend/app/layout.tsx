@@ -18,17 +18,17 @@ const display = Bricolage_Grotesque({
 export const metadata = {
   metadataBase: new URL("https://opentip.tech"),
   title: {
-    default: "Opentip | Funding for open source",
+    default: "Opentip | Tips for open source",
     template: "%s | Opentip",
   },
-  description: "Funding for open source, from the open market. Fund maintainers in ETH or USDC. No account needed. OAR is coming soon.",
+  description: "Tips for open source, from the open market. Tip maintainers in ETH or USDC. OAR is coming soon.",
   icons: { icon: "/Opentip.png" },
   other: {
     "base:app_id": "6ab5fa7b81234bc7e80b13bf",
   },
   openGraph: {
-    title: "Opentip | Funding for open source",
-    description: "Funding for open source, from the open market. Fund maintainers in ETH or USDC. No account needed. OAR is coming soon.",
+    title: "Opentip | Tips for open source",
+    description: "Tips for open source, from the open market. Tip maintainers in ETH or USDC. OAR is coming soon.",
     url: "https://opentip.tech",
     siteName: "Opentip",
     type: "website",
@@ -36,8 +36,8 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Opentip | Funding for open source",
-    description: "Funding for open source, from the open market. Fund maintainers in ETH or USDC. No account needed. OAR is coming soon.",
+    title: "Opentip | Tips for open source",
+    description: "Tips for open source, from the open market. Tip maintainers in ETH or USDC. OAR is coming soon.",
     images: ["/ogimage.png"],
   },
 };

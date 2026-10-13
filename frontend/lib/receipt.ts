@@ -170,8 +170,8 @@ async function fromChain(hash: Hex): Promise<LoadedReceipt | null> {
       from: tx.from,
       legs: [],
       note: mined.status === "reverted"
-        ? "This transaction reverted. Nothing was funded or claimed."
-        : "This transaction is not an Opentip funding or claim.",
+        ? "This transaction reverted. No tip was sent and nothing was claimed."
+        : "This transaction is not an Opentip tip or claim.",
     };
   }
 
@@ -200,7 +200,7 @@ async function fromWalletLog(hash: string): Promise<LoadedReceipt | null> {
       repoId: row.repo_id ?? undefined,
       project: row.repo_id ? projectOf(row.repo_id) : undefined,
       legs: [],
-      note: "This transaction is not an Opentip funding or claim.",
+      note: "This transaction is not an Opentip tip or claim.",
     };
   }
   const legs: ReceiptLeg[] = [];
@@ -245,7 +245,7 @@ export async function loadReceipt(rawHash: string): Promise<LoadedReceipt> {
       }
       return logged;
     }
-    return { status: "unknown", hash, legs: [], note: "No funding or claim was found for this hash." };
+    return { status: "unknown", hash, legs: [], note: "No tip or claim was found for this hash." };
   } catch {
     return { status: "unknown", hash, legs: [], note: "The receipt could not be loaded. Try again in a moment." };
   }

@@ -16,12 +16,6 @@ const NAV_LINKS = [
   { href: "/docs", label: "Docs" },
 ];
 
-const RESERVED = new Set([
-  "docs", "repos", "leaderboard", "activity", "signin", "dashboard", "wallet",
-  "notifications", "onboarding", "admin", "legal", "install", "dev",
-  "forgot-password", "reset-password", "verify-email", "receipt",
-]);
-
 export default function HeaderShell() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -29,10 +23,6 @@ export default function HeaderShell() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const parts = pathname.split("/").filter(Boolean);
-  const center = parts.length === 2 && !RESERVED.has(parts[0])
-    ? `opentip.tech/${parts[0]}/${parts[1]}`
-    : null;
   const chainLabel = process.env.NEXT_PUBLIC_CHAIN === "base" ? "Base" : "Base Sepolia";
 
   return (
@@ -49,26 +39,20 @@ export default function HeaderShell() {
           <Link href="/" className="shrink-0" aria-label="Opentip home">
             <Logo />
           </Link>
-          {center ? (
-            <p className="hidden min-w-0 flex-1 truncate text-center font-mono text-xs text-muted-foreground sm:block">
-              {center}
-            </p>
-          ) : (
-            <div className="ml-4 hidden items-center gap-5 md:flex" aria-label="Primary">
-              {NAV_LINKS.map(({ href, label }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className={cn(
-                    "text-sm text-muted-foreground transition-colors hover:text-foreground",
-                    pathname === href && "text-foreground",
-                  )}
-                >
-                  {label}
-                </Link>
-              ))}
-            </div>
-          )}
+          <div className="ml-4 hidden items-center gap-5 md:flex" aria-label="Primary">
+            {NAV_LINKS.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  "text-sm text-muted-foreground transition-colors hover:text-foreground",
+                  pathname === href && "text-foreground",
+                )}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
           <div className="ml-auto flex items-center gap-1.5">
             <button
               type="button"

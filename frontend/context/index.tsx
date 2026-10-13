@@ -12,7 +12,7 @@ const queryClient = new QueryClient();
 
 const metadata = {
   name: "Opentip",
-  description: "Funding for open source — tip any GitHub repo in crypto",
+  description: "Tips for open source — tip any GitHub repo in crypto",
   url: "https://opentip.tech",
   icons: ["https://opentip.tech/Opentip.png"],
 };

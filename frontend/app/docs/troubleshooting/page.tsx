@@ -1,6 +1,6 @@
 export const metadata = {
   title: "Troubleshooting",
-  description: "Fixes for common Opentip problems: funding, registering and claiming repos, sign-in, notifications, and running your own instance.",
+  description: "Fixes for common Opentip problems: tipping, registering and claiming repos, sign-in, notifications, and running your own instance.",
 };
 
 function CodeBlock({ children }: { children: string }) {
@@ -20,7 +20,7 @@ export default function TroubleshootingPage() {
           Something not working? Find the message you see below. Each entry covers what it means, how to check, and how to fix it.
         </p>
         <ul className="text-sm text-foreground/80 space-y-2 list-disc pl-5">
-          <li><strong>Funding or maintaining a repo on opentip.tech?</strong> Start with <a href="#funding-a-repo" className="text-accent underline underline-offset-4">Funding a repo</a>.</li>
+          <li><strong>Tipping or maintaining a repo on opentip.tech?</strong> Start with <a href="#funding-a-repo" className="text-accent underline underline-offset-4">Tipping a repo</a>.</li>
           <li><strong>Running your own Opentip instance?</strong> Go to <a href="#running-your-own-instance" className="text-accent underline underline-offset-4">Running your own instance</a>.</li>
         </ul>
         <p className="text-sm text-foreground/80 leading-relaxed">
@@ -29,9 +29,9 @@ export default function TroubleshootingPage() {
       </section>
 
       <section className="border-t border-border pt-10 space-y-6">
-        <h2 id="for-people-funding-and-maintaining-repos" className="font-display text-xl">For people funding and maintaining repos</h2>
+        <h2 id="for-people-funding-and-maintaining-repos" className="font-display text-xl">For people tipping and maintaining repos</h2>
 
-        <h3 id="funding-a-repo" className="font-medium text-lg pt-2">Funding a repo</h3>
+        <h3 id="funding-a-repo" className="font-medium text-lg pt-2">Tipping a repo</h3>
 
         <div className="space-y-2">
           <h4 className="font-medium text-sm">&quot;Wrong network&quot;</h4>
@@ -47,8 +47,8 @@ export default function TroubleshootingPage() {
         <div className="space-y-2">
           <h4 className="font-medium text-sm">&quot;ETH price is unavailable. Try again shortly.&quot;</h4>
           <ul className="text-sm text-foreground/80 space-y-2 list-disc pl-5">
-            <li><strong>Why:</strong> Opentip checks that an ETH amount is worth at least $1, and it needs a live ETH price for that. If the price can&apos;t be loaded, ETH funding is paused rather than letting the $1 minimum slip.</li>
-            <li><strong>Fix:</strong> Wait a minute and try again, or fund in USDC for now.</li>
+            <li><strong>Why:</strong> Opentip checks that an ETH amount is worth at least $1, and it needs a live ETH price for that. If the price can&apos;t be loaded, ETH tipping is paused rather than letting the $1 minimum slip.</li>
+            <li><strong>Fix:</strong> Wait a minute and try again, or tip in USDC for now.</li>
           </ul>
         </div>
 
@@ -63,8 +63,8 @@ export default function TroubleshootingPage() {
         <div className="space-y-2">
           <h4 className="font-medium text-sm">&quot;OAR tipping coming soon&quot;</h4>
           <ul className="text-sm text-foreground/80 space-y-2 list-disc pl-5">
-            <li><strong>Why:</strong> Choosing OAR in the token menu shows this message and keeps your current token. OAR isn&apos;t available in the funding form yet.</li>
-            <li><strong>Fix:</strong> Fund in USDC or ETH.</li>
+            <li><strong>Why:</strong> Choosing OAR in the token menu shows this message and keeps your current token. OAR isn&apos;t available in the tip form yet.</li>
+            <li><strong>Fix:</strong> Tip in USDC or ETH.</li>
           </ul>
         </div>
 
@@ -72,7 +72,7 @@ export default function TroubleshootingPage() {
           <h4 className="font-medium text-sm">&quot;Connect wallet&quot;</h4>
           <ul className="text-sm text-foreground/80 space-y-2 list-disc pl-5">
             <li><strong>Why:</strong> You pressed <strong>Tip</strong> without a connected wallet.</li>
-            <li><strong>Fix:</strong> Press <strong>Connect wallet</strong> next to the amount, pick your wallet, then try again. You don&apos;t need an Opentip account to fund. See <a href="/docs/getting-started" className="text-accent underline underline-offset-4">Getting Started</a>.</li>
+            <li><strong>Fix:</strong> Press <strong>Connect wallet</strong> next to the amount, pick your wallet, then try again. You don&apos;t need an Opentip account to tip. See <a href="/docs/getting-started" className="text-accent underline underline-offset-4">Getting Started</a>.</li>
           </ul>
         </div>
 
@@ -84,7 +84,7 @@ export default function TroubleshootingPage() {
           <ul className="text-sm text-foreground/80 space-y-2 list-disc pl-5">
             <li><strong>Why:</strong> Opentip doesn&apos;t check your balance before it sends. Your wallet or the network refuses the transaction instead.</li>
             <li><strong>Check:</strong> Make sure you hold the amount on <strong>Base</strong>, plus a little ETH for gas.</li>
-            <li><strong>Fix:</strong> Top up on Base and try again. Funds sent on other networks won&apos;t show up.</li>
+            <li><strong>Fix:</strong> Top up on Base and try again. Tokens sent on other networks won&apos;t show up.</li>
           </ul>
         </div>
 
@@ -143,15 +143,15 @@ export default function TroubleshootingPage() {
         <div className="space-y-2">
           <h4 className="font-medium text-sm">Your payment went through but doesn&apos;t appear in &quot;Recent tips&quot; or &quot;Top supporters&quot;</h4>
           <ul className="text-sm text-foreground/80 space-y-2 list-disc pl-5">
-            <li><strong>Why:</strong> The <strong>Pending</strong>, <strong>Total tipped</strong>, and <strong>Tips</strong> numbers on a repo page come straight from the contract, so they update right away. A repo with no funds shows an em dash for an empty total. <strong>Recent tips</strong>, <strong>Top supporters</strong>, the <a href="/leaderboard" className="text-accent underline underline-offset-4">leaderboard</a>, and the totals on <a href="/repos" className="text-accent underline underline-offset-4">Repos</a> come from our indexer. The indexer reads the chain on a timer and can fall behind.</li>
-            <li><strong>Fix:</strong> Give it a few minutes and reload. If the contract numbers changed, your funds arrived.</li>
+            <li><strong>Why:</strong> The <strong>Pending</strong>, <strong>Total tipped</strong>, and <strong>Tips</strong> numbers on a repo page come straight from the contract, so they update right away. A repo with no tips shows an em dash for an empty total. <strong>Recent tips</strong>, <strong>Top supporters</strong>, the <a href="/leaderboard" className="text-accent underline underline-offset-4">leaderboard</a>, and the totals on <a href="/repos" className="text-accent underline underline-offset-4">Repos</a> come from our indexer. The indexer reads the chain on a timer and can fall behind.</li>
+            <li><strong>Fix:</strong> Give it a few minutes and reload. If the contract numbers changed, your tip arrived.</li>
           </ul>
         </div>
 
         <div className="space-y-2">
           <h4 className="font-medium text-sm">Display name</h4>
           <ul className="text-sm text-foreground/80 space-y-2 list-disc pl-5">
-            <li><strong>Why:</strong> Saving a name needs a signature from the wallet you fund with. That works for a connected external wallet and for the Opentip Smart Wallet. The name is stored for that wallet&apos;s address.</li>
+            <li><strong>Why:</strong> Saving a name needs a signature from the wallet you tip with. That works for a connected external wallet and for the Opentip Smart Wallet. The name is stored for that wallet&apos;s address.</li>
             <li><strong>Fix:</strong> Type a name of 1–64 characters, press <strong>Save</strong>, and sign the message.</li>
             <li><strong>&quot;Enter a display name&quot;</strong> means the name is empty, or no wallet address is available yet.</li>
             <li><strong>&quot;Save failed&quot;</strong> with <strong>&quot;invalid signature&quot;</strong> means the signature didn&apos;t match that address.</li>
@@ -345,7 +345,7 @@ export default function TroubleshootingPage() {
         <div className="space-y-2">
           <h4 className="font-medium text-sm">&quot;You need to link a wallet first. This wallet receives tips.&quot;</h4>
           <p className="text-sm text-foreground/80 leading-relaxed">
-            <strong>Fix:</strong> Press <strong>Link wallet →</strong> and create your Opentip Smart Wallet or link an external wallet. This wallet receives your funds. See <a href="/docs/smart-wallet" className="text-accent underline underline-offset-4">Smart Wallet</a>.
+            <strong>Fix:</strong> Press <strong>Link wallet →</strong> and create your Opentip Smart Wallet or link an external wallet. This wallet receives your tips. See <a href="/docs/smart-wallet" className="text-accent underline underline-offset-4">Smart Wallet</a>.
           </p>
         </div>
 
@@ -361,14 +361,14 @@ export default function TroubleshootingPage() {
           <h4 className="font-medium text-sm">Your repo moved from a personal account into an org</h4>
           <ul className="text-sm text-foreground/80 space-y-2 list-disc pl-5">
             <li><strong>Why:</strong> Opentip registers repos by their <code className="bg-muted px-1.5 py-0.5 rounded-sm font-mono text-xs">owner/repo</code> path. After a move, the repo has a new path, and that path is registered separately.</li>
-            <li><strong>Fix:</strong> Open the new path and register it there. The new owner is an org, so the org-repo entry above applies. Share the new link. Funds already sent to the old path stay under the old path. The payout wallet for the old path can still claim them on the old page.</li>
+            <li><strong>Fix:</strong> Open the new path and register it there. The new owner is an org, so the org-repo entry above applies. Share the new link. Tips already sent to the old path stay under the old path. The payout wallet for the old path can still claim them on the old page.</li>
           </ul>
         </div>
 
         <div className="space-y-2">
           <h4 className="font-medium text-sm">Repo page says &quot;Could not fetch GitHub metadata.&quot;</h4>
           <ul className="text-sm text-foreground/80 space-y-2 list-disc pl-5">
-            <li><strong>Why:</strong> Opentip couldn&apos;t load the repo&apos;s details from GitHub. Funding, registering, and claiming still work on that page.</li>
+            <li><strong>Why:</strong> Opentip couldn&apos;t load the repo&apos;s details from GitHub. Tipping, registering, and claiming still work on that page.</li>
             <li><strong>Fix:</strong> Reload in a few minutes. If it continues on opentip.tech, email support@opentip.tech with the repo name.</li>
           </ul>
         </div>
@@ -424,7 +424,7 @@ export default function TroubleshootingPage() {
       </section>
 
       <section className="border-t border-border pt-10 space-y-6">
-        <h3 id="claiming-funds-maintainers" className="font-medium text-lg">Claiming funds (maintainers)</h3>
+        <h3 id="claiming-funds-maintainers" className="font-medium text-lg">Claiming tips (maintainers)</h3>
 
         <div className="space-y-2">
           <h4 className="font-medium text-sm">There&apos;s no &quot;Claim tips&quot; button</h4>
@@ -466,9 +466,9 @@ export default function TroubleshootingPage() {
         </div>
 
         <div className="space-y-2">
-          <h4 className="font-medium text-sm">Someone funded your repo but you got no notification</h4>
+          <h4 className="font-medium text-sm">Someone tipped your repo but you got no notification</h4>
           <ul className="text-sm text-foreground/80 space-y-2 list-disc pl-5">
-            <li><strong>Check:</strong> The repo&apos;s payout wallet must be linked to your Opentip account. Funding notices go to the account that owns that wallet.</li>
+            <li><strong>Check:</strong> The repo&apos;s payout wallet must be linked to your Opentip account. Tip notices go to the account that owns that wallet.</li>
             <li><strong>Check:</strong> A new subscription includes tip received and tips paid out until you turn them off. After you clear every type, the page says <strong>&quot;No types selected, so pushes are not sent.&quot;</strong> and nothing is delivered.</li>
             <li><strong>Check:</strong> Look at your in-app list at <a href="/notifications" className="text-accent underline underline-offset-4">/notifications</a>. Notices show up there even if push didn&apos;t reach you. They can take a few minutes, because they come from the indexer.</li>
           </ul>
@@ -592,7 +592,7 @@ export default function TroubleshootingPage() {
         <div className="space-y-2">
           <h3 className="font-medium text-sm">Lists, leaderboard, and stats are stale or missing</h3>
           <ul className="text-sm text-foreground/80 space-y-2 list-disc pl-5">
-            <li><strong>Why:</strong> The indexer (<code className="bg-muted px-1.5 py-0.5 rounded-sm font-mono text-xs">indexer/src/index.ts</code>) polls the contract and writes funding, registration, payout, and claim events to Postgres. Claim events are stored and can trigger a <strong>&quot;Tips paid out&quot;</strong> notification.</li>
+            <li><strong>Why:</strong> The indexer (<code className="bg-muted px-1.5 py-0.5 rounded-sm font-mono text-xs">indexer/src/index.ts</code>) polls the contract and writes tips, registration, payout, and claim events to Postgres. Claim events are stored and can trigger a <strong>&quot;Tips paid out&quot;</strong> notification.</li>
             <li><strong>Check:</strong> Look in the indexer logs for <code className="bg-muted px-1.5 py-0.5 rounded-sm font-mono text-xs">[indexer] tick error</code> or <code className="bg-muted px-1.5 py-0.5 rounded-sm font-mono text-xs">[indexer] DB unreachable</code>. Look at <code className="bg-muted px-1.5 py-0.5 rounded-sm font-mono text-xs">last_block</code> in the <code className="bg-muted px-1.5 py-0.5 rounded-sm font-mono text-xs">IndexerState</code> table and compare it with the chain head.</li>
             <li><code className="bg-muted px-1.5 py-0.5 rounded-sm font-mono text-xs">CHAIN</code> isn&apos;t <code className="bg-muted px-1.5 py-0.5 rounded-sm font-mono text-xs">base</code> on mainnet. The indexer reads <code className="bg-muted px-1.5 py-0.5 rounded-sm font-mono text-xs">CHAIN</code>, not <code className="bg-muted px-1.5 py-0.5 rounded-sm font-mono text-xs">NEXT_PUBLIC_CHAIN</code>.</li>
             <li><code className="bg-muted px-1.5 py-0.5 rounded-sm font-mono text-xs">RPC_URL</code> or <code className="bg-muted px-1.5 py-0.5 rounded-sm font-mono text-xs">CONTRACT_ADDRESS</code> is wrong. Without <code className="bg-muted px-1.5 py-0.5 rounded-sm font-mono text-xs">CONTRACT_ADDRESS</code>, the indexer exits with <code className="bg-muted px-1.5 py-0.5 rounded-sm font-mono text-xs">CONTRACT_ADDRESS env required</code>.</li>
@@ -669,7 +669,7 @@ export default function TroubleshootingPage() {
         </div>
 
         <div className="space-y-2">
-          <h3 className="font-medium text-sm">ETH funding is blocked everywhere</h3>
+          <h3 className="font-medium text-sm">ETH tipping is blocked everywhere</h3>
           <ul className="text-sm text-foreground/80 space-y-2 list-disc pl-5">
             <li><strong>Why:</strong> Prices come from CoinGecko&apos;s public API and are cached for 60 seconds. If your server can&apos;t reach <code className="bg-muted px-1.5 py-0.5 rounded-sm font-mono text-xs">api.coingecko.com</code>, users see <strong>&quot;ETH price is unavailable. Try again shortly.&quot;</strong></li>
             <li><strong>Fix:</strong> Allow outbound access to <code className="bg-muted px-1.5 py-0.5 rounded-sm font-mono text-xs">api.coingecko.com</code>.</li>

@@ -72,7 +72,7 @@ export default function GettingStartedPage() {
           <div className="p-4 rounded-[10px] border border-border">
             <h3 className="font-medium text-sm">OAR</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              OAR funding is coming soon. Choosing OAR in the token menu shows &quot;OAR tipping coming soon&quot; and keeps your current token.
+              OAR tipping is coming soon. Choosing OAR in the token menu shows &quot;OAR tipping coming soon&quot; and keeps your current token.
             </p>
           </div>
         </div>
@@ -101,7 +101,7 @@ export default function GettingStartedPage() {
       <section className="border-t border-border pt-10 space-y-6">
         <h2 className="font-display text-xl">Sharing a tip link</h2>
         <p className="text-sm text-foreground/80 leading-relaxed">
-          Every repo page has a <strong>Copy tip link</strong> button. Share it on social media, in READMEs, or in issues so others can fund the same project.
+          Every repo page has a <strong>Copy tip link</strong> button. Share it on social media, in READMEs, or in issues so others can tip the same project.
         </p>
         <code className="block bg-zinc-950 text-zinc-100 p-4 rounded-sm font-mono text-sm">
           https://opentip.tech/{'{owner}'}/{'{repo}'}

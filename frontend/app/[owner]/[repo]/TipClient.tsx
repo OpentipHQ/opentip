@@ -342,7 +342,7 @@ export default function TipClient({
           logWalletTx({ walletAddress: address, kind: "tip", repoId: repoIdLower, token: selectedToken, amount: parseUnits(amount, currentToken.decimals).toString(), toAddress: contract!, txHash: tipW.data });
         } catch {}
       }
-      showToast({ status:"success", title:"Funded", description:`${amount} ${currentToken.symbol} → ${repoIdLower}` });
+      showToast({ status:"success", title:"Tip sent", description:`${amount} ${currentToken.symbol} → ${repoIdLower}` });
       markInstallTipped();
       setTipFlow("success");
       fetch(`/api/tips?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setTips).catch(()=>{});
@@ -352,7 +352,7 @@ export default function TipClient({
     }
     if (tipFlow==="sending" && tipReceipt.isError) {
       if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
-      showToast({ status:"error", title:"Funding failed", description: (tipReceipt.error as any)?.message?.slice(0,120) });
+      showToast({ status:"error", title:"Tip failed", description: (tipReceipt.error as any)?.message?.slice(0,120) });
       setTipFlow("error"); setTimeout(()=>setTipFlow("idle"), 2000);
     }
   }, [tipReceipt.isSuccess, tipReceipt.isError]);
@@ -372,7 +372,7 @@ export default function TipClient({
           logWalletTx({ walletAddress: address, kind: "tip", repoId: repoIdLower, token: ETH_ADDRESS, amount: parseEther(amount).toString(), toAddress: contract!, txHash: ethSend.data });
         } catch {}
       }
-      showToast({ status:"success", title:"Funded", description:`${amount} ETH → ${repoIdLower}` });
+      showToast({ status:"success", title:"Tip sent", description:`${amount} ETH → ${repoIdLower}` });
       markInstallTipped();
       setTipFlow("success");
       fetch(`/api/tips?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setTips).catch(()=>{});
@@ -382,7 +382,7 @@ export default function TipClient({
     }
     if (tipFlow==="sending" && ethReceipt.isError) {
       if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
-      showToast({ status:"error", title:"Funding failed", description: (ethReceipt.error as any)?.message?.slice(0,120) });
+      showToast({ status:"error", title:"Tip failed", description: (ethReceipt.error as any)?.message?.slice(0,120) });
       setTipFlow("error"); setTimeout(()=>setTipFlow("idle"), 2000);
     }
   }, [ethReceipt.isSuccess, ethReceipt.isError]);
@@ -470,14 +470,14 @@ export default function TipClient({
             ? " (you paid gas)"
             : " (you paid gas — daily sponsorship used up)"
           : "";
-        showToast({ status:"success", title:"Funded", description:`${amount} ${currentToken.symbol} → ${repoIdLower}${gasNote}${userOperationHash ? ` (${userOperationHash.slice(0,10)}…)` : ""}` });
+        showToast({ status:"success", title:"Tip sent", description:`${amount} ${currentToken.symbol} → ${repoIdLower}${gasNote}${userOperationHash ? ` (${userOperationHash.slice(0,10)}…)` : ""}` });
         markInstallTipped();
         setTipFlow("success"); setTimeout(()=>setTipFlow("idle"), 1600);
         fetch(`/api/tips?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setTips).catch(()=>{});
         fetch(`/api/leaderboard?repoId=${encodeURIComponent(repoIdLower)}`).then(r=>r.json()).then(setLeaderboard).catch(()=>{});
       } catch (e:any) {
         if (loadingToastRef.current) { dismissToast(loadingToastRef.current); loadingToastRef.current = null; }
-        showToast({ status:"error", title:"Funding failed", description: e.message?.slice(0,120) });
+        showToast({ status:"error", title:"Tip failed", description: e.message?.slice(0,120) });
         setTipFlow("error"); setTimeout(()=>setTipFlow("idle"), 2000);
       }
       return;
@@ -634,7 +634,7 @@ export default function TipClient({
     } catch(e:any){ showToast({ status:"error", title:"Save failed", description: e.message?.slice(0,100) }); }
   };
 
-  const tipButtonText = tipFlow==="approving" ? "Approving spend..." : tipFlow==="sending" ? "Sending..." : tipFlow==="success" ? "Funded" : tipFlow==="error" ? "Try again" : `Fund ${amount} ${currentToken.symbol}`;
+  const tipButtonText = tipFlow==="approving" ? "Approving spend..." : tipFlow==="sending" ? "Sending..." : tipFlow==="success" ? "Tip sent" : tipFlow==="error" ? "Try again" : `Tip ${amount} ${currentToken.symbol}`;
   const feeBps = feeBpsRaw == null ? null : Number(feeBpsRaw);
   const knownFee = feeBps != null && Number.isFinite(feeBps) && feeBps >= 0 && feeBps <= 10000;
   const split = knownFee ? previewSplit(amount, currentToken.decimals, feeBps) : null;
@@ -716,12 +716,12 @@ export default function TipClient({
           </div>
         </div>
         <Button variant="outline" onClick={copyLink}>
-          <Copy className="h-3.5 w-3.5" /> Copy funding link
+          <Copy className="h-3.5 w-3.5" /> Copy tip link
         </Button>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard label="Total funded">
+        <StatCard label="Total tipped">
           {fundedAsUsd && fundedUsd != null ? (
             <p className="mt-1 text-2xl tabular-nums">{fmtUsd(fundedUsd)}</p>
           ) : fundedRows.length === 0 ? (
@@ -736,7 +736,7 @@ export default function TipClient({
             </div>
           )}
         </StatCard>
-        <StatCard label="Funders">
+        <StatCard label="Supporters">
           <p className="mt-1 text-2xl tabular-nums">{funderCount == null ? "—" : funderCount.toLocaleString("en-US")}</p>
         </StatCard>
         <StatCard label="Pending claim" pending>
@@ -763,13 +763,13 @@ export default function TipClient({
           <section className="min-w-0">
             <div className="mb-3 flex items-baseline justify-between gap-3">
               <h2 className="text-sm font-medium">Ledger</h2>
-              <p className="text-xs text-muted-foreground">Recent funding · {VIEM_CHAIN.name}</p>
+              <p className="text-xs text-muted-foreground">Recent tips · {VIEM_CHAIN.name}</p>
             </div>
             {tipsLoading ? (
               <div className="flex justify-center py-8"><Loader variant="dots" size={20} /></div>
             ) : tips.length === 0 ? (
               <div className="rounded-[10px] border border-dashed border-border px-4 py-10 text-center">
-                <p className="font-medium">No funding yet</p>
+                <p className="font-medium">No tips yet</p>
                 <p className="mt-1 text-sm text-muted-foreground">The first contribution will show up here.</p>
               </div>
             ) : (
@@ -777,7 +777,7 @@ export default function TipClient({
                 <table className="w-full min-w-[280px] text-left">
                   <thead>
                     <tr className="border-b border-border text-xs text-muted-foreground">
-                      <th className="px-3 py-2 font-medium">Funder</th>
+                      <th className="px-3 py-2 font-medium">Supporter</th>
                       <th className="px-3 py-2 font-medium">Amount</th>
                       <th className="hidden px-3 py-2 font-medium sm:table-cell">To maintainers</th>
                       <th className="hidden px-3 py-2 font-medium md:table-cell">Tx</th>
@@ -857,7 +857,7 @@ export default function TipClient({
             ) : tipsLoading ? (
               <div className="flex justify-center py-8"><Loader variant="dots" size={20} /></div>
             ) : supporters.length === 0 ? (
-              <p className="py-4 text-sm text-muted-foreground">No funding yet.</p>
+              <p className="py-4 text-sm text-muted-foreground">No tips yet.</p>
             ) : (
               <ul className="divide-y divide-border">
                 {supporters.map((row) => (
@@ -889,12 +889,12 @@ export default function TipClient({
                   </div>
                 ) : wallets.length === 0 ? (
                   <div className="space-y-4">
-                    <p className="text-sm text-muted-foreground">You need to link a wallet first. This wallet receives funding.</p>
+                    <p className="text-sm text-muted-foreground">You need to link a wallet first. This wallet receives tips.</p>
                     <Button onClick={() => router.push("/onboarding")}>Link wallet →</Button>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <p className="text-sm text-muted-foreground">Verify you own <code className="font-mono text-sm">{repoIdLower}</code>, then register to start receiving funding. Payout defaults to your Opentip Smart Wallet.</p>
+                    <p className="text-sm text-muted-foreground">Verify you own <code className="font-mono text-sm">{repoIdLower}</code>, then register to start receiving tips. Payout defaults to your Opentip Smart Wallet.</p>
                     {wallets.length > 1 && (
                       <div className="space-y-1">
                         <label className="text-xs text-muted-foreground">Payout wallet</label>
@@ -931,7 +931,7 @@ export default function TipClient({
             <>
               <section className="w-full rounded-[10px] border border-border bg-card p-4">
                 <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-sm font-medium">Fund this repo</h2>
+                  <h2 className="text-sm font-medium">Tip this repo</h2>
                   <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                     <span className="size-1.5 rounded-full bg-accent" />
                     {VIEM_CHAIN.name}
@@ -984,7 +984,7 @@ export default function TipClient({
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   {useSmart && smartAddr ? (
-                    <span className="flex h-9 items-center gap-1.5 rounded-full border border-border px-2 font-mono text-xs" title="Funding from your Opentip Smart Wallet">{smartAddr.slice(0, 6)}...{smartAddr.slice(-4)}<span className="rounded bg-foreground px-1.5 py-0.5 text-[0.6rem] text-background">SMART</span></span>
+                    <span className="flex h-9 items-center gap-1.5 rounded-full border border-border px-2 font-mono text-xs" title="Tipping from your Opentip Smart Wallet">{smartAddr.slice(0, 6)}...{smartAddr.slice(-4)}<span className="rounded bg-foreground px-1.5 py-0.5 text-[0.6rem] text-background">SMART</span></span>
                   ) : isConnected ? (
                     <span className="flex h-9 items-center rounded-full border border-border px-2 font-mono text-xs">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
                   ) : (
@@ -994,11 +994,10 @@ export default function TipClient({
                 <StatefulButton className="mt-3 h-11 w-full" state={tipFlow==="approving"||tipFlow==="sending"?"loading": tipFlow==="success"?"success": tipFlow==="error"?"error":"idle"} onClick={openTipReview} disabled={tipFlow==="approving"||tipFlow==="sending"}>
                   {tipButtonText}
                 </StatefulButton>
-                <p className="mt-2 text-center text-xs text-muted-foreground">No account needed.</p>
                 <TxReviewModal
                   open={showTipReview}
                   onClose={() => setShowTipReview(false)}
-                  title="Review funding"
+                  title="Review tip"
                   rows={[
                     { label: "To repo", value: repoIdLower },
                     { label: "Amount", value: `${amount} ${currentToken.symbol}${usdHint > 0 ? ` (≈ ${fmtUsd(usdHint)})` : ""}` },

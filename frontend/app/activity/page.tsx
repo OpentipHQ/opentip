@@ -44,7 +44,7 @@ export default function ActivityFeed() {
     <div className="space-y-0">
       <section className="py-12 md:py-16 border-b border-border space-y-4">
         <h1 className="font-display text-4xl">Activity</h1>
-        <p className="max-w-xl text-sm text-muted-foreground">A live feed of funding.</p>
+        <p className="max-w-xl text-sm text-muted-foreground">A live feed of tips.</p>
       </section>
 
       <section className="py-10">
@@ -52,8 +52,8 @@ export default function ActivityFeed() {
           <div className="py-12 flex justify-center"><Loader variant="dots" size={20} /></div>
         ) : tips.length === 0 ? (
           <div className="py-12 space-y-3">
-            <p className="text-sm text-muted-foreground">No funding yet.</p>
-            <Link href="/repos" className="text-sm underline underline-offset-4 hover:text-brand">Fund a repo &rarr;</Link>
+            <p className="text-sm text-muted-foreground">No tips yet.</p>
+            <Link href="/repos" className="text-sm underline underline-offset-4 hover:text-brand">Tip a repo &rarr;</Link>
           </div>
         ) : (
           <>
@@ -66,7 +66,7 @@ export default function ActivityFeed() {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-sm">
                       <span className="font-mono text-xs">{t.display_name || truncate(t.tipper_address)}</span>
-                      {" funded "}
+                      {" tipped "}
                       <Link href={`/${t.repo_id}`} className="font-medium text-brand">{capitalize(t.repo_id.split("/")[1])}</Link>
                     </p>
                     <span className="font-mono text-xs tabular-nums text-brand">+{(Number(t.amount) / Math.pow(10, getTokenDecimals(t.token))).toFixed(2)} {getTokenSymbol(t.token)}</span>

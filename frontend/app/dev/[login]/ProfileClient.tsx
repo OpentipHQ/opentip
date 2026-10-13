@@ -146,9 +146,9 @@ export default function ProfileClient({ data, contributions }: { data: ProfileDa
       </header>
 
       <div className="grid min-w-0 gap-3 sm:grid-cols-3">
-        <Stat label="Total funded" value={fmtUsd(data.stats.total_tipped_usd)} />
+        <Stat label="Total tipped" value={fmtUsd(data.stats.total_tipped_usd)} />
         <Stat label="Repos" value={data.stats.repo_count.toLocaleString("en-US")} />
-        <Stat label="Funds" value={data.stats.total_tips.toLocaleString("en-US")} />
+        <Stat label="Tips" value={data.stats.total_tips.toLocaleString("en-US")} />
       </div>
 
       <section className="min-w-0">
@@ -162,7 +162,7 @@ export default function ProfileClient({ data, contributions }: { data: ProfileDa
                 <Link href={`/${r.repo_id}`} className="flex min-w-0 items-center justify-between gap-3 rounded-[10px] border border-border px-4 py-3 hover:bg-muted/50">
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-medium">{capitalize(r.repo_id.split("/")[1] || r.repo_id)}</span>
-                    <span className="text-xs text-muted-foreground">{r.tip_count.toLocaleString("en-US")} funds</span>
+                    <span className="text-xs text-muted-foreground">{r.tip_count.toLocaleString("en-US")} {r.tip_count === 1 ? "tip" : "tips"}</span>
                   </span>
                   <span className="shrink-0 font-mono text-sm tabular-nums">{fmtUsd(r.usd)}</span>
                 </Link>

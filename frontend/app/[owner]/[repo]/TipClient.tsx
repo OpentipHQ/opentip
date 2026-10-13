@@ -23,6 +23,7 @@ import { Input } from "@/components/motion/input";
 import { Button, StatefulButton } from "@/components/motion/button";
 import { Loader } from "@/components/motion/loader";
 import { SplitBar } from "@/components/ledger/SplitBar";
+import { Segmented } from "@/components/ledger/Segmented";
 import { bpsLabel } from "@/lib/fee-bps";
 import { Copy } from "lucide-react";
 import Image from "next/image";
@@ -63,6 +64,7 @@ function formatAmount(raw: bigint, token: TokenInfo): string {
 }
 
 type RepoLink = { title: string; url: string };
+type RepoDeveloper = { login: string; pfp: string | null; image: string | null };
 
 export default function TipClient({
   repoId,
@@ -71,6 +73,8 @@ export default function TipClient({
   icon = null,
   summary = null,
   links = [],
+  developer = null,
+  funderCount = null,
 }: {
   repoId: string;
   project?: string;
@@ -78,6 +82,8 @@ export default function TipClient({
   icon?: string | null;
   summary?: RepoSummary | null;
   links?: RepoLink[];
+  developer?: RepoDeveloper | null;
+  funderCount?: number | null;
 }) {
   const router = useRouter();
   const repoIdLower = repoId.toLowerCase();
@@ -661,10 +667,6 @@ export default function TipClient({
   const fundedUsd = fundedAsUsd ? fundedRows.reduce((sum, row) => sum + (usdOf(row.raw, row.token) ?? 0), 0) : null;
   const pendingAsUsd = pricesReady && pendingBalances.every((row) => usdOf(row.raw, row.token) != null);
   const pendingUsd = pendingAsUsd ? pendingBalances.reduce((sum, row) => sum + (usdOf(row.raw, row.token) ?? 0), 0) : null;
-  const funderIds = new Set<string>();
-  for (const row of leaderboard as { tipper_address?: string }[]) {
-    if (row?.tipper_address) funderIds.add(row.tipper_address.toLowerCase());
-  }
   const isPayoutWallet = Boolean(
     (address && payout && (address.toLowerCase() === (payout as string).toLowerCase())) ||
     (useSmart && smartAddr && payout && (payout as string).toLowerCase() === smartAddr.toLowerCase()),
@@ -695,7 +697,21 @@ export default function TipClient({
             </span>
           )}
           <div className="min-w-0">
-            <h1 className="font-display text-3xl sm:text-4xl">{projectName}</h1>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h1 className="font-display text-3xl sm:text-4xl">{projectName}</h1>
+              {developer ? (
+                <a href={`/dev/${developer.login}`} className="inline-flex items-center gap-1.5">
+                  <span className="text-xs text-muted-foreground">by <span className="font-medium text-foreground">{developer.login}</span></span>
+                  <img
+                    src={developer.pfp || developer.image || `https://avatars.githubusercontent.com/${developer.login}`}
+                    alt=""
+                    width={20}
+                    height={20}
+                    className="size-5 rounded-full"
+                  />
+                </a>
+              ) : null}
+            </div>
             {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
           </div>
         </div>
@@ -721,7 +737,7 @@ export default function TipClient({
           )}
         </StatCard>
         <StatCard label="Funders">
-          <p className="mt-1 text-2xl tabular-nums">{tipsLoading ? "…" : funderIds.size.toLocaleString("en-US")}</p>
+          <p className="mt-1 text-2xl tabular-nums">{funderCount == null ? "—" : funderCount.toLocaleString("en-US")}</p>
         </StatCard>
         <StatCard label="Pending claim" pending>
           {!isRegistered ? (
@@ -797,18 +813,15 @@ export default function TipClient({
           </section>
 
           <section className="min-w-0">
-            <div className="flex gap-4 border-b border-border">
-              {(["about", "supporters"] as const).map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setDetailTab(tab)}
-                  className={`border-b-2 -mb-px px-1 py-2 text-sm ${detailTab === tab ? "border-foreground font-medium text-foreground" : "border-transparent text-muted-foreground"}`}
-                >
-                  {tab === "about" ? "About" : "Top supporters"}
-                </button>
-              ))}
-            </div>
+            <Segmented
+              label="Repo details"
+              value={detailTab}
+              onChange={setDetailTab}
+              options={[
+                { value: "about", label: "About" },
+                { value: "supporters", label: "Top supporters" },
+              ]}
+            />
             {detailTab === "about" ? (
               <div className="space-y-4 py-4">
                 {summary ? (
@@ -884,7 +897,7 @@ export default function TipClient({
                     <p className="text-sm text-muted-foreground">Verify you own <code className="font-mono text-sm">{repoIdLower}</code>, then register to start receiving funding. Payout defaults to your Opentip Smart Wallet.</p>
                     {wallets.length > 1 && (
                       <div className="space-y-1">
-                        <label className="text-xs text-zinc-500">Payout wallet</label>
+                        <label className="text-xs text-muted-foreground">Payout wallet</label>
                         <select value={selectedPayout} onChange={e => setSelectedPayout(e.target.value)} className="h-9 w-full rounded-[10px] border border-border bg-transparent px-2 text-sm">
                           {wallets.map((w: any) => (
                             <option key={w.address} value={w.address}>{w.address.slice(0,6)}...{w.address.slice(-4)} {w.walletType==="smart"?"· Opentip Smart Wallet": w.isPrimary?"· Primary":""} </option>
@@ -892,7 +905,7 @@ export default function TipClient({
                         </select>
                       </div>
                     )}
-                    {wallets.length === 1 && <p className="text-xs text-zinc-500">Payout: {selectedPayout.slice(0,6)}...{selectedPayout.slice(-4)} {wallets[0].walletType==="smart"?"· Opentip Smart Wallet":""}</p>}
+                    {wallets.length === 1 && <p className="text-xs text-muted-foreground">Payout: {selectedPayout.slice(0,6)}...{selectedPayout.slice(-4)} {wallets[0].walletType==="smart"?"· Opentip Smart Wallet":""}</p>}
                     {ownership.loading ? (
                       <Loader variant="dots" />
                     ) : ownership.owns ? (

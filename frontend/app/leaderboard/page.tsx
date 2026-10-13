@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { getTokenPrices, fmtUsd, usdValue } from "@/lib/prices";
-import { rankTippersByUsd, type TipAggregateRow } from "@/lib/leaderboard-rank";
+import { getTokenPrices, usdValue } from "@/lib/prices";
+import { rankTippersByUsd, usdByRepo, type RepoTokenTotal, type TipAggregateRow } from "@/lib/leaderboard-rank";
+import { LeaderboardBoard } from "./LeaderboardBoard";
 
 async function getLeaderboard(): Promise<{ rows: { tipper_address: string; display_name: string | null; usd: number }[]; error: boolean }> {
   try {
@@ -33,32 +34,42 @@ async function getLeaderboard(): Promise<{ rows: { tipper_address: string; displ
   }
 }
 
-export default async function LeaderboardPage() {
-  const { rows, error } = await getLeaderboard();
-  return (
-    <div className="space-y-0">
-      <header>
-        <h1 className="font-display text-4xl">Leaderboard</h1>
-        <p className="mt-2 max-w-xl text-sm text-muted-foreground">Public totals. Ranks follow funded volume.</p>
-      </header>
+async function getRepoBoard() {
+  try {
+    const repos = await prisma.repo.findMany({ where: { hidden: false }, select: { repo_id: true } });
+    if (repos.length === 0) return [];
+    const repoIds = repos.map((repo) => repo.repo_id);
+    const [tipAgg, prices, funders] = await Promise.all([
+      prisma.$queryRaw<RepoTokenTotal[]>`
+        SELECT repo_id, token, SUM(amount)::text as total, COUNT(*)::int as count
+        FROM "Tip"
+        WHERE repo_id = ANY(${repoIds})
+        GROUP BY repo_id, token
+      `,
+      getTokenPrices(),
+      prisma.$queryRaw<{ repo_id: string; funders: number }[]>`
+        SELECT repo_id, COUNT(DISTINCT tipper_address)::int as funders
+        FROM "Tip"
+        WHERE repo_id = ANY(${repoIds})
+        GROUP BY repo_id
+      `,
+    ]);
+    const byRepo = usdByRepo(tipAgg, prices, usdValue);
+    const funderMap = new Map(funders.map((row) => [row.repo_id, Number(row.funders)]));
+    return repos
+      .map((repo) => ({
+        repo_id: repo.repo_id,
+        usd: byRepo.get(repo.repo_id)?.usd ?? 0,
+        funders: funderMap.get(repo.repo_id) ?? 0,
+      }))
+      .sort((a, b) => b.usd - a.usd || a.repo_id.localeCompare(b.repo_id))
+      .slice(0, 20);
+  } catch {
+    return null;
+  }
+}
 
-      <section className="py-6">
-        {error ? (
-          <p className="py-12 text-center text-sm text-muted-foreground">Couldn&apos;t load the leaderboard. Try again in a minute.</p>
-        ) : rows.length === 0 ? (
-          <p className="rounded-[10px] border border-dashed border-border px-4 py-12 text-center text-sm text-muted-foreground">No funding yet.</p>
-        ) : (
-          <ol className="flex flex-col gap-2">
-            {rows.map((r, i) => (
-              <li key={`${r.tipper_address}-${i}`} className="flex items-center gap-3 rounded-[10px] border border-border px-4 py-3">
-                <span className="w-6 font-mono text-sm text-brand">{i + 1}</span>
-                <span className="flex-1 font-mono text-sm">{r.display_name || `${r.tipper_address.slice(0,6)}...${r.tipper_address.slice(-4)}`}</span>
-                <span className="font-mono text-sm tabular-nums">{fmtUsd(r.usd)}</span>
-              </li>
-            ))}
-          </ol>
-        )}
-      </section>
-    </div>
-  );
+export default async function LeaderboardPage() {
+  const [{ rows, error }, repos] = await Promise.all([getLeaderboard(), getRepoBoard()]);
+  return <LeaderboardBoard funders={rows} repos={repos} error={error} />;
 }

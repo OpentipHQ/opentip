@@ -19,7 +19,7 @@ const REDUCED = {
 export function Loader({ variant = "spinner", size = 20, speed = 0.8, label = "Loading", className }: LoaderProps) {
   const reduce = useReducedMotion() ?? false;
   return (
-    <span role="status" aria-label={label} className={cn("inline-flex items-center justify-center text-zinc-900", className)}>
+    <span role="status" aria-label={label} className={cn("inline-flex items-center justify-center text-foreground", className)}>
       {variant === "spinner" ? <Spinner size={size} speed={speed} reduce={reduce} /> : <Dots size={size} speed={speed} reduce={reduce} />}
       <span className="sr-only">{label}</span>
     </span>

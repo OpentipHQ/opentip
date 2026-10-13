@@ -34,7 +34,7 @@ export default function NotificationsPage() {
   }
 
   if (status === "loading") {
-    return <div className="p-8 text-zinc-500">Loading notifications...</div>;
+    return <div className="p-8 text-muted-foreground">Loading notifications...</div>;
   }
 
   if (!userId) {
@@ -43,8 +43,8 @@ export default function NotificationsPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-10 space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="serif text-3xl font-semibold tracking-tight">Notifications</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-3xl tracking-tight">Notifications</h1>
         <div className="flex gap-2">
           <button onClick={markAllRead} className="text-sm text-accent hover:underline">Mark all as read</button>
           <button onClick={clearAll} className="text-sm text-red-600 hover:underline">Clear all</button>
@@ -52,20 +52,20 @@ export default function NotificationsPage() {
       </div>
 
       {loading ? (
-        <div className="p-8 text-zinc-500">Loading...</div>
+        <div className="p-8 text-muted-foreground">Loading...</div>
       ) : notifications.length === 0 ? (
-        <p className="text-sm text-zinc-500">No notifications yet.</p>
+        <p className="rounded-[10px] border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">No notifications yet.</p>
       ) : (
         <ul className="space-y-2">
           {notifications.map((n) => (
             <li
               key={n.id}
-              className={`border rule rounded-sm p-3 text-sm cursor-pointer transition-opacity hover:opacity-80 ${n.read ? "opacity-60" : ""}`}
+              className={`rounded-[10px] border border-border p-3 text-sm cursor-pointer transition-opacity hover:opacity-80 ${n.read ? "opacity-60" : ""}`}
               onClick={() => markRead(n.id)}
             >
               <div className="font-medium">{n.title}</div>
-              <div className="text-xs text-zinc-500">{n.body}</div>
-              <div className="text-xs text-zinc-400 mt-1">{new Date(n.createdAt).toLocaleString()}</div>
+              <div className="text-xs text-muted-foreground">{n.body}</div>
+              <div className="text-xs text-muted-foreground mt-1">{new Date(n.createdAt).toLocaleString()}</div>
             </li>
           ))}
         </ul>

@@ -37,9 +37,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({ l
     <div className={cn("flex flex-col gap-1.5", className, classNames?.root)}>
       {label ? <label htmlFor={id} className={cn("px-1 text-sm font-medium text-foreground", classNames?.label)}>{label}</label> : null}
       <div ref={fieldRef} data-state={hasError ? "error" : success ? "success" : focused ? "focused" : "idle"} className={cn("relative h-9 overflow-hidden rounded-sm border transition-colors duration-200", "border-hairline bg-transparent", focused && !hasError && "border-accent ring-1 ring-accent/20", hasError && "border-red-500 ring-1 ring-red-500/20", disabled && "opacity-60", classNames?.field)}>
-        {leftIcon ? <span className={cn("pointer-events-none absolute left-3 top-1/2 flex -translate-y-1/2 items-center text-zinc-500 [&_svg]:h-4 [&_svg]:w-4", classNames?.leftIcon)}>{leftIcon}</span> : null}
+        {leftIcon ? <span className={cn("pointer-events-none absolute left-3 top-1/2 flex -translate-y-1/2 items-center text-muted-foreground [&_svg]:h-4 [&_svg]:w-4", classNames?.leftIcon)}>{leftIcon}</span> : null}
         <input ref={ref} id={id} type={type} value={value} disabled={disabled} aria-invalid={hasError || undefined} aria-describedby={errorMessage ? `${id}-error` : undefined} {...rest} onChange={(e) => handleChange(e.target.value)} onFocus={(e) => { setFocused(true); onFocus?.(e); }} onBlur={(e) => { setFocused(false); onBlur?.(e); }} className={cn("peer h-full w-full bg-transparent text-base leading-6 text-foreground caret-foreground outline-none", "placeholder:text-muted-foreground", leftIcon ? "pl-10" : "pl-3.5", rightSlot || success ? "pr-10" : "pr-3.5", disabled && "cursor-not-allowed", classNames?.input)} />
-        {rightSlot ? <span className={cn("absolute right-0 top-0 flex h-full items-center text-zinc-500 [&_button]:grid [&_button]:size-11 [&_button]:place-items-center [&_svg]:h-4 [&_svg]:w-4", classNames?.rightIcon)}>{rightSlot}</span> : null}
+        {rightSlot ? <span className={cn("absolute right-0 top-0 flex h-full items-center text-muted-foreground [&_button]:grid [&_button]:size-11 [&_button]:place-items-center [&_svg]:h-4 [&_svg]:w-4", classNames?.rightIcon)}>{rightSlot}</span> : null}
       </div>
       <div className={reserveErrorLine ? "min-h-4" : "contents"}>
         <AnimatePresence initial={false}>

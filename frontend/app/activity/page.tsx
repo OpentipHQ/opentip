@@ -42,7 +42,7 @@ export default function ActivityFeed() {
 
   return (
     <div className="space-y-0">
-      <section className="py-12 md:py-16 border-b rule space-y-4">
+      <section className="py-12 md:py-16 border-b border-border space-y-4">
         <h1 className="font-display text-4xl">Activity</h1>
         <p className="max-w-xl text-sm text-muted-foreground">A live feed of funding.</p>
       </section>
@@ -86,8 +86,8 @@ export default function ActivityFeed() {
               })}
             </ul>
 
-            <div className="flex items-center justify-between mt-6 pt-4 border-t rule">
-              <span className="text-xs text-zinc-500">Page {page}</span>
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
+              <span className="text-xs text-muted-foreground">Page {page}</span>
               <div className="flex gap-2">
                 <Button variant="ghost" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>← Prev</Button>
                 <Button variant="ghost" size="sm" disabled={!hasMore} onClick={() => setPage(p => p + 1)}>Next →</Button>

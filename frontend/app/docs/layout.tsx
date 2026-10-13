@@ -60,7 +60,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
       <div className="lg:hidden sticky top-16 z-sticky bg-background pb-4">
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="w-full flex items-center justify-between px-4 py-3 border rule rounded-sm text-sm font-medium"
+          className="w-full flex items-center justify-between px-4 py-3 rounded-[10px] border border-border text-sm font-medium"
         >
           <span>{activeLabel}</span>
           <ChevronDown className={`w-4 h-4 transition-transform ${mobileOpen ? "rotate-180" : ""}`} />

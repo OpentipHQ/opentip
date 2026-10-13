@@ -136,8 +136,8 @@ export default function ReposDirectory() {
             </ul>
 
             {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6 pt-4 border-t rule">
-                <span className="text-xs text-zinc-500">{total} repos · page {page} of {totalPages}</span>
+              <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
+                <span className="text-xs text-muted-foreground">{total} repos · page {page} of {totalPages}</span>
                 <div className="flex gap-2">
                   <Button variant="ghost" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>← Prev</Button>
                   <Button variant="ghost" size="sm" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Next →</Button>

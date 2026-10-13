@@ -14,9 +14,9 @@ export default function GasRow({
 }) {
   return (
     <div className="flex justify-between px-3 py-2">
-      <span className="text-xs text-zinc-500">Gas</span>
+      <span className="text-xs text-muted-foreground">Gas</span>
       {sponsored === null || estimating ? (
-        <span className="stats text-xs text-zinc-500">Estimating…</span>
+        <span className="stats text-xs text-muted-foreground">Estimating…</span>
       ) : sponsored ? (
         <span className="stats text-xs text-accent">Sponsored by Opentip</span>
       ) : (

@@ -38,7 +38,7 @@ export async function generateMetadata({
     });
     if (!user) return { title: `@${login} | Opentip` };
     const addresses = user.wallets.map((w) => w.address);
-    let description = user.profile?.bio || `Support @${login} — tip their open-source work in crypto on Opentip.`;
+    let description = user.profile?.bio || `Fund @${login}'s open-source work on Opentip.`;
     if (addresses.length > 0) {
       const repos = await prisma.repo
         .findMany({
@@ -61,7 +61,7 @@ export async function generateMetadata({
         const count = tips.reduce((s, t) => s + (t._count ?? 0), 0);
         if (count > 0) {
           const totalUsd = tips.reduce((s, t) => s + usdValue(t._sum.amount?.toString() ?? "0", t.token, prices), 0);
-          description = `@${login} received ${fmtUsd(totalUsd)} across ${count} tip${count === 1 ? "" : "s"} — support their open-source work on Opentip.`;
+          description = `@${login} received ${fmtUsd(totalUsd)} across ${count} fund${count === 1 ? "" : "s"} on Opentip.`;
         }
       }
     }
@@ -138,28 +138,29 @@ export default async function DevProfilePage({
 
   const prices = await getTokenPrices();
 
-  const tipMap = new Map<string, { total: number; count: number }>();
-  const tippedPerToken: Record<string, number> = {};
+  const tipMap = new Map<string, { total: number; count: number; usd: number }>();
   let totalTippedUsd = 0;
   for (const t of tips) {
     const key = t.repo_id;
-    const existing = tipMap.get(key) || { total: 0, count: 0 };
+    const existing = tipMap.get(key) || { total: 0, count: 0, usd: 0 };
     const decimals = getTokenDecimals(t.token);
     const amt = Number(t._sum.amount?.toString() ?? "0");
     const humanAmount = amt / Math.pow(10, decimals);
     existing.total += humanAmount;
     existing.count += t._count;
-    tipMap.set(key, existing);
     const tokenKey = t.token.toLowerCase();
-    tippedPerToken[tokenKey] = (tippedPerToken[tokenKey] ?? 0) + humanAmount;
     const price = prices[tokenKey] ?? 0;
-    totalTippedUsd += humanAmount * price;
+    const usd = humanAmount * price;
+    existing.usd += usd;
+    tipMap.set(key, existing);
+    totalTippedUsd += usd;
   }
 
   const enrichedRepos = repos.map((r) => ({
     repo_id: r.repo_id,
     total_tipped: tipMap.get(r.repo_id)?.total ?? 0,
     tip_count: tipMap.get(r.repo_id)?.count ?? 0,
+    usd: tipMap.get(r.repo_id)?.usd ?? 0,
   }));
 
   const totalTips = enrichedRepos.reduce((sum, r) => sum + r.tip_count, 0);

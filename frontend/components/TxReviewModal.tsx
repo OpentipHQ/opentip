@@ -13,10 +13,10 @@ export type GasInfo = {
 // The divide-y summary box shared by every money-out review step.
 export function TxReviewRows({ rows, gas }: { rows: ReviewRow[]; gas?: GasInfo | null }) {
   return (
-    <div className="divide-y rule border rule rounded-sm">
+    <div className="divide-y divide-border rounded-[10px] border border-border">
       {rows.map((r) => (
         <div key={r.label} className="flex justify-between px-3 py-2">
-          <span className="text-xs text-zinc-500">{r.label}</span>
+          <span className="text-xs text-muted-foreground">{r.label}</span>
           <span className="stats text-xs">{r.value}</span>
         </div>
       ))}

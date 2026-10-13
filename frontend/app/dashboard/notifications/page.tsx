@@ -144,7 +144,7 @@ export default function NotificationsPage() {
   }
 
   if (status === "loading" || loading) {
-    return <div className="p-8 text-zinc-500">Loading notifications...</div>;
+    return <div className="p-8 text-muted-foreground">Loading notifications...</div>;
   }
 
   if (!userId) {
@@ -153,22 +153,22 @@ export default function NotificationsPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-10 space-y-8">
-      <h1 className="serif text-3xl font-semibold tracking-tight">Notification Settings</h1>
+      <h1 className="font-display text-3xl tracking-tight">Notification Settings</h1>
 
       <section className="space-y-4">
         <h2 className="text-xl font-semibold">Push Notifications</h2>
         {!installMode && (
-          <div className="border rule rounded-sm p-4 bg-zinc-50 text-sm text-zinc-600">
+          <div className="rounded-[10px] border border-border p-4 bg-muted text-sm text-muted-foreground">
             Install Opentip as a PWA to receive push notifications.{" "}
             <a href="/install" className="text-blue-600 underline">Install</a>
           </div>
         )}
         {pushSupported === false && (
-          <p className="text-sm text-zinc-600">This browser can&apos;t receive push notifications here. Install Opentip as a PWA or try another browser.</p>
+          <p className="text-sm text-muted-foreground">This browser can&apos;t receive push notifications here. Install Opentip as a PWA or try another browser.</p>
         )}
         {pushSupported && permission !== "granted" && (
-          <div className="border rule rounded-sm p-4">
-            <p className="text-sm text-zinc-600 mb-3">Enable browser notifications to receive alerts.</p>
+          <div className="rounded-[10px] border border-border p-4">
+            <p className="text-sm text-muted-foreground mb-3">Enable browser notifications to receive alerts.</p>
             <Button size="sm" onClick={() => Notification.requestPermission().then(setPermission)}>
               Enable Notifications
             </Button>
@@ -177,17 +177,17 @@ export default function NotificationsPage() {
         {pushSupported && permission === "granted" && (
           <Button size="sm" onClick={subscribe}>Subscribe</Button>
         )}
-        {feedback && <p className="text-sm text-zinc-700">{feedback}</p>}
+        {feedback && <p className="text-sm text-foreground/80">{feedback}</p>}
       </section>
 
       <section className="space-y-3">
         <h2 className="text-xl font-semibold">Notification Types</h2>
-        <p className="text-sm text-zinc-500">A new subscription starts with Tip received, Tips paid out, Tip submitted, and Claim submitted selected. Adding a device keeps your saved choices.</p>
+        <p className="text-sm text-muted-foreground">A new subscription starts with Tip received, Tips paid out, Tip submitted, and Claim submitted selected. Adding a device keeps your saved choices.</p>
         {types.length === 0 && (
-          <p className="text-sm text-zinc-500">No types selected, so pushes are not sent.</p>
+          <p className="text-sm text-muted-foreground">No types selected, so pushes are not sent.</p>
         )}
         {NOTIFICATION_TYPES.map(({ key, label, description }) => (
-          <label key={key} className="flex items-start gap-3 border rule rounded-sm p-3 cursor-pointer hover:bg-zinc-50 transition-colors">
+          <label key={key} className="flex items-start gap-3 rounded-[10px] border border-border p-3 cursor-pointer hover:bg-muted transition-colors">
             <input
               type="checkbox"
               checked={types.includes(key)}
@@ -196,7 +196,7 @@ export default function NotificationsPage() {
             />
             <div>
               <div className="font-medium text-sm">{label}</div>
-              <div className="text-xs text-zinc-500">{description}</div>
+              <div className="text-xs text-muted-foreground">{description}</div>
             </div>
           </label>
         ))}

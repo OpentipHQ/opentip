@@ -8,12 +8,20 @@ import { motion, useReducedMotion } from "motion/react";
 import { Button } from "@/components/motion/button";
 import { ReceiptCard } from "@/components/ledger/ReceiptCard";
 import { useToast } from "@/app/providers";
-import { formatAmount } from "@/lib/formatAmount";
+import { claimShareTotal } from "@/lib/receipt-display";
 import { SPRING_PRESS } from "@/lib/ease";
 import { useHoverCapable } from "@/lib/hooks/use-hover-capable";
 import type { LoadedReceipt } from "@/lib/receipt";
 
-export function ReceiptScreen({ receipt, network }: { receipt: LoadedReceipt; network: string }) {
+export function ReceiptScreen({
+  receipt,
+  network,
+  prices = {},
+}: {
+  receipt: LoadedReceipt;
+  network: string;
+  prices?: Record<string, number>;
+}) {
   const router = useRouter();
   const { showToast } = useToast();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -99,10 +107,11 @@ export function ReceiptScreen({ receipt, network }: { receipt: LoadedReceipt; ne
               timestamp={receipt.timestamp}
               legs={receipt.legs}
               network={network}
+              prices={prices}
             />
           </div>
           <motion.a
-            href={xShareIntent(receipt)}
+            href={xShareIntent(receipt, prices)}
             aria-label="Share on X"
             target={openShareInNewTab ? "_blank" : undefined}
             rel={openShareInNewTab ? "noopener noreferrer" : undefined}
@@ -147,10 +156,9 @@ export function ReceiptScreen({ receipt, network }: { receipt: LoadedReceipt; ne
   );
 }
 
-function xShareIntent(receipt: LoadedReceipt) {
+function xShareIntent(receipt: LoadedReceipt, prices: Record<string, number>) {
   const pageUrl = `https://opentip.tech/${receipt.repoId}`;
-  const leg = receipt.legs[0];
-  const claimed = leg ? `${formatAmount(leg.maintainer, leg.token) ?? "0"} ${leg.symbol}` : "";
+  const claimed = claimShareTotal(receipt.legs, prices);
   const text = receipt.kind === "claim"
     ? `Just claimed ${claimed} in tips for ${receipt.project} on @opentip_tech. Tips for open source, from the open market.`
     : `I just sent a tip to ${receipt.project} on @opentip_tech. Tips for open source, from the open market.`;

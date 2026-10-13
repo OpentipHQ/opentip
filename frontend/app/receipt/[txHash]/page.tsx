@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { ReceiptScreen } from "./ReceiptScreen";
+import { getTokenPrices } from "@/lib/prices";
 import { loadReceipt } from "@/lib/receipt";
 
 export const dynamic = "force-dynamic";
@@ -16,5 +17,6 @@ export default async function ReceiptPage({ params }: { params: Promise<{ txHash
     redirect(`/receipt/${receipt.canonicalHash}`);
   }
   const network = process.env.NEXT_PUBLIC_CHAIN === "base" ? "Base" : "Base Sepolia";
-  return <ReceiptScreen receipt={receipt} network={network} />;
+  const prices = await getTokenPrices().catch(() => ({} as Record<string, number>));
+  return <ReceiptScreen receipt={receipt} network={network} prices={prices} />;
 }

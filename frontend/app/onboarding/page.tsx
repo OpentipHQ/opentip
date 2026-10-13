@@ -227,7 +227,7 @@ export default function OnboardingPage() {
               <Copy className="h-3.5 w-3.5" />
             </button>
           </div>
-          <p className="text-sm text-muted-foreground">Fund your wallet now — send ETH, USDC, or OAR on <strong>Base</strong>.</p>
+          <p className="text-sm text-muted-foreground">Send ETH, USDC, or OAR to your wallet on <strong>Base</strong>.</p>
           <div>
             <Button onClick={() => setStep("welcome")}>Next</Button>
           </div>

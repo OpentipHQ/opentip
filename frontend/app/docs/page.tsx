@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Documentation",
-  description: "Learn how Opentip works — fund open-source maintainers, register repos, and claim funding.",
+  description: "Learn how Opentip works — tip open-source maintainers, register repos, and claim tips.",
 };
 
 export default function DocsPage() {
@@ -11,7 +11,7 @@ export default function DocsPage() {
       <section className="space-y-6">
         <h1 className="font-display text-4xl leading-[0.9]">Documentation</h1>
         <p className="text-lg text-muted-foreground max-w-xl">
-          Funding for open source, from the open market. Fund maintainers in ETH or USDC.
+          Tips for open source, from the open market. Tip maintainers in ETH or USDC.
         </p>
       </section>
 
@@ -27,7 +27,7 @@ export default function DocsPage() {
           </div>
           <div className="space-y-3">
             <div className="stats text-3xl font-semibold text-accent">02</div>
-            <h3 className="font-medium text-lg">Connect and fund</h3>
+            <h3 className="font-medium text-lg">Connect and tip</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Connect your wallet, check the summary on the About tab, choose USDC or ETH, enter an amount, and send. OAR is coming soon. Minimum is $1.
             </p>
@@ -93,7 +93,7 @@ export default function DocsPage() {
           </Link>
           <Link href="/docs/troubleshooting" className="block p-4 rounded-[10px] border border-border hover:bg-muted transition-colors">
             <h3 className="font-medium text-lg">Troubleshooting</h3>
-            <p className="text-sm text-muted-foreground mt-1">Fixes for funding, registering, claiming, sign-in, notifications, and self-hosting.</p>
+            <p className="text-sm text-muted-foreground mt-1">Fixes for tipping, registering, claiming, sign-in, notifications, and self-hosting.</p>
           </Link>
           <Link href="/docs/resources" className="block p-4 rounded-[10px] border border-border hover:bg-muted transition-colors">
             <h3 className="font-medium text-lg">Resources</h3>

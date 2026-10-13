@@ -10,19 +10,19 @@ import type { ReactNode } from "react";
 import { CONTRACT_ADDRESS } from "@/lib/chain";
 
 const steps = [
-  ["01", "Swap one word in the URL.", "Replace github.com with opentip.tech on any repo link to open its funding page."],
-  ["02", "Fund it in a supported token.", "Connect a wallet, choose an amount in ETH or USDC, and confirm. No account required. OAR is coming soon."],
-  ["03", "Maintainers claim on their schedule.", "The balance belongs to the maintainer the moment funding lands. They withdraw whenever they choose."],
+  ["01", "Swap one word in the URL.", "Replace github.com with opentip.tech on any repo link to open its tip page."],
+  ["02", "Tip it in a supported token.", "Connect a wallet, choose an amount in ETH or USDC, and confirm. No account required. OAR is coming soon."],
+  ["03", "Maintainers claim on their schedule.", "The balance belongs to the maintainer the moment a tip lands. They withdraw whenever they choose."],
 ];
 
 const faqs = [
-  ["Do I need an account to fund a repo?", "No. Connect a wallet, choose ETH or USDC, and confirm. Funding does not require an Opentip account."],
+  ["Do I need an account to tip a repo?", "No. Connect a wallet, choose ETH or USDC, and confirm. Tipping does not require an Opentip account."],
   ["If I send ETH, does the maintainer receive ETH?", "Yes. A contribution stays in the token you send. ETH is claimable as ETH, and USDC as USDC."],
   ["What chain does this run on?", "Base. Contributions, claims, and fees are on the public record."],
-  ["Can anyone claim any repo’s funds?", "No. Claiming requires the payout wallet registered for that repo. Registration happens after a maintainer signs in with GitHub and Opentip verifies ownership or maintainer access."],
-  ["Has the contract been audited?", "The contract is public and verifiable. Read the source and the on-chain record before you send funds."],
+  ["Can anyone claim any repo’s tips?", "No. Claiming requires the payout wallet registered for that repo. Registration happens after a maintainer signs in with GitHub and Opentip verifies ownership or maintainer access."],
+  ["Has the contract been audited?", "The contract is public and verifiable. Read the source and the on-chain record before you send a tip."],
   ["What happens if a repo changes owner?", "The payout address does not follow GitHub on its own. The registered wallet can update it, and Opentip can reassign it after the new maintainer verifies access."],
-  ["Isn’t the contract centralized?", "An owner key can pause funding, registrations, payout-address updates, and claims; set the fee to any rate up to a hard 10% cap; and reassign a payout address. It cannot withdraw a maintainer’s pending balance — only the current payout address can claim it. The owner can withdraw the separate fee balance. Those actions are public."],
+  ["Isn’t the contract centralized?", "An owner key can pause tipping, registrations, payout-address updates, and claims; set the fee to any rate up to a hard 10% cap; and reassign a payout address. It cannot withdraw a maintainer’s pending balance — only the current payout address can claim it. The owner can withdraw the separate fee balance. Those actions are public."],
 ];
 
 export async function HomePage() {
@@ -44,14 +44,14 @@ export async function HomePage() {
               Funding for open source, from the <span className="text-brand">open market.</span>
             </h1>
             <p className="max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Turn any GitHub repo into a funding page. Fund maintainers in ETH or USDC, no account needed. Maintainers claim whenever they want. OAR is coming soon.
+              Turn any GitHub repo into a tip page. Tip maintainers in ETH or USDC. Maintainers claim whenever they want. OAR is coming soon.
             </p>
             <UrlSwap />
             <p className="text-sm text-muted-foreground">Swap one word in any repo link. Paste owner/repo or a full GitHub URL.</p>
           </div>
           <aside className="rounded-[10px] border border-border bg-card p-4 shadow-[0_18px_50px_-32px_rgba(11,13,12,0.45)] sm:p-5">
-            <p className="text-sm font-medium">{ledger?.project ?? "No funding yet"}</p>
-            <p className="mt-5 text-xs text-muted-foreground">Total funded</p>
+            <p className="text-sm font-medium">{ledger?.project ?? "No tips yet"}</p>
+            <p className="mt-5 text-xs text-muted-foreground">Total tipped</p>
             <p className="mt-1 font-mono text-4xl tracking-tight">
               <NumberTicker value={ledger?.fundedUsd ?? 0} />
             </p>
@@ -73,7 +73,7 @@ export async function HomePage() {
                 ))}
               </ul>
             ) : (
-              <p className="mt-4 text-sm text-muted-foreground">Indexed funding will show up here.</p>
+              <p className="mt-4 text-sm text-muted-foreground">Indexed tips will show up here.</p>
             )}
           </aside>
         </section>
@@ -83,7 +83,7 @@ export async function HomePage() {
             [`${maintainerText}%`, "to maintainers"],
             [`${feeText}%`, "platform fee, 10% hard cap"],
             ["$1", "minimum per contribution"],
-            ["0 accounts", "needed to fund"],
+            ["0 accounts", "needed to tip"],
           ].map(([value, label], index) => (
             <div key={label} className={`border-border px-5 py-5 ${index < 3 ? "border-b sm:border-b lg:border-b-0 lg:border-r" : ""}`}>
               <p className="font-mono text-2xl tabular-nums">{value}</p>
@@ -105,7 +105,7 @@ export async function HomePage() {
         <section className="mt-16">
           <h2 className="font-display text-3xl sm:text-4xl">Built for trust</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <Trust n="01" title="Non-custodial by design." body="Funding never sits in an Opentip account. Only the registered payout wallet can withdraw a maintainer’s balance." />
+            <Trust n="01" title="Non-custodial by design." body="Tips never sit in an Opentip account. Only the registered payout wallet can withdraw a maintainer’s balance." />
             <Trust n="02" title="ETH and USDC today." body="Accept ETH or USDC with no extra setup. OAR is coming soon." />
             <Trust n="03" title="Fully verifiable." body="Every contribution, claim, and fee is on the public record.">
               {contract ? (
@@ -120,9 +120,9 @@ export async function HomePage() {
 
         <section className="mt-16 grid items-center gap-6 rounded-[10px] border border-border p-6 lg:grid-cols-2">
           <div>
-            <h2 className="font-display text-3xl sm:text-4xl">Turn your repo into a funding channel</h2>
+            <h2 className="font-display text-3xl sm:text-4xl">Turn your repo into a tip page</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Sign in with GitHub, verify ownership or maintainer access, and link a wallet. Setup takes about a minute. Your repo is then fundable at opentip.tech/owner/repo.
+              Sign in with GitHub, verify ownership or maintainer access, and link a wallet. Setup takes about a minute. Your repo then accepts tips at opentip.tech/owner/repo.
             </p>
             <Link href="/onboarding" className="mt-5 inline-flex h-10 items-center gap-2 rounded-full bg-accent px-4 text-sm font-medium text-white hover:bg-[hsl(var(--accent-hover))]">
               Register a repo
@@ -133,7 +133,7 @@ export async function HomePage() {
             <p className="font-mono text-sm">
               <span className="text-brand">opentip.tech/</span>owner/repo
             </p>
-            <p className="mt-2 text-sm text-muted-foreground">Anyone can fund the page. You claim the balance whenever you choose.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Anyone can tip the page. You claim the balance whenever you choose.</p>
           </aside>
         </section>
 

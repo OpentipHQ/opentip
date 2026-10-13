@@ -11,7 +11,7 @@ const ERROR = "Enter owner/repo, or paste a GitHub URL.";
 
 export function UrlSwap({
   initial = "vercel/next.js",
-  button = "Fund this repo",
+  button = "Tip this repo",
   compact = false,
   onNavigate,
 }: {

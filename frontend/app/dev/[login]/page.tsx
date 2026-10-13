@@ -38,7 +38,7 @@ export async function generateMetadata({
     });
     if (!user) return { title: `@${login} | Opentip` };
     const addresses = user.wallets.map((w) => w.address);
-    let description = user.profile?.bio || `Fund @${login}'s open-source work on Opentip.`;
+    let description = user.profile?.bio || `Tip @${login}'s open-source work on Opentip.`;
     if (addresses.length > 0) {
       const repos = await prisma.repo
         .findMany({
@@ -61,7 +61,7 @@ export async function generateMetadata({
         const count = tips.reduce((s, t) => s + (t._count ?? 0), 0);
         if (count > 0) {
           const totalUsd = tips.reduce((s, t) => s + usdValue(t._sum.amount?.toString() ?? "0", t.token, prices), 0);
-          description = `@${login} received ${fmtUsd(totalUsd)} across ${count} fund${count === 1 ? "" : "s"} on Opentip.`;
+          description = `@${login} received ${fmtUsd(totalUsd)} across ${count} tip${count === 1 ? "" : "s"} on Opentip.`;
         }
       }
     }

@@ -39,7 +39,7 @@ function buildFinalBody(
     case "send":
       return amt
         ? `Sent ${amt} to ${truncateAddress(f.to_address)}`
-        : `Sent funds to ${truncateAddress(f.to_address)}`;
+        : `Sent crypto to ${truncateAddress(f.to_address)}`;
     case "tip":
       return amt
         ? `You tipped ${amt} to ${f.repo_id}`

@@ -9,7 +9,7 @@ const NOTIFICATION_TYPES = [
   { key: "claim_available", label: "Tips paid out", description: "When tips are withdrawn from a repo" },
   { key: "tip_sent", label: "Tip submitted", description: "When you submit a tip" },
   { key: "claim_submitted", label: "Claim submitted", description: "When you submit a claim" },
-  { key: "send_out", label: "Sent", description: "When you send funds out of your wallet" },
+  { key: "send_out", label: "Sent", description: "When you send crypto out of your wallet" },
   { key: "repo_registered", label: "Repo registered", description: "When your repo is registered" },
   { key: "security_alert", label: "Security alert", description: "When policy limits or unusual activity occur" },
 ];

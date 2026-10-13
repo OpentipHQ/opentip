@@ -204,7 +204,7 @@ export default function SmartContractPage() {
           { name: "PayoutAddressUpdated", params: "repoId, oldAddress, newAddress (indexed)", description: "Emitted when a payout wallet is rotated." },
           { name: "TipReceived", params: "tipper (indexed), repoId, token, amount, feeAmount, timestamp", description: "Emitted on every tip (ETH or ERC-20)." },
           { name: "Claimed", params: "repoId, payoutAddress (indexed), token, amount, timestamp", description: "Emitted when a developer claims tips." },
-          { name: "TreasuryWithdrawn", params: "to (indexed), token, amount, timestamp", description: "Emitted when treasury funds are withdrawn." },
+          { name: "TreasuryWithdrawn", params: "to (indexed), token, amount, timestamp", description: "Emitted when the treasury balance is withdrawn." },
           { name: "FeeUpdated", params: "oldFeeBps, newFeeBps", description: "Emitted when the platform fee changes." },
           { name: "TreasuryAddressUpdated", params: "oldTreasury (indexed), newTreasury (indexed)", description: "Emitted when the treasury address changes." },
           { name: "RegistrarSignerUpdated", params: "oldSigner (indexed), newSigner (indexed)", description: "Emitted when the registrar signer is rotated." },

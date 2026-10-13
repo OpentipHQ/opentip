@@ -57,7 +57,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="py-4">
       {/* Mobile nav */}
-      <div className="lg:hidden sticky top-16 z-sticky bg-background fluid-page-neg fluid-page pb-4">
+      <div className="lg:hidden sticky top-16 z-sticky bg-background pb-4">
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="w-full flex items-center justify-between px-4 py-3 border rule rounded-sm text-sm font-medium"

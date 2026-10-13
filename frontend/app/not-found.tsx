@@ -15,9 +15,11 @@ export default function NotFound() {
         <h1 className="font-display text-3xl">This page is not on the ledger.</h1>
         <p className="text-sm text-muted-foreground">Swap a GitHub link, or go back to a repo you can fund.</p>
         <UrlSwap initial="" button="Open funding page" />
-        <Link href="/"><Button variant="secondary">Go home</Button></Link>
+        <Link href="/"><Button variant="outline">Go home</Button></Link>
       </div>
-      <Footer force />
+      <div className="ml-[calc(50%-50vw)] w-screen">
+        <Footer force />
+      </div>
     </>
   );
 }

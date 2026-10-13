@@ -25,6 +25,9 @@ import { Loader } from "@/components/motion/loader";
 import { SplitBar } from "@/components/ledger/SplitBar";
 import { bpsLabel } from "@/lib/fee-bps";
 import { Copy } from "lucide-react";
+import Image from "next/image";
+import type { RepoSummary } from "@/lib/ai";
+import { getBasescanTxUrl } from "@/lib/basescan";
 
 function truncate(addr: string){ return addr.slice(0,6)+"..."+addr.slice(-4); }
 
@@ -59,7 +62,23 @@ function formatAmount(raw: bigint, token: TokenInfo): string {
   return n.toFixed(4);
 }
 
-export default function TipClient({ repoId }: { repoId: string }) {
+type RepoLink = { title: string; url: string };
+
+export default function TipClient({
+  repoId,
+  project,
+  description = null,
+  icon = null,
+  summary = null,
+  links = [],
+}: {
+  repoId: string;
+  project?: string;
+  description?: string | null;
+  icon?: string | null;
+  summary?: RepoSummary | null;
+  links?: RepoLink[];
+}) {
   const router = useRouter();
   const repoIdLower = repoId.toLowerCase();
   const { address, isConnected, chainId } = useAccount();
@@ -95,8 +114,6 @@ export default function TipClient({ repoId }: { repoId: string }) {
 
   const { data: isRegistered, isPending: isRegPending } = useReadContract({ address: contract, abi: opentipV2Abi, functionName: "isRegistered", args: [repoIdLower], chainId: CHAIN_ID, query: { enabled: !!contract } });
   const { data: payout } = useReadContract({ address: contract, abi: opentipV2Abi, functionName: "getPayoutAddress", args: [repoIdLower], chainId: CHAIN_ID, query: { enabled: !!contract && !!isRegistered } });
-  const { data: totalTipCount, isPending: isCountPending } = useReadContract({ address: contract, abi: opentipV2Abi, functionName: "getTotalTipCount", args: [repoIdLower], chainId: CHAIN_ID, query: { enabled: !!contract && !!isRegistered } });
-
   // Per-token pending balances
   const { data: pendingUSDC } = useReadContract({ address: contract, abi: opentipV2Abi, functionName: "getPendingBalance", args: [repoIdLower, USDC_ADDRESS], chainId: CHAIN_ID, query: { enabled: !!contract && !!isRegistered } });
   const { data: pendingETH } = useReadContract({ address: contract, abi: opentipV2Abi, functionName: "getPendingBalance", args: [repoIdLower, ETH_ADDRESS], chainId: CHAIN_ID, query: { enabled: !!contract && !!isRegistered } });
@@ -123,6 +140,7 @@ export default function TipClient({ repoId }: { repoId: string }) {
   const [gasEstimate, setGasEstimate] = useState<string | null>(null);
   const [claimState, setClaimState] = useState<"idle"|"loading"|"success"|"error">("idle");
   const [registerState, setRegisterState] = useState<"idle"|"loading"|"success"|"error">("idle");
+  const [detailTab, setDetailTab] = useState<"about" | "supporters">("about");
   const [ownership, setOwnership] = useState<{ owns?: boolean; via?: string; loading?: boolean; signature?: string; expiry?: string; nonce?: string }>({});
   const [wallets, setWallets] = useState<any[]>([]);
   const [selectedPayout, setSelectedPayout] = useState<string>("");
@@ -627,246 +645,422 @@ export default function TipClient({ repoId }: { repoId: string }) {
   if (contract === undefined) return <div className="py-12 text-sm text-muted-foreground">Contract address not configured.</div>;
 
   const usdHint = (Number(amount) || 0) * (prices[selectedToken.toLowerCase()] || 0);
+  const projectName = project || capitalize(repoIdLower.split("/")[1]);
+  const pricesReady = Object.keys(prices).length > 0;
+  const fundedRows = [
+    { token: TOKENS[0], raw: totalUSDC as bigint | undefined },
+    { token: TOKENS[1], raw: totalETH as bigint | undefined },
+    { token: TOKENS[2], raw: totalOAR as bigint | undefined },
+  ].filter((b): b is { token: TokenInfo; raw: bigint } => isPositiveBigint(b.raw));
+  const usdOf = (raw: bigint, token: TokenInfo) => {
+    const price = prices[token.address.toLowerCase()] || 0;
+    if (!(price > 0)) return null;
+    return Number(formatUnits(raw, token.decimals)) * price;
+  };
+  const fundedAsUsd = pricesReady && fundedRows.every((row) => usdOf(row.raw, row.token) != null);
+  const fundedUsd = fundedAsUsd ? fundedRows.reduce((sum, row) => sum + (usdOf(row.raw, row.token) ?? 0), 0) : null;
+  const pendingAsUsd = pricesReady && pendingBalances.every((row) => usdOf(row.raw, row.token) != null);
+  const pendingUsd = pendingAsUsd ? pendingBalances.reduce((sum, row) => sum + (usdOf(row.raw, row.token) ?? 0), 0) : null;
+  const funderIds = new Set<string>();
+  for (const row of leaderboard as { tipper_address?: string }[]) {
+    if (row?.tipper_address) funderIds.add(row.tipper_address.toLowerCase());
+  }
+  const isPayoutWallet = Boolean(
+    (address && payout && (address.toLowerCase() === (payout as string).toLowerCase())) ||
+    (useSmart && smartAddr && payout && (payout as string).toLowerCase() === smartAddr.toLowerCase()),
+  );
+  const supporters = (() => {
+    const merged = new Map<string, { display_name: string|null; tipper_address: string; usd: number }>();
+    for (const r of leaderboard as any[]) {
+      const key = r.tipper_address.toLowerCase();
+      if (!merged.has(key)) merged.set(key, { display_name: r.display_name, tipper_address: r.tipper_address, usd: 0 });
+      const entry = merged.get(key)!;
+      const decimals = r.decimals ?? getTokenDecimals(r.token);
+      const amountN = Number(r.total) / Math.pow(10, decimals);
+      const price = prices[r.token?.toLowerCase()] ?? 0;
+      entry.usd += amountN * price;
+    }
+    return [...merged.values()].sort((a, b) => b.usd - a.usd).slice(0, 10);
+  })();
 
   return (
-    <div className="space-y-0">
-
-      <section className="grid gap-3 border-b border-border py-8 sm:grid-cols-4">
-        <Stat label="Pending" empty={pendingBalances.length === 0}>
-          {pendingBalances.map(b => (
-            <div key={b.token.symbol} className="flex items-baseline gap-2 font-mono text-lg">
-              {formatAmount(b.raw!, b.token)}
-              <span className="font-sans text-xs text-muted-foreground">{b.token.symbol}</span>
-            </div>
-          ))}
-        </Stat>
-        <Stat label="Total funded" empty={!isPositiveBigint(totalUSDC) && !isPositiveBigint(totalETH) && !isPositiveBigint(totalOAR)}>
-          {[
-            { token: TOKENS[0], raw: totalUSDC },
-            { token: TOKENS[1], raw: totalETH },
-            { token: TOKENS[2], raw: totalOAR },
-          ].filter((b): b is { token: TokenInfo; raw: bigint } => isPositiveBigint(b.raw)).map(b => (
-            <div key={b.token.symbol} className="flex items-baseline gap-2 font-mono text-lg">
-              {formatAmount(b.raw, b.token)}
-              <span className="font-sans text-xs text-muted-foreground">{b.token.symbol}</span>
-            </div>
-          ))}
-        </Stat>
-        <div>
-          <div className="text-[0.65rem] uppercase tracking-[0.16em] text-muted-foreground">Funds</div>
-          <div className="mt-2 font-mono text-lg">{isCountPending ? <Loader size={16} variant="dots" /> : totalTipCount?.toString() || "0"}</div>
-        </div>
-        <div>
-          <div className="text-[0.65rem] uppercase tracking-[0.16em] text-muted-foreground">Payout</div>
-          <div className="mt-2 font-mono text-sm">{payout ? truncate(payout as string) : "—"}</div>
-        </div>
-      </section>
-
-      {/* Unclaimed */}
-      {isRegPending ? (
-        <section className="py-12 flex justify-center"><Loader variant="spinner" size={24} /></section>
-      ) : !isRegistered ? (
-        <section className="py-10 border-b rule space-y-4">
-          <h2 className="serif text-2xl font-semibold">Claim this repo</h2>
-          {!session ? (
-            <div className="space-y-4">
-              <p className="max-w-lg text-muted-foreground">Not claimed yet. Sign in to verify ownership and register this repo.</p>
-              <div className="flex gap-3">
-                <Button onClick={() => router.push("/onboarding")}>Get started</Button>
-                <Button variant="ghost" onClick={() => signIn("github")}>Sign in with GitHub</Button>
-              </div>
-            </div>
-          ) : wallets.length === 0 ? (
-            <div className="space-y-4">
-              <p className="max-w-lg text-muted-foreground">You need to link a wallet first. This wallet receives funding.</p>
-              <Button onClick={() => router.push("/onboarding")}>Link wallet →</Button>
-            </div>
+    <div className="flex min-w-0 flex-col gap-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex min-w-0 items-start gap-3">
+          {icon ? (
+            <Image src={icon} alt="" width={48} height={48} className="size-12 rounded-[10px] border border-border object-cover" />
           ) : (
-            <div className="space-y-4">
-              <p className="max-w-lg text-muted-foreground">Verify you own <code className="font-mono text-sm">{repoIdLower}</code>, then register to start receiving funding. Payout defaults to your Opentip Smart Wallet.</p>
-              {wallets.length > 1 && (
-                <div className="space-y-1">
-                  <label className="text-xs text-zinc-500">Payout wallet</label>
-                  <select value={selectedPayout} onChange={e => setSelectedPayout(e.target.value)} className="h-9 border rule rounded-sm px-2 text-sm bg-transparent">
-                    {wallets.map((w: any) => (
-                      <option key={w.address} value={w.address}>{w.address.slice(0,6)}...{w.address.slice(-4)} {w.walletType==="smart"?"· Opentip Smart Wallet": w.isPrimary?"· Primary":""} </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-              {wallets.length === 1 && <p className="text-xs text-zinc-500">Payout: {selectedPayout.slice(0,6)}...{selectedPayout.slice(-4)} {wallets[0].walletType==="smart"?"· Opentip Smart Wallet":""}</p>}
-              {ownership.loading ? (
-                <Loader variant="dots" />
-              ) : ownership.owns ? (
-                <div className="space-y-3">
-                  <p className="text-sm text-emerald-700">Verified via {ownership.via}</p>
-                  <StatefulButton state={registerState === "loading" ? "loading" : registerState === "success" ? "success" : registerState === "error" ? "error" : "idle"} onClick={onRegister}>
-                    Register repo
-                  </StatefulButton>
-                </div>
-              ) : ownership.owns === false ? (
-                <div className="space-y-3">
-                  <p className="text-sm text-red-600">Not owner. Ensure you have admin/write on GitHub.</p>
-                  <Button variant="secondary" onClick={checkOwnershipAndSign}>Re-check</Button>
-                </div>
-              ) : (
-                <Button onClick={checkOwnershipAndSign}>Verify ownership</Button>
-              )}
+            <span className="flex size-12 items-center justify-center rounded-[10px] border border-border bg-card font-display text-xl">
+              {projectName.slice(0, 1)}
+            </span>
+          )}
+          <div className="min-w-0">
+            <h1 className="font-display text-3xl sm:text-4xl">{projectName}</h1>
+            {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
+          </div>
+        </div>
+        <Button variant="outline" onClick={copyLink}>
+          <Copy className="h-3.5 w-3.5" /> Copy funding link
+        </Button>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <StatCard label="Total funded">
+          {fundedAsUsd && fundedUsd != null ? (
+            <p className="mt-1 text-2xl tabular-nums">{fmtUsd(fundedUsd)}</p>
+          ) : fundedRows.length === 0 ? (
+            <p className="mt-1 text-2xl text-muted-foreground">—</p>
+          ) : (
+            <div className="mt-1 flex flex-col gap-1">
+              {fundedRows.map((row) => (
+                <p key={row.token.symbol} className="font-mono text-lg tabular-nums">
+                  {formatAmount(row.raw, row.token)} <span className="font-sans text-xs text-muted-foreground">{row.token.symbol}</span>
+                </p>
+              ))}
             </div>
           )}
-        </section>
-      ) : (
-        <section className="border-b border-border py-10">
-          <div className="max-w-md rounded-[10px] border border-border bg-card p-4">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-medium">Fund {capitalize(repoIdLower.split("/")[1])}</h2>
-              <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="size-1.5 rounded-full bg-accent" />
-                {VIEM_CHAIN.name}
-              </span>
+        </StatCard>
+        <StatCard label="Funders">
+          <p className="mt-1 text-2xl tabular-nums">{tipsLoading ? "…" : funderIds.size.toLocaleString("en-US")}</p>
+        </StatCard>
+        <StatCard label="Pending claim" pending>
+          {!isRegistered ? (
+            <p className="mt-1 text-2xl text-pending tabular-nums">—</p>
+          ) : pendingAsUsd && pendingUsd != null ? (
+            <p className="mt-1 text-2xl text-pending tabular-nums">{fmtUsd(pendingUsd)}</p>
+          ) : pendingBalances.length === 0 ? (
+            <p className="mt-1 text-2xl text-pending tabular-nums">{pricesReady ? fmtUsd(0) : "—"}</p>
+          ) : (
+            <div className="mt-1 flex flex-col gap-1">
+              {pendingBalances.map((row) => (
+                <p key={row.token.symbol} className="font-mono text-lg text-pending tabular-nums">
+                  {formatAmount(row.raw, row.token)} <span className="font-sans text-xs text-muted-foreground">{row.token.symbol}</span>
+                </p>
+              ))}
             </div>
-            <div className="grid grid-cols-3" role="group" aria-label="Token">
-              <button type="button" aria-pressed={selectedToken === ETH_ADDRESS} onClick={() => { setSelectedToken(ETH_ADDRESS); setAmount("0.01"); setAmountError(undefined); }} className={`h-9 rounded-l-[10px] border border-border text-sm ${selectedToken === ETH_ADDRESS ? "bg-foreground text-background" : "bg-card"}`}>ETH</button>
-              <button type="button" aria-pressed={selectedToken === USDC_ADDRESS} onClick={() => { setSelectedToken(USDC_ADDRESS); setAmount("25"); setAmountError(undefined); }} className={`h-9 border border-x-0 border-border text-sm ${selectedToken === USDC_ADDRESS ? "bg-foreground text-background" : "bg-card"}`}>USDC</button>
-              <button type="button" className="h-9 rounded-r-[10px] border border-border text-xs text-muted-foreground" onClick={() => showToast({ title: "OAR is coming soon", status: "info" })}>OAR soon</button>
+          )}
+        </StatCard>
+      </div>
+
+      <div className="grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="order-2 flex min-w-0 flex-col gap-6 lg:order-1">
+          <section className="min-w-0">
+            <div className="mb-3 flex items-baseline justify-between gap-3">
+              <h2 className="text-sm font-medium">Ledger</h2>
+              <p className="text-xs text-muted-foreground">Recent funding · {VIEM_CHAIN.name}</p>
             </div>
-            <div className="mt-4 rounded-[10px] border border-border px-4 py-3">
-              <div className="flex items-end justify-between gap-3">
-                <input
-                  inputMode="decimal"
-                  aria-label="Amount"
-                  value={amount}
-                  onChange={(e) => { const v = e.target.value; setAmount(v); setAmountError(validateAmount(v, currentToken, prices)); }}
-                  className="w-full bg-transparent font-mono text-4xl tracking-tight tabular-nums outline-none"
-                />
-                <span className="pb-1 text-xs text-muted-foreground">{currentToken.symbol}</span>
+            {tipsLoading ? (
+              <div className="flex justify-center py-8"><Loader variant="dots" size={20} /></div>
+            ) : tips.length === 0 ? (
+              <div className="rounded-[10px] border border-dashed border-border px-4 py-10 text-center">
+                <p className="font-medium">No funding yet</p>
+                <p className="mt-1 text-sm text-muted-foreground">The first contribution will show up here.</p>
               </div>
-              <p className="mt-1 font-mono text-xs text-muted-foreground">≈ {usdHint > 0 ? fmtUsd(usdHint) : "$0"} · min $1</p>
-            </div>
-            {amountError ? <p className="mt-2 text-sm text-destructive">{amountError}</p> : null}
-            <div className="mt-3 grid grid-cols-4 gap-2">
-              {(PRESETS[selectedToken] || PRESETS[USDC_ADDRESS]).map((preset) => (
-                <button key={preset} type="button" onClick={() => { setAmount(preset); setAmountError(validateAmount(preset, currentToken, prices)); }} className={`h-8 rounded-full border text-xs ${amount === preset ? "border-foreground bg-foreground text-background" : "border-border"}`}>
-                  {selectedToken === USDC_ADDRESS ? `$${preset}` : preset}
+            ) : (
+              <div className="overflow-x-auto rounded-[10px] border border-border">
+                <table className="w-full min-w-[280px] text-left">
+                  <thead>
+                    <tr className="border-b border-border text-xs text-muted-foreground">
+                      <th className="px-3 py-2 font-medium">Funder</th>
+                      <th className="px-3 py-2 font-medium">Amount</th>
+                      <th className="hidden px-3 py-2 font-medium sm:table-cell">To maintainers</th>
+                      <th className="hidden px-3 py-2 font-medium md:table-cell">Tx</th>
+                      <th className="px-3 py-2 text-right font-medium">When</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tips.slice(0, 20).map((t: any) => {
+                      const token = TOKENS.find((item) => item.address.toLowerCase() === String(t.token || "").toLowerCase()) || currentToken;
+                      const gross = safeBig(t.amount);
+                      const fee = safeBig(t.fee_amount);
+                      const toMaintainer = gross >= fee ? gross - fee : gross;
+                      return (
+                        <tr key={t.id} className="border-b border-border last:border-0">
+                          <td className="px-3 py-2 font-mono text-xs">{t.display_name || truncate(t.tipper_address)}</td>
+                          <td className="px-3 py-2 font-mono text-xs text-brand tabular-nums">+{formatAmount(gross, token)} {token.symbol}</td>
+                          <td className="hidden px-3 py-2 font-mono text-xs tabular-nums sm:table-cell">{formatAmount(toMaintainer, token)}</td>
+                          <td className="hidden px-3 py-2 md:table-cell">
+                            {t.tx_hash ? (
+                              <a href={getBasescanTxUrl(t.tx_hash)} className="font-mono text-xs text-brand hover:underline" target="_blank" rel="noreferrer">{truncate(t.tx_hash)}</a>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-right text-xs text-muted-foreground">{relTime(t.timestamp)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          <section className="min-w-0">
+            <div className="flex gap-4 border-b border-border">
+              {(["about", "supporters"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setDetailTab(tab)}
+                  className={`border-b-2 -mb-px px-1 py-2 text-sm ${detailTab === tab ? "border-foreground font-medium text-foreground" : "border-transparent text-muted-foreground"}`}
+                >
+                  {tab === "about" ? "About" : "Top supporters"}
                 </button>
               ))}
             </div>
-            {knownFee && split ? (
-              <div className="mt-4 flex flex-col gap-2">
-                <SplitBar maintainerBps={maintainerBps} />
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Maintainers · {bpsLabel(maintainerBps)}%</span>
-                  <span className="font-mono text-foreground">{formatAmount(split.maintainer, currentToken)} {currentToken.symbol}</span>
-                </div>
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Platform fee · {bpsLabel(feeBps ?? 0)}%</span>
-                  <span className="font-mono text-foreground">{formatAmount(split.fee, currentToken)} {currentToken.symbol}</span>
-                </div>
+            {detailTab === "about" ? (
+              <div className="space-y-4 py-4">
+                {summary ? (
+                  <>
+                    <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">{summary.description}</p>
+                    {summary.techStack.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {summary.techStack.map((tech) => (
+                          <span key={tech} className="rounded-full border border-border px-2.5 py-1 text-xs">{tech}</span>
+                        ))}
+                      </div>
+                    ) : null}
+                    {summary.features.length > 0 ? (
+                      <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                        {summary.features.map((feature) => <li key={feature}>{feature}</li>)}
+                      </ul>
+                    ) : null}
+                    {summary.audience ? <p className="text-xs text-muted-foreground">Built for: {summary.audience}</p> : null}
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No summary available yet.</p>
+                )}
+                {links.length > 0 ? (
+                  <ul className="flex flex-col gap-1">
+                    {links.map((link) => (
+                      <li key={link.url}>
+                        <a href={link.url} className="text-sm text-brand hover:underline" target="_blank" rel="noreferrer">{link.title}</a>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </div>
-            ) : null}
-            <div className="mt-4 flex items-end gap-2">
-              <div className="min-w-0 flex-1">
-                <Input value={displayName} onChange={setDisplayName} placeholder="Display name (optional)" aria-label="Display name" className="gap-0" />
-              </div>
-              <Button variant="ghost" size="sm" onClick={saveDisplayName}>Save</Button>
-            </div>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              {useSmart && smartAddr ? (
-                <span className="flex h-9 items-center gap-1.5 rounded-full border border-border px-2 font-mono text-xs" title="Funding from your Opentip Smart Wallet">{smartAddr.slice(0, 6)}...{smartAddr.slice(-4)}<span className="rounded bg-foreground px-1.5 py-0.5 text-[0.6rem] text-background">SMART</span></span>
-              ) : isConnected ? (
-                <span className="flex h-9 items-center rounded-full border border-border px-2 font-mono text-xs">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
-              ) : (
-                <Button variant="secondary" onClick={() => open()} className="h-9">Connect wallet</Button>
-              )}
-            </div>
-            <div className="mt-3 flex flex-wrap items-center gap-3">
-              <StatefulButton className="h-11 flex-1" state={tipFlow==="approving"||tipFlow==="sending"?"loading": tipFlow==="success"?"success": tipFlow==="error"?"error":"idle"} onClick={openTipReview} disabled={tipFlow==="approving"||tipFlow==="sending"}>
-                {tipButtonText}
-              </StatefulButton>
-              {((address && payout && (address.toLowerCase() === (payout as string).toLowerCase())) || (useSmart && smartAddr && payout && (payout as string).toLowerCase() === smartAddr.toLowerCase())) && hasPendingClaim && (
-                <StatefulButton state={claimState==="loading"?"loading": claimState==="success"?"success": claimState==="error"?"error":"idle"} onClick={onClaimAll} variant="secondary">
-                  Claim all
-                </StatefulButton>
-              )}
-            </div>
-            <Button variant="ghost" size="sm" className="mt-2" onClick={copyLink}><Copy className="h-3.5 w-3.5" /> Copy funding link</Button>
-          </div>
-          <TxReviewModal
-            open={showTipReview}
-            onClose={() => setShowTipReview(false)}
-            title="Review funding"
-            rows={[
-              { label: "To repo", value: repoIdLower },
-              { label: "Amount", value: `${amount} ${currentToken.symbol}${usdHint > 0 ? ` (≈ ${fmtUsd(usdHint)})` : ""}` },
-            ]}
-            gas={{ sponsored: reviewSponsored, estimating: gasEstimating, estimate: gasEstimate }}
-            onConfirm={() => { setShowTipReview(false); onTipClick(); }}
-            confirming={tipFlow === "approving" || tipFlow === "sending"}
-            confirmLabel="Confirm"
-          />
-        </section>
-      )}
-
-      {/* Feeds */}
-      <section className="py-10 grid md:grid-cols-2 gap-10">
-        <div>
-          <h3 className="serif font-semibold text-sm">Top supporters</h3>
-          {tipsLoading ? (
-            <div className="py-8 flex justify-center"><Loader variant="dots" size={20} /></div>
-          ) : leaderboard.length===0 ? (
-            <p className="mt-3 text-xs text-muted-foreground">No funding yet.</p>
-          ) : (
-            <ul className="mt-3 divide-y rule">
-              {(() => {
-                const merged = new Map<string, { display_name: string|null; tipper_address: string; usd: number }>();
-                for (const r of leaderboard as any[]) {
-                  const key = r.tipper_address.toLowerCase();
-                  if (!merged.has(key)) merged.set(key, { display_name: r.display_name, tipper_address: r.tipper_address, usd: 0 });
-                  const entry = merged.get(key)!;
-                  const decimals = r.decimals ?? getTokenDecimals(r.token);
-                  const amount = Number(r.total) / Math.pow(10, decimals);
-                  const price = prices[r.token?.toLowerCase()] ?? 0;
-                  entry.usd += amount * price;
-                }
-                return [...merged.values()].sort((a, b) => b.usd - a.usd).slice(0, 10).map((r) => (
-                  <li key={r.tipper_address} className="flex justify-between py-3">
-                    <span className="text-sm text-zinc-700">{r.display_name || truncate(r.tipper_address)}</span>
-                    <span className="stats text-sm text-zinc-900">{fmtUsd(r.usd)}</span>
+            ) : tipsLoading ? (
+              <div className="flex justify-center py-8"><Loader variant="dots" size={20} /></div>
+            ) : supporters.length === 0 ? (
+              <p className="py-4 text-sm text-muted-foreground">No funding yet.</p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {supporters.map((row) => (
+                  <li key={row.tipper_address} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                    <span className="font-mono text-xs">{row.display_name || truncate(row.tipper_address)}</span>
+                    <span className="font-mono text-xs tabular-nums">{fmtUsd(row.usd)}</span>
                   </li>
-                ));
-              })()}
-            </ul>
-          )}
+                ))}
+              </ul>
+            )}
+          </section>
         </div>
-        <div>
-          <h3 className="font-display text-sm font-semibold">Recent funding</h3>
-          {tipsLoading ? (
-            <div className="py-8 flex justify-center"><Loader variant="dots" size={20} /></div>
-          ) : tips.length===0 ? (
-            <p className="mt-3 text-xs text-muted-foreground">No funding yet.</p>
+
+        <div className="order-1 flex min-w-0 flex-col gap-4 lg:order-2">
+          {isRegPending ? (
+            <section className="flex justify-center py-12"><Loader variant="spinner" size={24} /></section>
+          ) : !isRegistered ? (
+            <section className="rounded-[10px] border border-border p-4">
+              <h2 className="text-sm font-medium">Maintainer</h2>
+              <div className="mt-3 space-y-4">
+                <h3 className="font-display text-2xl">Claim this repo</h3>
+                {!session ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">Not claimed yet. Sign in to verify ownership and register this repo.</p>
+                    <div className="flex flex-wrap gap-3">
+                      <Button onClick={() => router.push("/onboarding")}>Get started</Button>
+                      <Button variant="ghost" onClick={() => signIn("github")}>Sign in with GitHub</Button>
+                    </div>
+                  </div>
+                ) : wallets.length === 0 ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">You need to link a wallet first. This wallet receives funding.</p>
+                    <Button onClick={() => router.push("/onboarding")}>Link wallet →</Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">Verify you own <code className="font-mono text-sm">{repoIdLower}</code>, then register to start receiving funding. Payout defaults to your Opentip Smart Wallet.</p>
+                    {wallets.length > 1 && (
+                      <div className="space-y-1">
+                        <label className="text-xs text-zinc-500">Payout wallet</label>
+                        <select value={selectedPayout} onChange={e => setSelectedPayout(e.target.value)} className="h-9 w-full rounded-[10px] border border-border bg-transparent px-2 text-sm">
+                          {wallets.map((w: any) => (
+                            <option key={w.address} value={w.address}>{w.address.slice(0,6)}...{w.address.slice(-4)} {w.walletType==="smart"?"· Opentip Smart Wallet": w.isPrimary?"· Primary":""} </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    {wallets.length === 1 && <p className="text-xs text-zinc-500">Payout: {selectedPayout.slice(0,6)}...{selectedPayout.slice(-4)} {wallets[0].walletType==="smart"?"· Opentip Smart Wallet":""}</p>}
+                    {ownership.loading ? (
+                      <Loader variant="dots" />
+                    ) : ownership.owns ? (
+                      <div className="space-y-3">
+                        <p className="text-sm text-emerald-700">Verified via {ownership.via}</p>
+                        <StatefulButton state={registerState === "loading" ? "loading" : registerState === "success" ? "success" : registerState === "error" ? "error" : "idle"} onClick={onRegister}>
+                          Register repo
+                        </StatefulButton>
+                      </div>
+                    ) : ownership.owns === false ? (
+                      <div className="space-y-3">
+                        <p className="text-sm text-red-600">Not owner. Ensure you have admin/write on GitHub.</p>
+                        <Button variant="secondary" onClick={checkOwnershipAndSign}>Re-check</Button>
+                      </div>
+                    ) : (
+                      <Button onClick={checkOwnershipAndSign}>Verify ownership</Button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </section>
           ) : (
-            <ul className="mt-3 divide-y rule">
-              {tips.slice(0,10).map((t:any)=>(
-                <li key={t.id} className="flex justify-between py-3">
-                  <span className="text-xs text-zinc-600">{truncate(t.tipper_address)}</span>
-                  <span className="stats text-sm text-zinc-900">{(Number(t.amount)/Math.pow(10,getTokenDecimals(t.token))).toFixed(2)} {t.symbol || "USDC"}</span>
-                </li>
-              ))}
-            </ul>
+            <>
+              <section className="w-full rounded-[10px] border border-border bg-card p-4">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-sm font-medium">Fund this repo</h2>
+                  <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="size-1.5 rounded-full bg-accent" />
+                    {VIEM_CHAIN.name}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3" role="group" aria-label="Token">
+                  <button type="button" aria-pressed={selectedToken === ETH_ADDRESS} onClick={() => { setSelectedToken(ETH_ADDRESS); setAmount("0.01"); setAmountError(undefined); }} className={`h-9 rounded-l-[10px] border border-border text-sm ${selectedToken === ETH_ADDRESS ? "bg-foreground text-background" : "bg-card"}`}>ETH</button>
+                  <button type="button" aria-pressed={selectedToken === USDC_ADDRESS} onClick={() => { setSelectedToken(USDC_ADDRESS); setAmount("25"); setAmountError(undefined); }} className={`h-9 border border-x-0 border-border text-sm ${selectedToken === USDC_ADDRESS ? "bg-foreground text-background" : "bg-card"}`}>USDC</button>
+                  <button type="button" className="h-9 rounded-r-[10px] border border-border text-xs text-muted-foreground" onClick={() => showToast({ title: "OAR is coming soon", status: "info" })}>OAR soon</button>
+                </div>
+                <div className="mt-4 rounded-[10px] border border-border px-4 py-3">
+                  <div className="flex items-end justify-between gap-3">
+                    <input
+                      inputMode="decimal"
+                      aria-label="Amount"
+                      value={amount}
+                      onChange={(e) => { const v = e.target.value; setAmount(v); setAmountError(validateAmount(v, currentToken, prices)); }}
+                      className="w-full min-w-0 bg-transparent font-mono text-4xl tracking-tight tabular-nums outline-none"
+                    />
+                    <span className="pb-1 text-xs text-muted-foreground">{currentToken.symbol}</span>
+                  </div>
+                  <p className="mt-1 font-mono text-xs text-muted-foreground">≈ {usdHint > 0 ? fmtUsd(usdHint) : "$0"} · min $1</p>
+                </div>
+                {amountError ? <p className="mt-2 text-sm text-destructive">{amountError}</p> : null}
+                <div className="mt-3 grid grid-cols-4 gap-2">
+                  {(PRESETS[selectedToken] || PRESETS[USDC_ADDRESS]).map((preset) => (
+                    <button key={preset} type="button" onClick={() => { setAmount(preset); setAmountError(validateAmount(preset, currentToken, prices)); }} className={`h-8 rounded-full border text-xs ${amount === preset ? "border-foreground bg-foreground text-background" : "border-border"}`}>
+                      {selectedToken === USDC_ADDRESS ? `$${preset}` : preset}
+                    </button>
+                  ))}
+                </div>
+                {knownFee && split ? (
+                  <div className="mt-4 flex flex-col gap-2">
+                    <SplitBar maintainerBps={maintainerBps} />
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Maintainers · {bpsLabel(maintainerBps)}%</span>
+                      <span className="font-mono text-foreground">{formatAmount(split.maintainer, currentToken)} {currentToken.symbol}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Platform fee · {bpsLabel(feeBps ?? 0)}%</span>
+                      <span className="font-mono text-foreground">{formatAmount(split.fee, currentToken)} {currentToken.symbol}</span>
+                    </div>
+                  </div>
+                ) : null}
+                <div className="mt-4 flex items-end gap-2">
+                  <div className="min-w-0 flex-1">
+                    <Input value={displayName} onChange={setDisplayName} placeholder="Display name (optional)" aria-label="Display name" className="gap-0" />
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={saveDisplayName}>Save</Button>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {useSmart && smartAddr ? (
+                    <span className="flex h-9 items-center gap-1.5 rounded-full border border-border px-2 font-mono text-xs" title="Funding from your Opentip Smart Wallet">{smartAddr.slice(0, 6)}...{smartAddr.slice(-4)}<span className="rounded bg-foreground px-1.5 py-0.5 text-[0.6rem] text-background">SMART</span></span>
+                  ) : isConnected ? (
+                    <span className="flex h-9 items-center rounded-full border border-border px-2 font-mono text-xs">{address?.slice(0, 6)}...{address?.slice(-4)}</span>
+                  ) : (
+                    <Button variant="secondary" onClick={() => open()} className="h-9">Connect wallet</Button>
+                  )}
+                </div>
+                <StatefulButton className="mt-3 h-11 w-full" state={tipFlow==="approving"||tipFlow==="sending"?"loading": tipFlow==="success"?"success": tipFlow==="error"?"error":"idle"} onClick={openTipReview} disabled={tipFlow==="approving"||tipFlow==="sending"}>
+                  {tipButtonText}
+                </StatefulButton>
+                <p className="mt-2 text-center text-xs text-muted-foreground">No account needed.</p>
+                <TxReviewModal
+                  open={showTipReview}
+                  onClose={() => setShowTipReview(false)}
+                  title="Review funding"
+                  rows={[
+                    { label: "To repo", value: repoIdLower },
+                    { label: "Amount", value: `${amount} ${currentToken.symbol}${usdHint > 0 ? ` (≈ ${fmtUsd(usdHint)})` : ""}` },
+                  ]}
+                  gas={{ sponsored: reviewSponsored, estimating: gasEstimating, estimate: gasEstimate }}
+                  onConfirm={() => { setShowTipReview(false); onTipClick(); }}
+                  confirming={tipFlow === "approving" || tipFlow === "sending"}
+                  confirmLabel="Confirm"
+                />
+              </section>
+              <section className="rounded-[10px] border border-border p-4">
+                <h2 className="text-sm font-medium">Maintainer</h2>
+                <p className="mt-3 text-xs text-muted-foreground">Pending balance</p>
+                <ul className="mt-2 flex flex-col gap-1 text-sm">
+                  {pendingRowsAll(pendingUSDC, pendingETH, pendingOAR).map((row) => (
+                    <li key={row.token.symbol} className="flex items-center justify-between gap-3">
+                      <span>{row.token.symbol}</span>
+                      <span className="font-mono text-xs tabular-nums">
+                        {formatAmount(row.raw, row.token)}
+                        {pricesReady && usdOf(row.raw, row.token) != null ? ` · ${fmtUsd(usdOf(row.raw, row.token) ?? 0)}` : ""}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {isPayoutWallet && hasPendingClaim ? (
+                  <StatefulButton className="mt-3 w-full" state={claimState==="loading"?"loading": claimState==="success"?"success": claimState==="error"?"error":"idle"} onClick={onClaimAll} variant="secondary">
+                    Claim all
+                  </StatefulButton>
+                ) : isPayoutWallet ? (
+                  <Button className="mt-3 w-full" variant="secondary" disabled>Nothing to claim</Button>
+                ) : null}
+              </section>
+            </>
           )}
         </div>
-      </section>
+      </div>
     </div>
   );
 }
 
-function Stat({ label, empty, children }: { label: string; empty?: boolean; children: ReactNode }) {
+function StatCard({ label, pending, children }: { label: string; pending?: boolean; children: ReactNode }) {
   return (
-    <div>
-      <div className="text-[0.65rem] uppercase tracking-[0.16em] text-muted-foreground">{label}</div>
-      <div className="mt-2 space-y-1">
-        {empty ? <div className="font-mono text-lg text-muted-foreground">—</div> : children}
-      </div>
+    <div className="rounded-[10px] border border-border bg-card px-4 py-3">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <div className={pending ? "text-pending" : undefined}>{children}</div>
     </div>
   );
+}
+
+function pendingRowsAll(usdc: unknown, eth: unknown, oar: unknown) {
+  return [
+    { token: TOKENS[0], raw: (typeof usdc === "bigint" ? usdc : 0n) },
+    { token: TOKENS[1], raw: (typeof eth === "bigint" ? eth : 0n) },
+    { token: TOKENS[2], raw: (typeof oar === "bigint" ? oar : 0n) },
+  ];
+}
+
+function safeBig(value: unknown) {
+  try {
+    if (typeof value === "bigint") return value;
+    if (typeof value === "number" && Number.isFinite(value)) return BigInt(Math.trunc(value));
+    const text = String(value ?? "0").split(".")[0];
+    return BigInt(text || "0");
+  } catch {
+    return 0n;
+  }
+}
+
+function relTime(value: unknown) {
+  const date = value instanceof Date ? value : new Date(String(value ?? ""));
+  if (Number.isNaN(date.getTime())) return "";
+  const diff = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+  if (diff < 60) return `${diff}s`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d`;
+  return date.toISOString().slice(0, 10);
 }

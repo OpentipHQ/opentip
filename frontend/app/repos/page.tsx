@@ -86,17 +86,16 @@ export default function ReposDirectory() {
               className="h-10 w-full rounded-[10px] border border-border bg-transparent pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-accent"
             />
           </div>
-          <div className="flex gap-1">
-            {(["tipped", "recent", "tips"] as const).map(s => (
-              <button
-                key={s}
-                onClick={() => setSort(s)}
-                className={`rounded-full px-3 py-1.5 text-xs transition-colors ${sort === s ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted"}`}
-              >
-                {s === "tipped" ? "Most funded" : s === "recent" ? "Recent" : "Most funds"}
-              </button>
-            ))}
-          </div>
+          <select
+            aria-label="Sort repos"
+            value={sort}
+            onChange={(event) => setSort(event.target.value as typeof sort)}
+            className="h-10 rounded-[10px] border border-border bg-background px-3 text-sm"
+          >
+            <option value="tipped">Most funded</option>
+            <option value="tips">Most funds</option>
+            <option value="recent">Recently registered</option>
+          </select>
         </div>
       </header>
 
@@ -129,7 +128,6 @@ export default function ReposDirectory() {
                         <span className="block truncate text-sm font-medium">{capitalize(r.repo_id.split("/")[1])}</span>
                         {meta?.description ? <span className="block truncate text-xs text-muted-foreground">{meta.description}</span> : null}
                       </span>
-                      <span className="hidden text-xs text-muted-foreground sm:inline">{r.tip_count} funds</span>
                       <span className="font-mono text-sm tabular-nums">{typeof r.tipped_usd === "number" ? fmtUsd(r.tipped_usd) : ""}</span>
                     </Link>
                   </li>

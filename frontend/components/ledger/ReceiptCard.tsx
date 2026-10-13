@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatAmount } from "@/lib/formatAmount";
 import { getBasescanTxUrl } from "@/lib/basescan";
+import { receiptHeadline } from "@/lib/receipt-display";
 import type { ReceiptLeg } from "@/lib/receipt";
 
 const HASH_RE = /^0x[0-9a-fA-F]{64}$/;
@@ -14,6 +15,7 @@ export function ReceiptCard({
   timestamp,
   legs,
   network,
+  prices = {},
 }: {
   kind: "fund" | "claim";
   project: string;
@@ -23,10 +25,9 @@ export function ReceiptCard({
   timestamp?: string;
   legs: ReceiptLeg[];
   network: string;
+  prices?: Record<string, number>;
 }) {
-  const primary = legs[0];
-  const headlineRaw = primary ? (kind === "claim" ? primary.maintainer : primary.amount) : "0";
-  const headline = primary ? human(headlineRaw, primary.token) : "—";
+  const headline = receiptHeadline(kind, legs, prices);
 
   return (
     <article className="mx-auto w-full max-w-md">
@@ -35,10 +36,28 @@ export function ReceiptCard({
           <span>Receipt</span>
           <span className="font-mono normal-case tracking-normal">{network}</span>
         </div>
-        <div className="mt-4 flex items-end gap-3">
-          <p className="font-mono text-5xl leading-none tracking-tight tabular-nums">{headline}</p>
-          {primary ? <p className="pb-1 text-sm text-muted-foreground">{primary.symbol}</p> : null}
-        </div>
+        {headline.mode === "usd" ? (
+          <div className="mt-4">
+            <p className="font-mono text-5xl leading-none tracking-tight tabular-nums">{headline.usd}</p>
+            <p className="mt-3 text-sm text-muted-foreground">{headline.breakdown}</p>
+          </div>
+        ) : headline.mode === "stacked" ? (
+          <div className="mt-4 flex flex-col gap-2">
+            {headline.lines.map((line, index) => (
+              <div key={`${line.token}-${index}`} className="flex items-end gap-3">
+                <p className="font-mono text-5xl leading-none tracking-tight tabular-nums">{line.amount}</p>
+                <p className="pb-1 text-sm text-muted-foreground">{line.symbol}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-4 flex items-end gap-3">
+            <p className="font-mono text-5xl leading-none tracking-tight tabular-nums">
+              {headline.mode === "single" ? headline.amount : "—"}
+            </p>
+            {headline.mode === "single" ? <p className="pb-1 text-sm text-muted-foreground">{headline.symbol}</p> : null}
+          </div>
+        )}
         <p className="mt-3 text-sm">
           <span className="text-muted-foreground">{kind === "claim" ? "Claimed from" : "→"} </span>
           <Link href={`/${repoId}`} className="font-medium hover:text-brand">
@@ -52,20 +71,24 @@ export function ReceiptCard({
       </div>
       <div className="border-x border-border bg-card px-5 py-4">
         <dl className="flex flex-col gap-2.5 text-sm">
-          {legs.map((leg) => {
-            const maintainerPct = percent(leg.maintainer, kind === "claim" ? leg.maintainer : leg.amount);
-            const feePct = percent(leg.fee, leg.amount);
-            const suffix = legs.length > 1 ? ` · ${leg.symbol}` : "";
-            return (
-              <LegRows
-                key={`${leg.token}-${leg.amount}`}
-                maintainerLabel={`Maintainers · ${maintainerPct}%${suffix}`}
-                feeLabel={`Platform fee · ${feePct}%${suffix}`}
-                maintainer={withSymbol(leg.maintainer, leg)}
-                fee={withSymbol(leg.fee, leg)}
-              />
-            );
-          })}
+          {kind === "claim"
+            ? legs.map((leg, index) => (
+                <Row key={`${leg.token}-${index}`} label="Claimed" value={withSymbol(leg.maintainer, leg)} />
+              ))
+            : legs.map((leg, index) => {
+                const maintainerPct = percent(leg.maintainer, leg.amount);
+                const feePct = percent(leg.fee, leg.amount);
+                const suffix = legs.length > 1 ? ` · ${leg.symbol}` : "";
+                return (
+                  <LegRows
+                    key={`${leg.token}-${index}`}
+                    maintainerLabel={`Maintainers · ${maintainerPct}%${suffix}`}
+                    feeLabel={`Platform fee · ${feePct}%${suffix}`}
+                    maintainer={withSymbol(leg.maintainer, leg)}
+                    fee={withSymbol(leg.fee, leg)}
+                  />
+                );
+              })}
           <Row label="Network" value={network} />
           <Row label="From" value={from ? shortAddr(from) : "—"} />
           <div className="flex items-baseline justify-between gap-4">
